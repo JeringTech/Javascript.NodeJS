@@ -1,0 +1,25 @@
+version: '{build}'
+skip_non_tags: true
+image: Visual Studio 2017
+# TODO if dotnet build isn't called, error MSB4044 is thrown by dotnet pack
+build_script:
+- ps: |
+    dotnet build -c release
+    dotnet pack -c release /p:version=$env:APPVEYOR_REPO_TAG_NAME
+test_script:
+- ps: |
+    cd .\src\Node.Tests
+    dotnet test -v n -c release -l trx -r ./ --no-build .\Jering.Markdig.Extensions.Node.Tests.csproj
+    $wc = New-Object 'System.Net.WebClient'
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
+artifacts:
+  - path: '**/*.nupkg'
+deploy:
+  provider: NuGet
+  api_key:
+    secure: YuSNfK09e6bNa8EEC2jAsTZP8b8sHN6BDdhrqbI1hRAoqSAUUre5gH8CaW/85NpF
+  skip_symbols: false
+  artifact: /.*\.nupkg/
+# If caching fails, the entire build fails - https://github.com/appveyor/ci/issues/1509
+#cache:
+#    - '%USERPROFILE%\.nuget\packages -> **\*.csproj'
