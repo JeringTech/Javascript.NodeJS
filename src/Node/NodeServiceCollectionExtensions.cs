@@ -6,7 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// Extension methods for setting up NodeServices in an <see cref="IServiceCollection" />.
     /// </summary>
-    public static class NodeServicesServiceCollectionExtensions
+    public static class NodeServiceCollectionExtensions
     {
         /// <summary>
         /// Adds NodeServices support to the <paramref name="services"/>.
@@ -14,8 +14,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         public static void AddNodeServices(this IServiceCollection services)
         {
-            services.AddSingleton<INodeInstanceFactory, HttpNodeInstanceFactory>();
-            services.AddSingleton<INodeServices, NodeServices>();
+            services.AddSingleton<INodeHostFactory, HttpNodeHostFactory>();
+            services.AddSingleton(serviceProvider =>
+            {
+                INodeHostFactory nodeHostFactory = serviceProvider.GetRequiredService<INodeHostFactory>();
+                return nodeHostFactory.Create();
+            });
         }
     }
 }

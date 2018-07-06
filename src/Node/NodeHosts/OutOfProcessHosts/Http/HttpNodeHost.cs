@@ -1,3 +1,7 @@
+using Jering.JavascriptUtils.Node.Node.OutOfProcessHosts;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
 using System.Net.Http;
@@ -5,8 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Jering.JavascriptUtils.Node.HostingModels
 {
@@ -19,7 +21,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
     /// accept RPC invocations.
     /// </summary>
     /// <seealso cref="HostingModels.BaseNodeInstance" />
-    internal class HttpNodeInstance : OutOfProcessNodeInstance
+    internal class HttpNodeHost : OutOfProcessNodeHost
     {
         private static readonly Regex EndpointMessageRegex =
             new Regex(@"^\[Jering.JavascriptUtils.Node.HttpNodeHost:Listening on {(.*?)} port (\d+)\]$");
@@ -34,32 +36,21 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         private bool _disposed;
         private string _endpoint;
 
-        public HttpNodeInstance(HttpNodeInstanceOptions options, int port = 0)
-        : base(
-                EmbeddedResourceReader.Read(
-                    typeof(HttpNodeInstance),
-                    "/Content/Node/entrypoint-http.js"),
-                options.ProjectPath,
-                options.WatchFileExtensions,
-                MakeCommandLineOptions(port),
-                options.ApplicationStoppingToken,
-                options.NodeInstanceOutputLogger,
-                options.EnvironmentVariables,
-                options.InvocationTimeoutMilliseconds,
-                options.LaunchWithDebugging,
-                options.DebuggingPort)
+        public HttpNodeHost(INodeProcessFactory nodeProcessFactory,
+            string nodeServerScript,
+            ILogger nodeOutputLogger,
+            OutOfProcessNodeHostOptions outOfProcessNodeHostOptions) :
+            base(nodeProcessFactory, nodeServerScript, nodeOutputLogger, outOfProcessNodeHostOptions)
         {
-            _client = new HttpClient();
-            _client.Timeout = TimeSpan.FromMilliseconds(options.InvocationTimeoutMilliseconds + 1000);
+            // TODO di client accessor
+            _client = new HttpClient
+            {
+                // TODO no timeout scenario
+                Timeout = TimeSpan.FromMilliseconds(outOfProcessNodeHostOptions.InvocationTimeoutMS + 1000)
+            };
         }
 
-        private static string MakeCommandLineOptions(int port)
-        {
-            return $"--port {port}";
-        }
-
-        protected override async Task<T> InvokeExportAsync<T>(
-            NodeInvocationInfo invocationInfo, CancellationToken cancellationToken)
+        protected override async Task<T> InvokeExportAsync<T>(NodeInvocationInfo invocationInfo, CancellationToken cancellationToken)
         {
             string payloadJson = JsonConvert.SerializeObject(invocationInfo, jsonSerializerSettings);
             var payload = new StringContent(payloadJson, Encoding.UTF8, "application/json");
@@ -109,31 +100,10 @@ namespace Jering.JavascriptUtils.Node.HostingModels
             }
         }
 
-        protected override void OnOutputDataReceived(string outputData)
+        // TODO clean up disposal
+        protected override void DisposeCore()
         {
-            // Watch for "port selected" messages, and when observed, 
-            // store the IP (IPv4/IPv6) and port number
-            // so we can use it when making HTTP requests. The child process will always send
-            // one of these messages before it sends a "ready for connections" message.
-            Match match = string.IsNullOrEmpty(_endpoint) ? EndpointMessageRegex.Match(outputData) : null;
-            if (match != null && match.Success)
-            {
-                int port = int.Parse(match.Groups[2].Captures[0].Value);
-                string resolvedIpAddress = match.Groups[1].Captures[0].Value;
-
-                //IPv6 must be wrapped with [] brackets
-                resolvedIpAddress = resolvedIpAddress == "::1" ? $"[{resolvedIpAddress}]" : resolvedIpAddress;
-                _endpoint = $"http://{resolvedIpAddress}:{port}";
-            }
-            else
-            {
-                base.OnOutputDataReceived(outputData);
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
+            base.DisposeCore();
 
             if (!_disposed)
             {
@@ -143,6 +113,21 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                 }
 
                 _disposed = true;
+            }
+        }
+
+        // TODO extract ip and endpoint from connection established message
+        protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+        {
+            Match match = string.IsNullOrEmpty(_endpoint) ? EndpointMessageRegex.Match(outputData) : null;
+            if (match != null && match.Success)
+            {
+                int port = int.Parse(match.Groups[2].Captures[0].Value);
+                string resolvedIpAddress = match.Groups[1].Captures[0].Value;
+
+                //IPv6 must be wrapped with [] brackets
+                resolvedIpAddress = resolvedIpAddress == "::1" ? $"[{resolvedIpAddress}]" : resolvedIpAddress;
+                _endpoint = $"http://{resolvedIpAddress}:{port}";
             }
         }
 

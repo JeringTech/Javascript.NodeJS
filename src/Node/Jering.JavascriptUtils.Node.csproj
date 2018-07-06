@@ -10,11 +10,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Remove="Javascript\bin\**" />
+        <Compile Remove="Javascript\node_modules\**" />
+        <EmbeddedResource Remove="Javascript\bin\**" />
+        <EmbeddedResource Remove="Javascript\node_modules\**" />
+        <None Remove="Javascript\bin\**" />
+        <None Remove="Javascript\node_modules\**" />
         <None Remove="node_modules\**\*" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Javascript\Node\entrypoint-http.js" />
     </ItemGroup>
 
     <ItemGroup>
