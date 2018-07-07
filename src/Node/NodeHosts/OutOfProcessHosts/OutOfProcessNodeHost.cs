@@ -1,4 +1,6 @@
 using Jering.JavascriptUtils.Node.Node.OutOfProcessHosts;
+using Jering.JavascriptUtils.Node.NodeHosts;
+using Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -25,11 +27,12 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// <summary>
         /// The <see cref="ILogger"/> to which the Node.js instance's stdout/stderr is being redirected.
         /// </summary>
-        private readonly ILogger _nodeOutputLogger;
         private readonly INodeProcessFactory _nodeProcessFactory;
-        private readonly TaskCompletionSource<object> _connectionIsReadySource = new TaskCompletionSource<object>();
-        private readonly OutOfProcessNodeHostOptions _options;
         private readonly string _nodeServerScript;
+        private readonly IInvocationDataFactory _invocationDataFactory;
+        private readonly ILogger _nodeOutputLogger;
+        private readonly OutOfProcessNodeHostOptions _options;
+        private readonly TaskCompletionSource<object> _connectionIsReadySource = new TaskCompletionSource<object>();
 
         private object _nodeProcessAccessLock = new object();
         private Process _nodeProcess;
@@ -39,12 +42,21 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// Creates a new instance of <see cref="OutOfProcessNodeHost"/>.
         /// </summary>
         /// <param name="nodeProcess">The Node.js process.</param>
+        /// <param name="nodeProcessFactory"></param>
+        /// <param name="nodeServerScript"></param>
+        /// <param name="invocationDataFactory"></param>
         /// <param name="nodeOutputLogger">The <see cref="ILogger"/> to which the Node.js instance's stdout/stderr (and other log information) should be written.</param>
+        /// <param name="options"></param>
         /// <param name="invocationTimeoutMilliseconds">The maximum duration, in milliseconds, to wait for RPC calls to complete.</param>
-        protected OutOfProcessNodeHost(INodeProcessFactory nodeProcessFactory, string nodeServerScript, ILogger nodeOutputLogger, OutOfProcessNodeHostOptions options)
+        protected OutOfProcessNodeHost(INodeProcessFactory nodeProcessFactory,
+            string nodeServerScript,
+            IInvocationDataFactory invocationDataFactory,
+            ILogger nodeOutputLogger,
+            OutOfProcessNodeHostOptions options)
         {
             _nodeProcessFactory = nodeProcessFactory;
             _nodeServerScript = nodeServerScript;
+            _invocationDataFactory = invocationDataFactory;
             _nodeOutputLogger = nodeOutputLogger ?? throw new ArgumentNullException(nameof(nodeOutputLogger));
             _options = options;
         }
@@ -56,41 +68,57 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// <param name="invocationInfo">Specifies the Node.js function to be invoked and arguments to be passed to it.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        protected abstract Task<T> InvokeExportAsync<T>(NodeInvocationInfo invocationInfo, CancellationToken cancellationToken);
+        protected abstract Task<T> InvokeAsync<T>(InvocationData invocationData, CancellationToken cancellationToken);
 
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
-        // TODO implement - or abstract?
-        public Task<T> InvokeExportFromFileAsync<T>(string relativePath, bool cache = true, string export = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<T> InvokeFromFileAsync<T>(string modulePath, bool cache = true, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            throw new NotImplementedException();
+            InvocationData invocationData = _invocationDataFactory.
+                Create(ModuleSourceType.File,
+                    modulePath, cache ? modulePath : null,
+                    exportName,
+                    args);
+
+            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
         }
 
-        public Task<T> InvokeExportFromStringAsync<T>(string module, string cacheIdentifier = null, string export = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            throw new NotImplementedException();
+            InvocationData invocationData = _invocationDataFactory.
+                Create(ModuleSourceType.String,
+                    moduleString,
+                    newCacheIdentifier,
+                    exportName,
+                    args);
+
+            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
         }
 
-        public Task<T> InvokeExportFromStreamAsync<T>(Stream module, string cacheIdentifier = null, string export = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            throw new NotImplementedException();
+            InvocationData invocationData = _invocationDataFactory.
+                Create(ModuleSourceType.Stream,
+                    newCacheIdentifier: newCacheIdentifier,
+                    exportName: exportName,
+                    args: args,
+                    moduleStreamSource: moduleStream);
+
+            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
         }
 
-        public Task<bool> TryInvokeExportFromCacheAsync<T>(string identifier, out T result, string export = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<TryInvokeFromCacheResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            throw new NotImplementedException();
+            InvocationData invocationData = _invocationDataFactory.
+                Create(ModuleSourceType.Cache,
+                    moduleCacheIdentifier,
+                    exportName: exportName,
+                    args: args);
+
+            return InvokeWithRetryAsync<TryInvokeFromCacheResult<T>>(invocationData, true, cancellationToken);
         }
 
-        /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
-        /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <param name="moduleName">The path to the Node.js module (i.e., JavaScript file) relative to your project root that contains the code to be invoked.</param>
-        /// <param name="exportNameOrNull">If set, specifies the CommonJS export to be invoked. If not set, the module's default CommonJS export itself must be a function to be invoked.</param>
-        /// <param name="args">Any sequence of JSON-serializable arguments to be passed to the Node.js function.</param>
-        /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        public async Task<T> InvokeExportAsync<T>(CancellationToken cancellationToken, string moduleName, string exportNameOrNull, params object[] args)
+        private async Task<T> InvokeWithRetryAsync<T>(InvocationData invocationData, bool allowRetry, CancellationToken cancellationToken)
         {
             if (_nodeProcess?.HasExited != false)
             {
@@ -101,6 +129,33 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                 }
             }
 
+            try
+            {
+                return await InvokeCoreAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
+            }
+            // TODO simple retry on first NodeInvocationException? only if node is unavailable?
+            catch (NodeInvocationException nodeInvocationException)
+            {
+                if (nodeInvocationException.NodeInstanceUnavailable)
+                {
+                }
+
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously invokes code in the Node.js instance.
+        /// </summary>
+        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
+        /// <param name="invocationData"></param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
+        /// <param name="moduleName">The path to the Node.js module (i.e., JavaScript file) relative to your project root that contains the code to be invoked.</param>
+        /// <param name="exportNameOrNull">If set, specifies the CommonJS export to be invoked. If not set, the module's default CommonJS export itself must be a function to be invoked.</param>
+        /// <param name="args">Any sequence of JSON-serializable arguments to be passed to the Node.js function.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
+        private async Task<T> InvokeCoreAsync<T>(InvocationData invocationData, CancellationToken cancellationToken)
+        {
             // Construct a new cancellation token that combines the supplied token with the configured invocation
             // timeout. Technically we could avoid wrapping the cancellationToken if no timeout is configured,
             // but that's not really a major use case, since timeouts are enabled by default.
@@ -119,21 +174,20 @@ namespace Jering.JavascriptUtils.Node.HostingModels
 
                 try
                 {
+                    // TODO do we need this every call or only on the first call?
+
                     // Wait until the connection is established. This will throw if the connection fails to initialize,
                     // or if cancellation is requested first. Note that we can't really cancel the "establishing connection"
                     // task because that's shared with all callers, but we can stop waiting for it if this call is cancelled.
                     await _connectionIsReadySource.Task.OrThrowOnCancellation(cancellationToken).ConfigureAwait(false);
                     connectionSuccessful = true;
 
-                    return await InvokeExportAsync<T>(new NodeInvocationInfo
-                    {
-                        ModuleName = moduleName,
-                        ExportedFunctionName = exportNameOrNull,
-                        Args = args
-                    }, cancellationToken).ConfigureAwait(false);
+                    return await InvokeAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)
                 {
+                    // TODO restart process and retry?
+
                     if (timeoutSource.IsCancellationRequested)
                     {
                         // It was very common for developers to report 'TaskCanceledException' when encountering almost any

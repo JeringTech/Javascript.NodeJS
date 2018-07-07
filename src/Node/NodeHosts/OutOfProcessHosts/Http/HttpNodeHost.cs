@@ -1,4 +1,5 @@
 using Jering.JavascriptUtils.Node.Node.OutOfProcessHosts;
+using Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -50,7 +51,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
             };
         }
 
-        protected override async Task<T> InvokeExportAsync<T>(NodeInvocationInfo invocationInfo, CancellationToken cancellationToken)
+        protected override async Task<T> InvokeExportAsync<T>(SerializableInvocationData invocationInfo, CancellationToken cancellationToken)
         {
             string payloadJson = JsonConvert.SerializeObject(invocationInfo, jsonSerializerSettings);
             var payload = new StringContent(payloadJson, Encoding.UTF8, "application/json");

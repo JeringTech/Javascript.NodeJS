@@ -1,7 +1,6 @@
 ﻿using Jering.JavascriptUtils.Node.NodeHosts;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -11,55 +10,38 @@ namespace Jering.JavascriptUtils.Node.Node.OutOfProcessHosts
     {
         private readonly NodeProcessOptions _nodeProcessOptions;
 
-        public NodeProcessFactory(IOptions<NodeProcessOptions> optionsAccessor)
+        protected NodeProcessFactory(IOptions<NodeProcessOptions> optionsAccessor)
         {
             _nodeProcessOptions = optionsAccessor.Value;
         }
 
         public Process Create(string nodeServerScript)
         {
-            ProcessStartInfo startInfo = CreateNodeProcessStartInfo(
-                nodeServerScript,
-                _nodeProcessOptions.ProjectPath,
-                _nodeProcessOptions.CommandLineOptions,
-                _nodeProcessOptions.EnvironmentVariables);
+            ProcessStartInfo startInfo = CreateNodeProcessStartInfo(nodeServerScript);
 
             return CreateAndStartNodeProcess(startInfo);
         }
 
-        /// <summary>
-        /// Configures a <see cref="ProcessStartInfo"/> instance describing how to launch the Node.js process.
-        /// </summary>
-        /// <param name="nodeServerScript">The script defining the server that will be used for IPC.</param>
-        /// <param name="projectPath">The root path of the project. This is used when locating Node.js modules relative to the project root.</param>
-        /// <param name="nodeAndV8Options">Node.js and V8 options in the form [Node.js options] [V8 options]. 
-        /// The full list of Node.js options can be found here: https://nodejs.org/api/cli.html#cli_options</param>
-        /// <param name="environmentVars">Environment variables to be set on the Node.js process.</param>
-        /// <param name="port">The port that the server running on Node.js will listen on. If set to 0, the OS will choose the port.</param>.
-        protected virtual ProcessStartInfo CreateNodeProcessStartInfo(string nodeServerScript,
-            string projectPath,
-            string nodeAndV8Options,
-            IDictionary<string, string> environmentVars,
-            int port = 0)
+        protected virtual ProcessStartInfo CreateNodeProcessStartInfo(string nodeServerScript)
         {
             // This method is virtual, as it provides a way to override the NODE_PATH or the path to node.exe
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")
             {
-                Arguments = $"{nodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {port}",
+                Arguments = $"{_nodeProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeProcessOptions.Port}",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = projectPath
+                WorkingDirectory = _nodeProcessOptions.ProjectPath
             };
 
-            // Append environment vars
-            if (environmentVars != null)
+            // Append environment Variables
+            if (_nodeProcessOptions.EnvironmentVariables != null)
             {
-                foreach (var envVarKey in environmentVars.Keys)
+                foreach (var envVarKey in _nodeProcessOptions.EnvironmentVariables.Keys)
                 {
-                    string envVarValue = environmentVars[envVarKey];
+                    string envVarValue = _nodeProcessOptions.EnvironmentVariables[envVarKey];
                     if (envVarValue != null)
                     {
                         startInfo.Environment[envVarKey] = envVarValue;
@@ -74,7 +56,7 @@ namespace Jering.JavascriptUtils.Node.Node.OutOfProcessHosts
                 existingNodePath += Path.PathSeparator;
             }
 
-            startInfo.Environment["NODE_PATH"] = existingNodePath + Path.Combine(projectPath, "node_modules");
+            startInfo.Environment["NODE_PATH"] = existingNodePath + Path.Combine(_nodeProcessOptions.ProjectPath, "node_modules");
 
             return startInfo;
         }

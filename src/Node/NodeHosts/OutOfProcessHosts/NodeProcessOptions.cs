@@ -9,9 +9,15 @@ namespace Jering.JavascriptUtils.Node.NodeHosts
         /// </summary>
         public string ProjectPath { get; set; }
 
+        /// <summary>
+        /// Node.js and V8 options in the form [Node.js options] [V8 options]. 
+        /// The full list of Node.js options can be found here: https://nodejs.org/api/cli.html#cli_options
+        /// </summary>
+        public string NodeAndV8Options { get; set; }
 
-        public string CommandLineOptions { get; set; }
-
+        /// <summary>
+        /// The port that the server running on Node.js will listen on. If set to 0, the OS will choose the port.
+        /// </summary>
         public int Port { get; set; }
 
         /// <summary>
