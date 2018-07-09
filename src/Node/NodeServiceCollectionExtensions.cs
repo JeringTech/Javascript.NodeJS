@@ -1,4 +1,3 @@
-using Jering.JavascriptUtils.Node;
 using Jering.JavascriptUtils.Node.HostingModels;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -14,12 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         public static void AddNodeServices(this IServiceCollection services)
         {
-            services.AddSingleton<INodeHostFactory, HttpNodeHostFactory>();
-            services.AddSingleton(serviceProvider =>
-            {
-                INodeHostFactory nodeHostFactory = serviceProvider.GetRequiredService<INodeHostFactory>();
-                return nodeHostFactory.Create();
-            });
+            services.AddSingleton<INodeHost, HttpNodeHost>();
         }
     }
 }

@@ -5,49 +5,44 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Jering.JavascriptUtils.Node.HostingModels
 {
     /// <summary>
-    /// Class responsible for launching a Node child process on the local machine, determining when it is ready to
-    /// accept invocations, detecting if it dies on its own, and finally terminating it on disposal.
-    ///
+    /// <para>The primary responsibilities of this class are launching and maintaining a Node.js process.</para>
+    /// <para>
     /// This abstract base class uses the input/output streams of the child process to perform a simple handshake
     /// to determine when the child process is ready to accept invocations. This is agnostic to the mechanism that
     /// derived classes use to actually perform the invocations (e.g., they could use HTTP-RPC, or a binary TCP
     /// protocol, or any other RPC-type mechanism).
+    /// </para>
     /// </summary>
     /// <seealso cref="INodeHost" />
     public abstract class OutOfProcessNodeHost : INodeHost
     {
         private const string CONNECTION_ESTABLISHED_MESSAGE = "[Jering.JavascriptUtils.Node:Listening]";
 
-        /// <summary>
-        /// The <see cref="ILogger"/> to which the Node.js instance's stdout/stderr is being redirected.
-        /// </summary>
         private readonly INodeProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
         private readonly IInvocationDataFactory _invocationDataFactory;
         private readonly ILogger _nodeOutputLogger;
         private readonly OutOfProcessNodeHostOptions _options;
-        private readonly TaskCompletionSource<object> _connectionIsReadySource = new TaskCompletionSource<object>();
 
-        private object _nodeProcessAccessLock = new object();
+        private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private Process _nodeProcess;
         private bool _disposed;
 
         /// <summary>
         /// Creates a new instance of <see cref="OutOfProcessNodeHost"/>.
         /// </summary>
-        /// <param name="nodeProcess">The Node.js process.</param>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeServerScript"></param>
+        /// <param name="nodeServerScript">The server script to run in the Node.js process.</param>
         /// <param name="invocationDataFactory"></param>
-        /// <param name="nodeOutputLogger">The <see cref="ILogger"/> to which the Node.js instance's stdout/stderr (and other log information) should be written.</param>
+        /// <param name="nodeOutputLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="options"></param>
-        /// <param name="invocationTimeoutMilliseconds">The maximum duration, in milliseconds, to wait for RPC calls to complete.</param>
         protected OutOfProcessNodeHost(INodeProcessFactory nodeProcessFactory,
             string nodeServerScript,
             IInvocationDataFactory invocationDataFactory,
@@ -65,11 +60,16 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// Asynchronously invokes code in the Node.js instance.
         /// </summary>
         /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="invocationInfo">Specifies the Node.js function to be invoked and arguments to be passed to it.</param>
+        /// <param name="invocationData">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
         protected abstract Task<T> InvokeAsync<T>(InvocationData invocationData, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
+        /// information on the server, such as the port is is listening on.
+        /// </summary>
+        /// <param name="connectionEstablishedMessage"></param>
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
         public Task<T> InvokeFromFileAsync<T>(string modulePath, bool cache = true, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -80,7 +80,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     exportName,
                     args);
 
-            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
+            return InvokeCoreAsync<T>(invocationData, cancellationToken);
         }
 
         public Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -92,7 +92,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     exportName,
                     args);
 
-            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
+            return InvokeCoreAsync<T>(invocationData, cancellationToken);
         }
 
         public Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -104,7 +104,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     args: args,
                     moduleStreamSource: moduleStream);
 
-            return InvokeWithRetryAsync<T>(invocationData, true, cancellationToken);
+            return InvokeCoreAsync<T>(invocationData, cancellationToken);
         }
 
         public Task<TryInvokeFromCacheResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -115,146 +115,142 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     exportName: exportName,
                     args: args);
 
-            return InvokeWithRetryAsync<TryInvokeFromCacheResult<T>>(invocationData, true, cancellationToken);
+            return InvokeCoreAsync<TryInvokeFromCacheResult<T>>(invocationData, cancellationToken);
         }
 
-        private async Task<T> InvokeWithRetryAsync<T>(InvocationData invocationData, bool allowRetry, CancellationToken cancellationToken)
-        {
-            if (_nodeProcess?.HasExited != false)
-            {
-                lock (_nodeProcessAccessLock)
-                {
-                    _nodeProcess?.Dispose();
-                    _nodeProcess = _nodeProcessFactory.Create(_nodeServerScript);
-                }
-            }
-
-            try
-            {
-                return await InvokeCoreAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
-            }
-            // TODO simple retry on first NodeInvocationException? only if node is unavailable?
-            catch (NodeInvocationException nodeInvocationException)
-            {
-                if (nodeInvocationException.NodeInstanceUnavailable)
-                {
-                }
-
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
-        /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="invocationData"></param>
-        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <param name="moduleName">The path to the Node.js module (i.e., JavaScript file) relative to your project root that contains the code to be invoked.</param>
-        /// <param name="exportNameOrNull">If set, specifies the CommonJS export to be invoked. If not set, the module's default CommonJS export itself must be a function to be invoked.</param>
-        /// <param name="args">Any sequence of JSON-serializable arguments to be passed to the Node.js function.</param>
-        /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
         private async Task<T> InvokeCoreAsync<T>(InvocationData invocationData, CancellationToken cancellationToken)
         {
-            // Construct a new cancellation token that combines the supplied token with the configured invocation
-            // timeout. Technically we could avoid wrapping the cancellationToken if no timeout is configured,
-            // but that's not really a major use case, since timeouts are enabled by default.
-            using (var timeoutSource = new CancellationTokenSource())
-            using (CancellationTokenSource combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token))
+            try
             {
-                if (_options.InvocationTimeoutMS > 0)
+                // If the the Node.js process has terminated for some reason, attempt to create a new process.
+                // Apart from the thread creating the process, all other threads will be blocked. If the new process 
+                // is created successfully, all threads will be released by the OutputDataReceived delegate in 
+                // ConnectToInputOutputStreams.
+                if (_nodeProcess?.HasExited != false)
                 {
-                    timeoutSource.CancelAfter(_options.InvocationTimeoutMS);
+                    await _semaphore.WaitAsync().ConfigureAwait(false);
+
+                    // Double checked lock
+                    if (_nodeProcess?.HasExited != false)
+                    {
+                        _nodeProcess?.Dispose();
+                        _nodeProcess = null;
+                        Process newNodeProcess = _nodeProcessFactory.Create(_nodeServerScript);
+                        ConnectToInputOutputStreams(newNodeProcess);
+
+                        await _semaphore.WaitAsync(_options.InvocationTimeoutMS, cancellationToken).ConfigureAwait(false);
+
+                        // Successfully connected to new node process
+                        _nodeProcess = newNodeProcess;
+                    }
                 }
 
-                // By overwriting the supplied cancellation token, we ensure that it isn't accidentally used
-                // below. We only want to pass through the token that respects timeouts.
-                cancellationToken = combinedCancellationTokenSource.Token;
-                bool connectionSuccessful = false;
-
+                // Create CancellationTokenSources only as required. The following try block cannot be combined with the outer try block
+                // because if a NodeInvocationException is thrown and no method down the stack catches it, the logic in finally will never run. 
+                CancellationTokenSource timeoutCTS = null;
+                CancellationTokenSource combinedCTS = null;
                 try
                 {
-                    // TODO do we need this every call or only on the first call?
-
-                    // Wait until the connection is established. This will throw if the connection fails to initialize,
-                    // or if cancellation is requested first. Note that we can't really cancel the "establishing connection"
-                    // task because that's shared with all callers, but we can stop waiting for it if this call is cancelled.
-                    await _connectionIsReadySource.Task.OrThrowOnCancellation(cancellationToken).ConfigureAwait(false);
-                    connectionSuccessful = true;
-
-                    return await InvokeAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
-                }
-                catch (TaskCanceledException)
-                {
-                    // TODO restart process and retry?
-
-                    if (timeoutSource.IsCancellationRequested)
+                    if (_options.InvocationTimeoutMS > 0)
                     {
-                        // It was very common for developers to report 'TaskCanceledException' when encountering almost any
-                        // trouble when using NodeServices. Now we have a default invocation timeout, and attempt to give
-                        // a more descriptive exception message if it happens.
-                        if (!connectionSuccessful)
+                        timeoutCTS = new CancellationTokenSource();
+                        timeoutCTS.CancelAfter(_options.InvocationTimeoutMS);
+
+                        if (cancellationToken != CancellationToken.None)
                         {
-                            // This is very unlikely, but for debugging, it's still useful to differentiate it from the
-                            // case below.
-                            throw new NodeInvocationException(
-                                $"Attempt to connect to Node timed out after {_options.InvocationTimeoutMS}ms.",
-                                string.Empty);
+                            combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
+                            cancellationToken = combinedCTS.Token;
                         }
                         else
                         {
-                            // Developers encounter this fairly often (if their Node code fails without invoking the callback,
-                            // all that the .NET side knows is that the invocation eventually times out). Previously, this surfaced
-                            // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
-                            // descriptive error.
-                            throw new NodeInvocationException(
-                                $"The Node invocation timed out after {_options.InvocationTimeoutMS}ms.",
-                                $"You can change the timeout duration by setting the {OutOfProcessNodeHostOptions.TimeoutConfigPropertyName} "
-                                + $"property on {nameof(OutOfProcessNodeHostOptions)}.\n\n"
-                                + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
-                                + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
-                                + "the .NET code has no way to know that it is finished or has failed."
-                            );
+                            cancellationToken = timeoutCTS.Token;
                         }
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    return await InvokeAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
                 }
+                finally
+                {
+                    timeoutCTS?.Dispose();
+                    combinedCTS?.Dispose();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                if (_nodeProcess == null)
+                {
+                    // This is very unlikely
+                    throw new NodeInvocationException(
+                        $"Attempt to connect to Node timed out after {_options.InvocationTimeoutMS}ms.",
+                        string.Empty);
+                }
+
+                // Developers encounter this fairly often (if their Node code fails without invoking the callback,
+                // all that the .NET side knows is that the invocation eventually times out). Previously, this surfaced
+                // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
+                // descriptive error.
+                throw new NodeInvocationException(
+                    $"The Node invocation timed out after {_options.InvocationTimeoutMS}ms.",
+                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeHostOptions.InvocationTimeoutMS)} "
+                    + $"property on {nameof(OutOfProcessNodeHostOptions)}.\n\n"
+                    + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
+                    + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
+                    + "the .NET code has no way to know that it is finished or has failed."
+                );
             }
         }
 
         protected virtual void ConnectToInputOutputStreams(Process nodeProcess)
         {
-            bool initializationIsCompleted = false;
+            bool connectionEstablished = false;
+            var outputStringBuilder = new StringBuilder();
+            var errorStringBuilder = new StringBuilder();
 
             nodeProcess.OutputDataReceived += (sender, evt) =>
             {
-                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE) && !initializationIsCompleted)
+                if (evt.Data == null)
+                {
+                    return;
+                }
+
+                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE) && !connectionEstablished)
                 {
                     OnConnectionEstablishedMessageReceived(evt.Data);
-                    _connectionIsReadySource.SetResult(null);
-                    initializationIsCompleted = true;
+                    connectionEstablished = true;
+
+                    // Release all threads by resetting CurrentCount to 1
+                    while (_semaphore.CurrentCount < 1)
+                    {
+                        _semaphore.Release();
+
+                        // TODO Remove this after testing
+                        if (_nodeOutputLogger.IsEnabled(LogLevel.Debug))
+                        {
+                            _nodeOutputLogger.LogDebug($"Node process creation semaphor count: {_semaphore.CurrentCount}");
+                        }
+                    }
                 }
-                else if (evt.Data != null)
+                else
                 {
-                    _nodeOutputLogger.LogInformation(UnencodeNewlines(evt.Data));
+                    // Process output is received line by line. The last line of a message ends with a \0 (null character),
+                    // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
+                    if (TryCreateMessage(outputStringBuilder, evt.Data, out string message))
+                    {
+                        _nodeOutputLogger.LogInformation(message);
+                    }
                 }
             };
 
             nodeProcess.ErrorDataReceived += (sender, evt) =>
             {
-                if (evt.Data != null)
+                if (evt.Data == null)
                 {
-                    if (IsDebuggerMessage(evt.Data))
-                    {
-                        _nodeOutputLogger.LogWarning(evt.Data);
-                    }
-                    else
-                    {
-                        _nodeOutputLogger.LogError(UnencodeNewlines(evt.Data));
-                    }
+                    return;
+                }
+
+                if (TryCreateMessage(errorStringBuilder, evt.Data, out string message))
+                {
+                    _nodeOutputLogger.LogError(message);
                 }
             };
 
@@ -262,28 +258,21 @@ namespace Jering.JavascriptUtils.Node.HostingModels
             nodeProcess.BeginErrorReadLine();
         }
 
-        private static string UnencodeNewlines(string str)
+        private bool TryCreateMessage(StringBuilder stringBuilder, string newLine, out string message)
         {
-            // TODO this is real ugly, just use a message terminator string like "\0"
-            // use a string builder to accumulate till terminator is reached then construct and log output.
-            if (str != null)
+            stringBuilder.AppendLine(newLine);
+
+            if (stringBuilder[stringBuilder.Length - 1] != '\0')
             {
-                // The token here needs to match the const in OverrideStdOutputs.ts.
-                // See the comment there for why we're doing this.
-                str = str.Replace("__ns_newline__", Environment.NewLine);
+                message = null;
+                return false;
             }
 
-            return str;
-        }
+            stringBuilder.Length--;
+            message = stringBuilder.ToString();
+            stringBuilder.Length = 0;
 
-        private static bool IsDebuggerMessage(string message)
-        {
-            return message.StartsWith("Debugger attached", StringComparison.Ordinal) ||
-                message.StartsWith("Debugger listening ", StringComparison.Ordinal) ||
-                message.StartsWith("To start debugging", StringComparison.Ordinal) ||
-                message.Equals("Warning: This is an experimental feature and could change at any time.", StringComparison.Ordinal) ||
-                message.Equals("For help see https://nodejs.org/en/docs/inspector", StringComparison.Ordinal) ||
-                message.Contains("chrome-devtools:");
+            return true;
         }
 
         /// <summary>

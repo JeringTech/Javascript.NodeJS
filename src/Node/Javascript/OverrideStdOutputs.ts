@@ -24,7 +24,8 @@ function encodeNewlinesWrittenToStream(outputStream: NodeJS.WritableStream) {
         // Only interfere with the write if it's definitely a string
         if (typeof value === 'string') {
             const argsClone = Array.prototype.slice.call(arguments, 0);
-            argsClone[0] = encodeNewlinesInString(value);
+            // TODO why clone? does null character work in js?
+            argsClone[0] += '\0';
             origWriteFunction.apply(this, argsClone);
         } else {
             origWriteFunction.apply(this, arguments);

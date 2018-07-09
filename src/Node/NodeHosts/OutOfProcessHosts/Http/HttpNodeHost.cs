@@ -1,6 +1,8 @@
 using Jering.JavascriptUtils.Node.Node.OutOfProcessHosts;
 using Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts;
+using Jering.JavascriptUtils.Node.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -37,23 +39,69 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         private bool _disposed;
         private string _endpoint;
 
-        public HttpNodeHost(INodeProcessFactory nodeProcessFactory,
-            string nodeServerScript,
-            ILogger nodeOutputLogger,
-            OutOfProcessNodeHostOptions outOfProcessNodeHostOptions) :
-            base(nodeProcessFactory, nodeServerScript, nodeOutputLogger, outOfProcessNodeHostOptions)
+        public HttpNodeHost(IOptions<OutOfProcessNodeHostOptions> outOfProcessNodeHostOptionsAccessor,
+            IEmbeddedResourcesService embeddedResourcesService,
+            IInvocationDataFactory invocationDataFactory,
+            INodeProcessFactory nodeProcessFactory,
+            ILogger nodeOutputLogger) :
+            base(nodeProcessFactory, 
+                embeddedResourcesService.ReadAsString(typeof(HttpNodeHost), "HttpServer.js"), 
+                invocationDataFactory,
+                nodeOutputLogger, 
+                outOfProcessNodeHostOptionsAccessor.Value)
         {
             // TODO di client accessor
             _client = new HttpClient
             {
                 // TODO no timeout scenario
-                Timeout = TimeSpan.FromMilliseconds(outOfProcessNodeHostOptions.InvocationTimeoutMS + 1000)
+                Timeout = TimeSpan.FromMilliseconds(outOfProcessNodeHostOptionsAccessor.Value.InvocationTimeoutMS + 1000)
             };
         }
 
-        protected override async Task<T> InvokeExportAsync<T>(SerializableInvocationData invocationInfo, CancellationToken cancellationToken)
+        protected override async Task<T> InvokeAsync<T>(InvocationData invocationData, CancellationToken cancellationToken)
         {
-            string payloadJson = JsonConvert.SerializeObject(invocationInfo, jsonSerializerSettings);
+            // Create memory stream?
+            // Create streamwriter
+            // create jsontextwriter
+            // serialize to stream
+            // create multipartformdatacontent
+            // add json stream to multipartformdatacontent
+            //  - use content type application/json
+            // if module stream exists add it as well
+            //  - use content type octet-stream
+            // post
+
+            // if status code is any of the expected codes, create an invokeresultdata (rename invocationdata to invokerequestdata)
+            //  - otherwise throw
+            // invokeresultdata should contain stream and only create string if it is read
+            // 
+
+            var serializer = JsonSerializer.Create(GetJsonSerializerSettings());
+
+            using (var sw = new StreamWriter(stream))
+            using (var jsonTextWriter = new JsonTextWriter(sw))
+            {
+                serializer.Serialize(jsonTextWriter, obj);
+            }
+
+            using (var content =
+    new MultipartFormDataContent("Upload----" + DateTime.Now.ToString(CultureInfo.InvariantCulture)))
+            {
+                content.Add(new StreamContent(new MemoryStream(image)), "bilddatei", "upload.jpg");
+
+                using (
+                   var message =
+                       await client.PostAsync("http://www.directupload.net/index.php?mode=upload", content))
+                {
+                    var input = await message.Content.ReadAsStringAsync();
+
+                    return !string.IsNullOrWhiteSpace(input) ? Regex.Match(input, @"http://\w*\.directupload\.net/images/\d*/\w*\.[a-z]{3}").Value : null;
+                }
+            }
+
+
+
+            string payloadJson = JsonConvert.SerializeObject(invocationData, jsonSerializerSettings);
             var payload = new StringContent(payloadJson, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await _client.PostAsync(_endpoint, payload, cancellationToken).ConfigureAwait(false);
 

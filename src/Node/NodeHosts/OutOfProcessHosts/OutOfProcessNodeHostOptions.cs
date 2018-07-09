@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace Jering.JavascriptUtils.Node
+﻿namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// Describes options used to configure an <see cref="INodeServices"/> instance.
@@ -59,10 +57,5 @@ namespace Jering.JavascriptUtils.Node
         /// Specifies the maximum duration, in milliseconds, that your .NET code should wait for Node.js RPC calls to return.
         /// </summary>
         public int InvocationTimeoutMS { get; set; }
-
-        /// <summary>
-        /// A token that indicates when the host application is stopping.
-        /// </summary>
-        public CancellationToken ApplicationStoppingToken { get; set; }
     }
 }

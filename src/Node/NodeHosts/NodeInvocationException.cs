@@ -11,7 +11,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// If true, indicates that the invocation failed because the Node.js instance could not be reached. For example,
         /// it might have already shut down or previously crashed.
         /// </summary>
-        public bool NodeInstanceUnavailable { get; private set; }
+        public bool NodeInstanceUnavailable { get; }
 
         /// <summary>
         /// Creates a new instance of <see cref="NodeInvocationException"/>.
