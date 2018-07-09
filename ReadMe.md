@@ -6,7 +6,7 @@ This project will have the following additional features:
 
 - [X] Allow for any Node.js option. This will enable debugging using `--inspect-brk`.
 
-- [ ] Allow for no-timeout mode to facilitate debugging.
+- [x] Allow for no-timeout mode to facilitate debugging.
 
 - [ ] Expose convenience static methods on top of DI support.
 
@@ -21,4 +21,4 @@ And some changes under the hood:
 
 - [ ] Clean up DI architecture https://github.com/aspnet/Options/pull/219
 
-- [ ] Consider using plain anonymous pipes instead of HTTP for lower latency.
+- [ ] Use pipes instead of HTTP for lower latency.
