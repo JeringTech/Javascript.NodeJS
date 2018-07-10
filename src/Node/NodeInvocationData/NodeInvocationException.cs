@@ -1,6 +1,6 @@
 using System;
 
-namespace Jering.JavascriptUtils.Node.HostingModels
+namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// Represents an exception caused by invoking Node.js code.

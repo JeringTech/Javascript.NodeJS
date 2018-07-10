@@ -1,36 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Description>Invoke Node.js modules at runtime in ASP.NET Core applications.</Description>
+        <Description>Invoke Javascript at Runtime from .NET Applications.</Description>
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup>
         <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.Node.ruleset</CodeAnalysisRuleSet>
+        <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
+        <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="Javascript\bin\**" />
-        <Compile Remove="Javascript\node_modules\**" />
-        <EmbeddedResource Remove="Javascript\bin\**" />
-        <EmbeddedResource Remove="Javascript\node_modules\**" />
-        <None Remove="Javascript\bin\**" />
-        <None Remove="Javascript\node_modules\**" />
-        <None Remove="node_modules\**\*" />
+        <JavascriptInputs Include="Javascript\**" Exclude="$(DefaultItemExcludes)" />
+        <!-- TODO if there are multiple outputs, e.g tcp server -->
+        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\HttpServer.js" />
+        <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
+        <UpToDateCheckInput Include="@(JavascriptInputs)" />
+        <!-- TODO if there are multiple outputs, e.g tcp server -->
+        <EmbeddedResource Include="@(JavascriptOutputs)" LogicalName="HttpServer.js" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="$(MicrosoftAspNetCoreHostingAbstractionsPackageVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsolePackageVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.1" />
-        <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
+        <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
         <PackageReference Include="Roslynator.Analyzers" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
         <PackageReference Include="Roslynator.CodeFixes" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.7.0" PrivateAssets="All" ExcludeAssets="Runtime" />
     </ItemGroup>
 
-    <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">
-        <Exec Command="npm install" />
-        <Exec Command="node node_modules/webpack/bin/webpack.js" />
+    <!-- TODO one target per bundle or one target for all bundles? will have to generalize webpack.config if one target per bundle. -->
+    <Target Name="JavascriptBuild" BeforeTargets="BeforeBuild" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration)" />
     </Target>
 
 </Project>

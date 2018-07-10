@@ -1,14 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
 
-namespace Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts
+namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// Invocation data to be sent to the Node.js process. 
     /// </summary>
-    public class InvocationData
+    public class NodeInvocationRequest
     {
-        public InvocationData(string moduleSource,
+        internal NodeInvocationRequest(string moduleSource,
             ModuleSourceType moduleSourceType,
             string newCacheIdentifier,
             string exportName,

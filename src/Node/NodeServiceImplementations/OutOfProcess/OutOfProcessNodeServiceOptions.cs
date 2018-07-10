@@ -3,14 +3,14 @@
     /// <summary>
     /// Describes options used to configure an <see cref="INodeServices"/> instance.
     /// </summary>
-    public class OutOfProcessNodeHostOptions
+    public class OutOfProcessNodeServiceOptions
     {
         //internal const string TimeoutConfigPropertyName = nameof(InvocationTimeoutMS);
         //private const int DefaultInvocationTimeoutMilliseconds = 60 * 1000;
         //private const string LogCategoryName = "Jering.JavascriptUtils.Node";
 
         /// <summary>
-        /// Creates a new instance of <see cref="OutOfProcessNodeHostOptions"/>.
+        /// Creates a new instance of <see cref="OutOfProcessNodeServiceOptions"/>.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         //public OutOfProcessNodeHostOptions()
@@ -56,6 +56,6 @@
         /// <summary>
         /// Specifies the maximum duration, in milliseconds, that your .NET code should wait for Node.js RPC calls to return.
         /// </summary>
-        public int InvocationTimeoutMS { get; set; }
+        public int InvocationTimeoutMS { get; set; } = 1000;
     }
 }

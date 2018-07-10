@@ -1,12 +1,11 @@
-﻿using Jering.JavascriptUtils.Node.HostingModels;
-using System;
+﻿using System;
 using System.IO;
 
-namespace Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts
+namespace Jering.JavascriptUtils.Node
 {
-    public class InvocationDataFactory : IInvocationDataFactory
+    public class NodeInvocationRequestFactory : INodeInvocationRequestFactory
     {
-        public InvocationData Create(ModuleSourceType moduleSourceType,
+        public NodeInvocationRequest Create(ModuleSourceType moduleSourceType,
             string moduleSource = null,
             string newCacheIdentifier = null,
             string exportName = null,
@@ -25,13 +24,12 @@ namespace Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts
                 }
             }
 
-            var serializableInvocationData = new SerializableInvocationData(moduleSource,
+            return new NodeInvocationRequest(moduleSource,
                 moduleSourceType,
                 newCacheIdentifier,
                 exportName,
-                args);
-
-            return new InvocationData(serializableInvocationData, moduleStreamSource);
+                args,
+                moduleStreamSource);
         }
     }
 }

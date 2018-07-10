@@ -1,4 +1,4 @@
-﻿namespace Jering.JavascriptUtils.Node.NodeHosts
+﻿namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// Source type of modules to be invoked in Node.js.

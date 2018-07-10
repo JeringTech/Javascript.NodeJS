@@ -1,6 +1,3 @@
-using Jering.JavascriptUtils.Node.Node.OutOfProcessHosts;
-using Jering.JavascriptUtils.Node.NodeHosts;
-using Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -9,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node.HostingModels
+namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// <para>The primary responsibilities of this class are launching and maintaining a Node.js process.</para>
@@ -20,39 +17,39 @@ namespace Jering.JavascriptUtils.Node.HostingModels
     /// protocol, or any other RPC-type mechanism).
     /// </para>
     /// </summary>
-    /// <seealso cref="INodeHost" />
-    public abstract class OutOfProcessNodeHost : INodeHost
+    /// <seealso cref="INodeService" />
+    public abstract class OutOfProcessNodeService : INodeService
     {
-        private const string CONNECTION_ESTABLISHED_MESSAGE = "[Jering.JavascriptUtils.Node:Listening]";
+        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
 
         private readonly INodeProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
-        private readonly IInvocationDataFactory _invocationDataFactory;
-        private readonly ILogger _nodeOutputLogger;
-        private readonly OutOfProcessNodeHostOptions _options;
+        private readonly INodeInvocationRequestFactory _invocationRequestDataFactory;
+        private readonly OutOfProcessNodeServiceOptions _options;
+        protected readonly ILogger NodeServiceLogger;
 
-        private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
         private Process _nodeProcess;
         private bool _disposed;
 
         /// <summary>
-        /// Creates a new instance of <see cref="OutOfProcessNodeHost"/>.
+        /// Creates a new instance of <see cref="OutOfProcessNodeService"/>.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
         /// <param name="nodeServerScript">The server script to run in the Node.js process.</param>
-        /// <param name="invocationDataFactory"></param>
-        /// <param name="nodeOutputLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
+        /// <param name="invocationRequestDataFactory"></param>
+        /// <param name="nodeServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="options"></param>
-        protected OutOfProcessNodeHost(INodeProcessFactory nodeProcessFactory,
+        protected OutOfProcessNodeService(INodeProcessFactory nodeProcessFactory,
             string nodeServerScript,
-            IInvocationDataFactory invocationDataFactory,
-            ILogger nodeOutputLogger,
-            OutOfProcessNodeHostOptions options)
+            INodeInvocationRequestFactory invocationRequestDataFactory,
+            ILogger nodeServiceLogger,
+            OutOfProcessNodeServiceOptions options)
         {
             _nodeProcessFactory = nodeProcessFactory;
             _nodeServerScript = nodeServerScript;
-            _invocationDataFactory = invocationDataFactory;
-            _nodeOutputLogger = nodeOutputLogger ?? throw new ArgumentNullException(nameof(nodeOutputLogger));
+            _invocationRequestDataFactory = invocationRequestDataFactory;
+            NodeServiceLogger = nodeServiceLogger ?? throw new ArgumentNullException(nameof(nodeServiceLogger));
             _options = options;
         }
 
@@ -60,65 +57,65 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// Asynchronously invokes code in the Node.js instance.
         /// </summary>
         /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="invocationData">Contains the data to be sent to the Node.js process.</param>
+        /// <param name="invocationRequestData">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        protected abstract Task<T> InvokeAsync<T>(InvocationData invocationData, CancellationToken cancellationToken);
+        public abstract Task<T> InvokeAsync<T>(NodeInvocationRequest invocationRequestData, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
         /// information on the server, such as the port is is listening on.
         /// </summary>
         /// <param name="connectionEstablishedMessage"></param>
-        protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
+        public abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
         public Task<T> InvokeFromFileAsync<T>(string modulePath, bool cache = true, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationData invocationData = _invocationDataFactory.
+            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.File,
                     modulePath, cache ? modulePath : null,
                     exportName,
                     args);
 
-            return InvokeCoreAsync<T>(invocationData, cancellationToken);
+            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
         }
 
         public Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationData invocationData = _invocationDataFactory.
+            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.String,
                     moduleString,
                     newCacheIdentifier,
                     exportName,
                     args);
 
-            return InvokeCoreAsync<T>(invocationData, cancellationToken);
+            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
         }
 
         public Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationData invocationData = _invocationDataFactory.
+            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.Stream,
                     newCacheIdentifier: newCacheIdentifier,
                     exportName: exportName,
                     args: args,
                     moduleStreamSource: moduleStream);
 
-            return InvokeCoreAsync<T>(invocationData, cancellationToken);
+            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
         }
 
-        public Task<TryInvokeFromCacheResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<NodeInvocationResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationData invocationData = _invocationDataFactory.
+            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.Cache,
                     moduleCacheIdentifier,
                     exportName: exportName,
                     args: args);
 
-            return InvokeCoreAsync<TryInvokeFromCacheResult<T>>(invocationData, cancellationToken);
+            return InvokeCoreAsync<NodeInvocationResult<T>>(invocationRequestData, cancellationToken);
         }
 
-        private async Task<T> InvokeCoreAsync<T>(InvocationData invocationData, CancellationToken cancellationToken)
+        private async Task<T> InvokeCoreAsync<T>(NodeInvocationRequest invocationRequestData, CancellationToken cancellationToken)
         {
             try
             {
@@ -126,19 +123,20 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                 // Apart from the thread creating the process, all other threads will be blocked. If the new process 
                 // is created successfully, all threads will be released by the OutputDataReceived delegate in 
                 // ConnectToInputOutputStreams.
-                if (_nodeProcess?.HasExited != false)
+                if (_nodeProcess?.HasExited != false && !_disposed)
                 {
-                    await _semaphore.WaitAsync().ConfigureAwait(false);
+                    await _processSemaphore.WaitAsync().ConfigureAwait(false);
 
                     // Double checked lock
                     if (_nodeProcess?.HasExited != false)
                     {
+                        // Release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
                         _nodeProcess?.Dispose();
                         _nodeProcess = null;
                         Process newNodeProcess = _nodeProcessFactory.Create(_nodeServerScript);
                         ConnectToInputOutputStreams(newNodeProcess);
 
-                        await _semaphore.WaitAsync(_options.InvocationTimeoutMS, cancellationToken).ConfigureAwait(false);
+                        await _processSemaphore.WaitAsync(_options.InvocationTimeoutMS, cancellationToken).ConfigureAwait(false);
 
                         // Successfully connected to new node process
                         _nodeProcess = newNodeProcess;
@@ -167,7 +165,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                         }
                     }
 
-                    return await InvokeAsync<T>(invocationData, cancellationToken).ConfigureAwait(false);
+                    return await InvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -191,8 +189,8 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                 // descriptive error.
                 throw new NodeInvocationException(
                     $"The Node invocation timed out after {_options.InvocationTimeoutMS}ms.",
-                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeHostOptions.InvocationTimeoutMS)} "
-                    + $"property on {nameof(OutOfProcessNodeHostOptions)}.\n\n"
+                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeServiceOptions.InvocationTimeoutMS)} "
+                    + $"property on {nameof(OutOfProcessNodeServiceOptions)}.\n\n"
                     + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
                     + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
                     + "the .NET code has no way to know that it is finished or has failed."
@@ -213,20 +211,20 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     return;
                 }
 
-                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE) && !connectionEstablished)
+                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START) && !connectionEstablished)
                 {
                     OnConnectionEstablishedMessageReceived(evt.Data);
                     connectionEstablished = true;
 
                     // Release all threads by resetting CurrentCount to 1
-                    while (_semaphore.CurrentCount < 1)
+                    while (_processSemaphore.CurrentCount < 1)
                     {
-                        _semaphore.Release();
+                        _processSemaphore.Release();
 
                         // TODO Remove this after testing
-                        if (_nodeOutputLogger.IsEnabled(LogLevel.Debug))
+                        if (NodeServiceLogger.IsEnabled(LogLevel.Debug))
                         {
-                            _nodeOutputLogger.LogDebug($"Node process creation semaphor count: {_semaphore.CurrentCount}");
+                            NodeServiceLogger.LogDebug($"Node process creation semaphor count: {_processSemaphore.CurrentCount}");
                         }
                     }
                 }
@@ -236,7 +234,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
                     // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
                     if (TryCreateMessage(outputStringBuilder, evt.Data, out string message))
                     {
-                        _nodeOutputLogger.LogInformation(message);
+                        NodeServiceLogger.LogInformation(message);
                     }
                 }
             };
@@ -250,7 +248,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
 
                 if (TryCreateMessage(errorStringBuilder, evt.Data, out string message))
                 {
-                    _nodeOutputLogger.LogError(message);
+                    NodeServiceLogger.LogError(message);
                 }
             };
 
@@ -293,10 +291,12 @@ namespace Jering.JavascriptUtils.Node.HostingModels
             if (!_disposed)
             {
                 // Make sure the Node process is finished
-                // TODO: Is there a more graceful way to end it? Or does this still let it perform any cleanup?
                 if (_nodeProcess?.HasExited == false)
                 {
                     _nodeProcess.Kill();
+                    // Give async output some time to push its messages
+                    _nodeProcess.WaitForExit(1000);
+                    _nodeProcess.Dispose();
                 }
 
                 _disposed = true;
@@ -306,7 +306,7 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// <summary>
         /// Implements the finalization part of the IDisposable pattern by calling Dispose(false).
         /// </summary>
-        ~OutOfProcessNodeHost()
+        ~OutOfProcessNodeService()
         {
             DisposeCore();
         }

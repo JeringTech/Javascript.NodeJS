@@ -1,4 +1,5 @@
-using Jering.JavascriptUtils.Node.HostingModels;
+using Jering.JavascriptUtils.Node;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -11,9 +12,15 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Adds NodeServices support to the <paramref name="services"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        public static void AddNodeServices(this IServiceCollection services)
+        public static void AddNode(this IServiceCollection services)
         {
-            services.AddSingleton<INodeHost, HttpNodeHost>();
+            services.AddLogging();
+            services.AddOptions();
+            services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
+            services.AddSingleton<INodeInvocationRequestFactory, NodeInvocationRequestFactory>();
+            services.AddSingleton<IHttpClientFactory, HttpClientFactory>();
+            services.AddSingleton<INodeProcessFactory, NodeProcessFactory>();
+            services.AddSingleton<INodeService, HttpNodeService>();
         }
     }
 }

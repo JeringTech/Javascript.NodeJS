@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		ThirdPartyLicenses.txt = ThirdPartyLicenses.txt
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jering.JavascriptUtils.Node.Tests", "Jering.JavascriptUtils.Node.Tests\Jering.JavascriptUtils.Node.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{66B77203-1469-41DF-92F2-2BE6900BD36F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66B77203-1469-41DF-92F2-2BE6900BD36F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66B77203-1469-41DF-92F2-2BE6900BD36F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

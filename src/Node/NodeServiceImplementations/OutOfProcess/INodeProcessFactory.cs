@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Jering.JavascriptUtils.Node.Node.OutOfProcessHosts
+namespace Jering.JavascriptUtils.Node
 {
     public interface INodeProcessFactory
     {

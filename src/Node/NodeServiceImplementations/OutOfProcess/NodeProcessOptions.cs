@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Jering.JavascriptUtils.Node.NodeHosts
+namespace Jering.JavascriptUtils.Node
 {
     public class NodeProcessOptions
     {

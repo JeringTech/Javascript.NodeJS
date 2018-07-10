@@ -1,15 +1,14 @@
-using Jering.JavascriptUtils.Node.NodeHosts.OutOfProcessHosts;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node.HostingModels
+namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
     /// Represents an instance of Node.js to which Remote Procedure Calls (RPC) may be sent.
     /// </summary>
-    public interface INodeHost : IDisposable
+    public interface INodeService : IDisposable
     {
         /// <summary>
         /// Asynchronously invokes code in the Node.js instance.
@@ -59,8 +58,8 @@ namespace Jering.JavascriptUtils.Node.HostingModels
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{TryInvokeFromCacheResult{T}}"/> representing the completion of the RPC call. Since this method is asynchronous, it cannot have an out parameter.
-        /// Therefore, it returns both a bool indicating success or failure and the resulting value of the invocation wrapped in <see cref="TryInvokeFromCacheResult{T}"/>.</returns>
-        Task<TryInvokeFromCacheResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <returns>A <see cref="Task{NodeInvocationResult{T}}"/> representing the completion of the RPC call. Since this method is asynchronous, it cannot have an out parameter.
+        /// Therefore, it returns both a bool indicating success or failure and the resulting value of the invocation wrapped in <see cref="NodeInvocationResult{T}"/>.</returns>
+        Task<NodeInvocationResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }
