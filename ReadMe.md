@@ -17,8 +17,8 @@ And some changes under the hood:
 
 - [X] Add ConfigureAwait(false) to Tasks to mitigate the chance of deadlock for consuming packages.
 
-- [ ] Proper target for generating javascript bundle.
+- [X] Proper target for generating javascript bundle.
 
 - [ ] Clean up DI architecture https://github.com/aspnet/Options/pull/219
 
-- [ ] Use pipes instead of HTTP for lower latency.
+- [ ] Explore alternative IPC methods.
