@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\Node\Jering.JavascriptUtils.Node.csproj" />
+      <ProjectReference Include="..\..\src\Node\Jering.JavascriptUtils.Node.csproj" />
     </ItemGroup>
 
 </Project>

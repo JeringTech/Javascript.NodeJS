@@ -14,9 +14,9 @@ namespace Jering.JavascriptUtils.Node
             Assembly asm = assemblyContainingType.GetTypeInfo().Assembly;
 
             using (Stream stream = asm.GetManifestResourceStream(name))
-            using (var sr = new StreamReader(stream))
+            using (var streamReader = new StreamReader(stream))
             {
-                return sr.ReadToEnd();
+                return streamReader.ReadToEnd();
             }
         }
 

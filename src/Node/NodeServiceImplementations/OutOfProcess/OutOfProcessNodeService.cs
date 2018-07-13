@@ -18,7 +18,7 @@ namespace Jering.JavascriptUtils.Node
     /// </para>
     /// </summary>
     /// <seealso cref="INodeService" />
-    public abstract class OutOfProcessNodeService : INodeService
+    public abstract class OutOfProcessNodeService :  INodeService
     {
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
 
@@ -57,10 +57,10 @@ namespace Jering.JavascriptUtils.Node
         /// Asynchronously invokes code in the Node.js instance.
         /// </summary>
         /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="invocationRequestData">Contains the data to be sent to the Node.js process.</param>
+        /// <param name="nodeInvocationRequest">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        public abstract Task<T> InvokeAsync<T>(NodeInvocationRequest invocationRequestData, CancellationToken cancellationToken);
+        public abstract Task<T> InvokeAsync<T>(NodeInvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
@@ -69,13 +69,13 @@ namespace Jering.JavascriptUtils.Node
         /// <param name="connectionEstablishedMessage"></param>
         public abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
-        public Task<T> InvokeFromFileAsync<T>(string modulePath, bool cache = true, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.File,
-                    modulePath, cache ? modulePath : null,
-                    exportName,
-                    args);
+                    modulePath,
+                    exportName: exportName,
+                    args: args);
 
             return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
         }
@@ -117,6 +117,10 @@ namespace Jering.JavascriptUtils.Node
 
         private async Task<T> InvokeCoreAsync<T>(NodeInvocationRequest invocationRequestData, CancellationToken cancellationToken)
         {
+            // Disposables
+            CancellationTokenSource timeoutCTS = null;
+            CancellationTokenSource combinedCTS = null;
+
             try
             {
                 // If the the Node.js process has terminated for some reason, attempt to create a new process.
@@ -143,38 +147,36 @@ namespace Jering.JavascriptUtils.Node
                     }
                 }
 
-                // Create CancellationTokenSources only as required. The following try block cannot be combined with the outer try block
-                // because if a NodeInvocationException is thrown and no method down the stack catches it, the logic in finally will never run. 
-                CancellationTokenSource timeoutCTS = null;
-                CancellationTokenSource combinedCTS = null;
-                try
+                // Create combined CancellationToken only as required.
+                if (_options.InvocationTimeoutMS > 0)
                 {
-                    if (_options.InvocationTimeoutMS > 0)
+                    timeoutCTS = new CancellationTokenSource();
+                    timeoutCTS.CancelAfter(_options.InvocationTimeoutMS);
+
+                    if (cancellationToken != CancellationToken.None)
                     {
-                        timeoutCTS = new CancellationTokenSource();
-                        timeoutCTS.CancelAfter(_options.InvocationTimeoutMS);
-
-                        if (cancellationToken != CancellationToken.None)
-                        {
-                            combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
-                            cancellationToken = combinedCTS.Token;
-                        }
-                        else
-                        {
-                            cancellationToken = timeoutCTS.Token;
-                        }
+                        combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
+                        cancellationToken = combinedCTS.Token;
                     }
+                    else
+                    {
+                        cancellationToken = timeoutCTS.Token;
+                    }
+                }
 
-                    return await InvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    timeoutCTS?.Dispose();
-                    combinedCTS?.Dispose();
-                }
+                return await InvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
+
             }
-            catch (OperationCanceledException)
+            catch (Exception exception)
             {
+                timeoutCTS?.Dispose();
+                combinedCTS?.Dispose();
+
+                if (!(exception is OperationCanceledException))
+                {
+                    throw;
+                }
+
                 if (_nodeProcess == null)
                 {
                     // This is very unlikely
@@ -290,6 +292,8 @@ namespace Jering.JavascriptUtils.Node
         {
             if (!_disposed)
             {
+                _processSemaphore.Dispose();
+
                 // Make sure the Node process is finished
                 if (_nodeProcess?.HasExited == false)
                 {

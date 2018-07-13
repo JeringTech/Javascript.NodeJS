@@ -11,17 +11,16 @@ namespace Jering.JavascriptUtils.Node
     public interface INodeService : IDisposable
     {
         /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
+        /// Asynchronously invokes code in the Node.js instance. 
         /// </summary>
         /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
         /// <param name="modulePath">The path to the Node.js module (i.e., JavaScript file) relative to your project root that contains the code to be invoked.</param>
-        /// <param name="cache">If true, the Node.js module's exports will be cached by the Node.js process, using <paramref name="modulePath"/> as its identifier. </param>
         /// <param name="exportName">If set, specifies the name of the property in the Node.js module's exports to be invoked. If not set, the module's exports
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{T}"/> representing the completion of the RPC call.</returns>
-        Task<T> InvokeFromFileAsync<T>(string modulePath, bool cache = true, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Asynchronously invokes code in the Node.js instance.

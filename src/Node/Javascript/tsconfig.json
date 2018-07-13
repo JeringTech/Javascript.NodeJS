@@ -1,16 +1,10 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es6",
         "module": "commonjs",
-        "noImplicitAny": true,
         "moduleResolution": "node",
-        "typeRoots": [
-            "../node_modules/@types"
-        ],
+        "typeRoots": [ "node_modules/@types" ],
         "types": [ "node" ]
     },
-    "include": [ "./Http/HttpServer.ts"],
-    "exclude": [
-        "node_modules"
-    ]
+    "exclude": ["node_modules", "./unused/**" ]
 }

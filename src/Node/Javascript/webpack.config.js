@@ -1,4 +1,4 @@
-const Path = require('path');
+const path = require('path');
 
 module.exports = env => {
 
@@ -9,18 +9,18 @@ module.exports = env => {
         mode: mode,
         target: 'node',
         resolve: {
-            extensions: ['.ts']
+            extensions: ['.ts', '.js']
         },
         module: {
             rules: [
                 { test: /\.ts$/, loader: 'ts-loader' }
             ]
         },
-        entry: './Http/HttpServer.ts',
+        entry: env.entry,
         output: {
             libraryTarget: 'commonjs2',
-            path: Path.join(__dirname, 'bin', env.mode),
-            filename: '[name].js'
+            path: path.join(__dirname, 'bin', env.mode),
+            filename: path.basename(env.entry, path.extname(env.entry)) + '.js'
         }
     };
-};
+}; 

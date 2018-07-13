@@ -11,13 +11,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Changelog.md = Changelog.md
+		Jering.JavascriptUtils.Node.ruleset = Jering.JavascriptUtils.Node.ruleset
 		License.txt = License.txt
 		ReadMe.md = ReadMe.md
 		ThingsToDo.md = ThingsToDo.md
 		ThirdPartyLicenses.txt = ThirdPartyLicenses.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jering.JavascriptUtils.Node.Tests", "Jering.JavascriptUtils.Node.Tests\Jering.JavascriptUtils.Node.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.Node.Tests", "test\Node.Tests\Jering.JavascriptUtils.Node.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
