@@ -57,8 +57,8 @@ namespace Jering.JavascriptUtils.Node
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{NodeInvocationResult{T}}"/> representing the completion of the RPC call. Since this method is asynchronous, it cannot have an out parameter.
-        /// Therefore, it returns both a bool indicating success or failure and the resulting value of the invocation wrapped in <see cref="NodeInvocationResult{T}"/>.</returns>
-        Task<NodeInvocationResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <returns>A <see cref="Task{InvocationResult{T}}"/> representing the completion of the RPC call. Since this method is asynchronous, it cannot have an out parameter.
+        /// Therefore, it returns both a bool indicating success or failure and the resulting value of the invocation wrapped in <see cref="InvocationResult{T}"/>.</returns>
+        Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

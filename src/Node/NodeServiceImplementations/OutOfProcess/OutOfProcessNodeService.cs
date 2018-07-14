@@ -18,13 +18,13 @@ namespace Jering.JavascriptUtils.Node
     /// </para>
     /// </summary>
     /// <seealso cref="INodeService" />
-    public abstract class OutOfProcessNodeService :  INodeService
+    public abstract class OutOfProcessNodeService : INodeService
     {
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
 
         private readonly INodeProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
-        private readonly INodeInvocationRequestFactory _invocationRequestDataFactory;
+        private readonly IInvocationRequestFactory _invocationRequestDataFactory;
         private readonly OutOfProcessNodeServiceOptions _options;
         protected readonly ILogger NodeServiceLogger;
 
@@ -42,7 +42,7 @@ namespace Jering.JavascriptUtils.Node
         /// <param name="options"></param>
         protected OutOfProcessNodeService(INodeProcessFactory nodeProcessFactory,
             string nodeServerScript,
-            INodeInvocationRequestFactory invocationRequestDataFactory,
+            IInvocationRequestFactory invocationRequestDataFactory,
             ILogger nodeServiceLogger,
             OutOfProcessNodeServiceOptions options)
         {
@@ -60,63 +60,70 @@ namespace Jering.JavascriptUtils.Node
         /// <param name="nodeInvocationRequest">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        public abstract Task<T> InvokeAsync<T>(NodeInvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
+        protected abstract Task<InvocationResult<T>> InvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
         /// information on the server, such as the port is is listening on.
         /// </summary>
         /// <param name="connectionEstablishedMessage"></param>
-        public abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
+        protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
-        public Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
+            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.File,
                     modulePath,
                     exportName: exportName,
                     args: args);
 
-            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
+            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
         }
 
-        public Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
+            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.String,
                     moduleString,
                     newCacheIdentifier,
                     exportName,
                     args);
 
-            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
+            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
         }
 
-        public Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
+            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.Stream,
                     newCacheIdentifier: newCacheIdentifier,
                     exportName: exportName,
                     args: args,
                     moduleStreamSource: moduleStream);
 
-            return InvokeCoreAsync<T>(invocationRequestData, cancellationToken);
+            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
         }
 
-        public Task<NodeInvocationResult<T>> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            NodeInvocationRequest invocationRequestData = _invocationRequestDataFactory.
+            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.Cache,
                     moduleCacheIdentifier,
                     exportName: exportName,
                     args: args);
 
-            return InvokeCoreAsync<NodeInvocationResult<T>>(invocationRequestData, cancellationToken);
+            InvocationResult<T> invocationResult = await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
+
+            return (!invocationResult.CacheMiss, invocationResult.Value);
         }
 
-        private async Task<T> InvokeCoreAsync<T>(NodeInvocationRequest invocationRequestData, CancellationToken cancellationToken)
+        private async Task<InvocationResult<T>> InvokeCoreAsync<T>(InvocationRequest invocationRequestData, CancellationToken cancellationToken)
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(OutOfProcessNodeService));
+            }
+
             // Disposables
             CancellationTokenSource timeoutCTS = null;
             CancellationTokenSource combinedCTS = null;
@@ -180,7 +187,7 @@ namespace Jering.JavascriptUtils.Node
                 if (_nodeProcess == null)
                 {
                     // This is very unlikely
-                    throw new NodeInvocationException(
+                    throw new InvocationException(
                         $"Attempt to connect to Node timed out after {_options.InvocationTimeoutMS}ms.",
                         string.Empty);
                 }
@@ -189,7 +196,7 @@ namespace Jering.JavascriptUtils.Node
                 // all that the .NET side knows is that the invocation eventually times out). Previously, this surfaced
                 // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
                 // descriptive error.
-                throw new NodeInvocationException(
+                throw new InvocationException(
                     $"The Node invocation timed out after {_options.InvocationTimeoutMS}ms.",
                     $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeServiceOptions.InvocationTimeoutMS)} "
                     + $"property on {nameof(OutOfProcessNodeServiceOptions)}.\n\n"
@@ -280,7 +287,7 @@ namespace Jering.JavascriptUtils.Node
         /// </summary>
         public void Dispose()
         {
-            DisposeCore();
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -288,23 +295,29 @@ namespace Jering.JavascriptUtils.Node
         /// Disposes the instance.
         /// </summary>
         /// <param name="disposing">True if the object is disposing or false if it is finalizing.</param>
-        protected virtual void DisposeCore()
+        protected virtual void Dispose(bool disposing)
         {
-            if (!_disposed)
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
             {
                 _processSemaphore.Dispose();
-
-                // Make sure the Node process is finished
-                if (_nodeProcess?.HasExited == false)
-                {
-                    _nodeProcess.Kill();
-                    // Give async output some time to push its messages
-                    _nodeProcess.WaitForExit(1000);
-                    _nodeProcess.Dispose();
-                }
-
-                _disposed = true;
             }
+
+            // Ensure that node process gets killed
+            if (_nodeProcess?.HasExited == false)
+            {
+                _nodeProcess.Kill();
+                // Give async output some time to push its messages
+                // TODO this can throw, is it safe to call in the finalizer?
+                _nodeProcess.WaitForExit(500);
+                _nodeProcess.Dispose();
+            }
+
+            _disposed = true;
         }
 
         /// <summary>
@@ -312,7 +325,7 @@ namespace Jering.JavascriptUtils.Node
         /// </summary>
         ~OutOfProcessNodeService()
         {
-            DisposeCore();
+            Dispose(false);
         }
     }
 }

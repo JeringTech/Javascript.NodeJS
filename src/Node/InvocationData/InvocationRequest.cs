@@ -6,9 +6,9 @@ namespace Jering.JavascriptUtils.Node
     /// <summary>
     /// Invocation data to be sent to the Node.js process. 
     /// </summary>
-    public class NodeInvocationRequest
+    public class InvocationRequest
     {
-        internal NodeInvocationRequest(string moduleSource,
+        internal InvocationRequest(string moduleSource,
             ModuleSourceType moduleSourceType,
             string newCacheIdentifier,
             string exportName,

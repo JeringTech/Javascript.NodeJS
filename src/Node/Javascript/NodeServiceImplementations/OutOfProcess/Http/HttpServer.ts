@@ -1,7 +1,8 @@
 // The typings for module are incomplete and can't be augmented, so import as any.
-var Module = require('module'); 
+var Module = require('module');
 import * as path from 'path';
 import * as http from 'http';
+import * as stream from 'stream';
 import { AddressInfo } from 'net';
 import InvocationRequest from '../../../NodeInvocationData/InvocationRequest';
 import ModuleSourceType from '../../../NodeInvocationData/ModuleSourceType';
@@ -43,6 +44,7 @@ const server = http.createServer((req, res) => {
                     if (cachedModule == null) {
                         res.statusCode = 404;
                         res.end();
+                        return;
                     }
 
                     exports = cachedModule.exports;
@@ -63,10 +65,12 @@ const server = http.createServer((req, res) => {
                     exports = module.exports;
                 } else {
                     respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}`);
+                    return;
                 }
                 if (exports == null) {
                     respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
                     has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.`);
+                    return;
                 }
 
                 // Get function to invoke
@@ -76,21 +80,24 @@ const server = http.createServer((req, res) => {
                     if (functionToInvoke == null) {
                         respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
                         has no export named ${invocationRequest.exportName}`);
+                        return;
                     }
                     if (!(typeof functionToInvoke === 'function')) {
                         respondWithError(res, `The export named ${invocationRequest.exportName} from module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
                         is not a function`);
+                        return;
                     }
                 } else {
                     if (!(typeof exports === 'function')) {
                         respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
                         does not export a function`);
+                        return;
                     }
                     functionToInvoke = exports;
                 }
 
                 let callbackCalled = false;
-                const callback = (error : Error | string, result: any) => {
+                const callback = (error: Error | string, result: any) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -98,7 +105,14 @@ const server = http.createServer((req, res) => {
 
                     if (error != null) {
                         respondWithError(res, error);
-                    } else if (typeof result !== 'string') {
+                    } else if (result instanceof stream.Readable) {
+                        // By default, res is ended when result ends - https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
+                        result.pipe(res);
+                    } else if (typeof result === 'string') {
+                        // String - can bypass JSON-serialization altogether
+                        res.setHeader('Content-Type', 'text/plain');
+                        res.end(result);
+                    } else {
                         // Arbitrary object/number/etc - JSON-serialize it
                         let responseJson: string;
                         try {
@@ -110,10 +124,6 @@ const server = http.createServer((req, res) => {
                         }
                         res.setHeader('Content-Type', 'application/json');
                         res.end(responseJson);
-                    } else {
-                        // String - can bypass JSON-serialization altogether
-                        res.setHeader('Content-Type', 'text/plain');
-                        res.end(result);
                     }
                 }
 
@@ -136,7 +146,7 @@ function respondWithError(res: http.ServerResponse, error: Error | string) {
     res.statusCode = 500;
     res.end(JSON.stringify({
         errorMessage: errorIsString ? error : (error as Error).message,
-        errorDetails: errorIsString ? null : (error as Error).stack
+        errorStack: errorIsString ? null : (error as Error).stack
     }));
 }
 

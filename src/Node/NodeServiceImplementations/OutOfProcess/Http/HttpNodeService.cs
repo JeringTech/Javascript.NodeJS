@@ -2,6 +2,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System;
+using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -34,7 +37,7 @@ namespace Jering.JavascriptUtils.Node
 
         public HttpNodeService(IOptions<OutOfProcessNodeServiceOptions> outOfProcessNodeHostOptionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
-            INodeInvocationRequestFactory invocationRequestDataFactory,
+            IInvocationRequestFactory invocationRequestDataFactory,
             INodeProcessFactory nodeProcessFactory,
             IHttpClientFactory httpClientFactory,
             ILogger<HttpNodeService> nodeServiceLogger) :
@@ -48,32 +51,61 @@ namespace Jering.JavascriptUtils.Node
             _jsonSerializer = JsonSerializer.Create(jsonSerializerSettings);
         }
 
-        public override async Task<T> InvokeAsync<T>(NodeInvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
+        protected override async Task<InvocationResult<T>> InvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
         {
             using (var invocationContent = new NodeInvocationContent(_jsonSerializer, nodeInvocationRequest))
             using (HttpResponseMessage httpResponseMessage = await _httpClient.PostAsync(_endpoint, invocationContent, cancellationToken).ConfigureAwait(false))
             {
-                // 400 = cache miss
-                // 500 = throw nodeinvocationexception
-                // 200 = success
-            }
+                if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return new InvocationResult<T>(default(T), true);
+                }
 
-            return default(T);
+                if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
+                {
+                    using (Stream responseStream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                    using (var stringReader = new StreamReader(responseStream))
+                    using (var jsonTextReader = new JsonTextReader(stringReader))
+                    {
+                        InvocationError invocationError = _jsonSerializer.Deserialize<InvocationError>(jsonTextReader);
+                        throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
+                    }
+                }
+
+                if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+                {
+                    Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    var value = default(T);
+
+                    if (typeof(T) == typeof(Stream))
+                    {
+                        value = (T)(object)stream;
+                    }
+                    else if (typeof(T) == typeof(string))
+                    {
+                        // Stream reader closes the stream when it is diposed
+                        using (var streamReader = new StreamReader(stream))
+                        {
+                            value = (T)(object)await streamReader.ReadToEndAsync().ConfigureAwait(false);
+                        }
+                    }
+                    else
+                    {
+                        using (var streamReader = new StreamReader(stream))
+                        using (var jsonTextReader = new JsonTextReader(streamReader))
+                        {
+                            value = _jsonSerializer.Deserialize<T>(jsonTextReader);
+                        }
+                    }
+
+                    return new InvocationResult<T>(value, false);
+                }
+
+                throw new InvocationException($"Http response received with unexpected status code: {httpResponseMessage.StatusCode}.");
+            }
         }
 
-        // TODO clean up disposal
-        protected override void DisposeCore()
-        {
-            base.DisposeCore();
-
-            if (!_disposed)
-            {
-                _httpClient.Dispose();
-                _disposed = true;
-            }
-        }
-
-        public override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+        protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
         {
             // Start after message start and "IP - "
             int startIndex = CONNECTION_ESTABLISHED_MESSAGE_START.Length + 5;
@@ -109,12 +141,21 @@ namespace Jering.JavascriptUtils.Node
             }
         }
 
-#pragma warning disable 649 // These properties are populated via JSON deserialization
-        private class RpcJsonResponse
+        protected override void Dispose(bool disposing)
         {
-            public string ErrorMessage { get; set; }
-            public string ErrorDetails { get; set; }
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _httpClient.Dispose();
+            }
+
+            base.Dispose(disposing);
+
+            _disposed = true;
         }
-#pragma warning restore 649
     }
 }

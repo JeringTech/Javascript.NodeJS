@@ -3,9 +3,9 @@ using System.IO;
 
 namespace Jering.JavascriptUtils.Node
 {
-    public class NodeInvocationRequestFactory : INodeInvocationRequestFactory
+    public class InvocationRequestFactory : IInvocationRequestFactory
     {
-        public NodeInvocationRequest Create(ModuleSourceType moduleSourceType,
+        public InvocationRequest Create(ModuleSourceType moduleSourceType,
             string moduleSource = null,
             string newCacheIdentifier = null,
             string exportName = null,
@@ -24,7 +24,7 @@ namespace Jering.JavascriptUtils.Node
                 }
             }
 
-            return new NodeInvocationRequest(moduleSource,
+            return new InvocationRequest(moduleSource,
                 moduleSourceType,
                 newCacheIdentifier,
                 exportName,

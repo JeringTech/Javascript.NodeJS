@@ -8,6 +8,7 @@ namespace Jering.JavascriptUtils.Node
 
         public HttpClient Create()
         {
+            // TODO create lightweight httpmessagehandler
             return _httpClient ?? (_httpClient = new HttpClient());
         }
     }

@@ -14,9 +14,9 @@ namespace Jering.JavascriptUtils.Node
         private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         private readonly JsonSerializer _jsonSerializer;
-        private readonly NodeInvocationRequest _nodeInvocationRequest;
+        private readonly InvocationRequest _nodeInvocationRequest;
 
-        public NodeInvocationContent(JsonSerializer jsonSerializer, NodeInvocationRequest nodeInvocationRequest)
+        public NodeInvocationContent(JsonSerializer jsonSerializer, InvocationRequest nodeInvocationRequest)
         {
             _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
             _nodeInvocationRequest = nodeInvocationRequest ?? throw new ArgumentNullException(nameof(nodeInvocationRequest));
