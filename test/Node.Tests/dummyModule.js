@@ -1,0 +1,1 @@
+﻿module.exports = (callback, resultString) => callback(null, { result: resultString });

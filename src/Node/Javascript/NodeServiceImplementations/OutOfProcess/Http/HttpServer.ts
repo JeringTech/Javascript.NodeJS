@@ -7,8 +7,6 @@ import { AddressInfo } from 'net';
 import InvocationRequest from '../../../NodeInvocationData/InvocationRequest';
 import ModuleSourceType from '../../../NodeInvocationData/ModuleSourceType';
 
-// TODO read through original, make sure nothing missed out, e.g stream
-
 // Parse arguments
 const args: { [key: string]: string } = parseArgs(process.argv);
 
@@ -21,15 +19,13 @@ const server = http.createServer((req, res) => {
     req.
         on('data', chunk => bodyChunks.push(chunk)).
         on('end', () => {
-            debugger;
-
             try {
                 // Create InvocationRequest
                 let body: string = Buffer.concat(bodyChunks).toString();
                 let invocationRequest: InvocationRequest;
-                if (req.headers["content-type"] == 'application/json') {
+                if (req.headers['content-type'] == 'application/json') {
                     invocationRequest = JSON.parse(body);
-                } else if (req.headers["content-type"] == 'multipart/mixed') {
+                } else if (req.headers['content-type'] == 'multipart/mixed') {
                     let parts: string[] = body.split('--Jering.JavascriptUtils.Node');
                     invocationRequest = JSON.parse(parts[0]);
                     invocationRequest.moduleSource = parts[1];
@@ -51,25 +47,27 @@ const server = http.createServer((req, res) => {
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.Stream ||
                     invocationRequest.moduleSourceType === ModuleSourceType.String) {
                     let module = new Module(null, null);
-                    module._compile(invocationRequest.moduleSource, "anonymous");
+                    module._compile(invocationRequest.moduleSource, 'anonymous');
 
                     if (invocationRequest.newCacheIdentifier != null) {
-                        module._cache[invocationRequest.newCacheIdentifier] = module;
+                        // Notes on module caching:
+                        // When a module is required using require, it is cached in Module._cache using its absolute file path as its key.
+                        // When Module._load tries to load the same module again, it first resolves the absolute file path of the module, then it 
+                        // checks if the module exists in the cache. Custom keys for in memory modules cause an error at the file resolution step.
+                        // To make modules with custom keys requirable by other modules, require must be monkey patched.
+                        Module._cache[invocationRequest.newCacheIdentifier] = module;
                     }
 
                     exports = module.exports;
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(process.cwd(), invocationRequest.moduleSource);
-                    let module = __non_webpack_require__(resolvedPath);
-
-                    exports = module.exports;
+                    exports = __non_webpack_require__(resolvedPath);
                 } else {
-                    respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}`);
+                    respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}.`);
                     return;
                 }
-                if (exports == null) {
-                    respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
-                    has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.`);
+                if (exports == null || typeof exports === 'object' && Object.keys(exports).length === 0) {
+                    respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.`);
                     return;
                 }
 
@@ -78,19 +76,16 @@ const server = http.createServer((req, res) => {
                 if (invocationRequest.exportName != null) {
                     functionToInvoke = exports[invocationRequest.exportName];
                     if (functionToInvoke == null) {
-                        respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
-                        has no export named ${invocationRequest.exportName}`);
+                        respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} has no export named ${invocationRequest.exportName}.`);
                         return;
                     }
                     if (!(typeof functionToInvoke === 'function')) {
-                        respondWithError(res, `The export named ${invocationRequest.exportName} from module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
-                        is not a function`);
+                        respondWithError(res, `The export named ${invocationRequest.exportName} from module ${getTempIdentifier(invocationRequest)} is not a function.`);
                         return;
                     }
                 } else {
                     if (!(typeof exports === 'function')) {
-                        respondWithError(res, `The module ${invocationRequest.newCacheIdentifier == null ? invocationRequest.moduleSource : invocationRequest.newCacheIdentifier} 
-                        does not export a function`);
+                        respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} does not export a function.`);
                         return;
                     }
                     functionToInvoke = exports;
@@ -110,7 +105,6 @@ const server = http.createServer((req, res) => {
                         result.pipe(res);
                     } else if (typeof result === 'string') {
                         // String - can bypass JSON-serialization altogether
-                        res.setHeader('Content-Type', 'text/plain');
                         res.end(result);
                     } else {
                         // Arbitrary object/number/etc - JSON-serialize it
@@ -122,13 +116,13 @@ const server = http.createServer((req, res) => {
                             respondWithError(res, err);
                             return;
                         }
-                        res.setHeader('Content-Type', 'application/json');
                         res.end(responseJson);
                     }
                 }
 
                 // Invoke function 
-                functionToInvoke.apply(null, invocationRequest.args.unshift(callback));
+                let args: object[] = [callback];
+                functionToInvoke.apply(null, args.concat(invocationRequest.args));
             } catch (synchronousError) {
                 respondWithError(res, synchronousError);
             }
@@ -139,6 +133,14 @@ const server = http.createServer((req, res) => {
     let info = server.address() as AddressInfo;
     console.log(`[Jering.JavascriptUtils.Node: Listening on IP - ${info.address} Port - ${info.port}]`);
 });
+
+function getTempIdentifier(invocationRequest: InvocationRequest): string {
+    if (invocationRequest.newCacheIdentifier == null) {
+        return `"${invocationRequest.moduleSource.substring(0, 25)}..."`;
+    } else {
+        return invocationRequest.newCacheIdentifier;
+    }
+}
 
 function respondWithError(res: http.ServerResponse, error: Error | string) {
     let errorIsString: boolean = typeof error === 'string';
@@ -172,6 +174,7 @@ function parseArgs(args: string[]) {
 function exitWhenParentExits(parentPid: number, ignoreSigint: boolean, pollIntervalMS: number) {
     setInterval(() => {
         if (!processExists(parentPid)) {
+            console.log(`Parent process (pid: ${parentPid}) exited. Exiting this process...`);
             process.exit();
         }
     }, pollIntervalMS);

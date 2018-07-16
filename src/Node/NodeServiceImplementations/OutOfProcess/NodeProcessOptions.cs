@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Jering.JavascriptUtils.Node
 {
@@ -7,7 +8,7 @@ namespace Jering.JavascriptUtils.Node
         /// <summary>
         /// If set, overrides the path to the root of your application. This path is used when locating Node.js modules relative to your project.
         /// </summary>
-        public string ProjectPath { get; set; }
+        public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
         /// <summary>
         /// Node.js and V8 options in the form [Node.js options] [V8 options]. 

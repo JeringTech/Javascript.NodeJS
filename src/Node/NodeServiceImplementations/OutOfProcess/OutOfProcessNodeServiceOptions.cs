@@ -54,8 +54,9 @@
 
 
         /// <summary>
-        /// Specifies the maximum duration, in milliseconds, that your .NET code should wait for Node.js RPC calls to return.
+        /// Specifies the maximum duration, to wait for the Node.js process to start and to wait for responses to invocations. 
+        /// Generally, these tasks should complete in under a millisecond, so this default is quite generous.
         /// </summary>
-        public int InvocationTimeoutMS { get; set; } = 1000;
+        public int TimeoutMS { get; set; } = 1000;
     }
 }

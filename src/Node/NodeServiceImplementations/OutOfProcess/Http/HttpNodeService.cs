@@ -51,14 +51,23 @@ namespace Jering.JavascriptUtils.Node
             _jsonSerializer = JsonSerializer.Create(jsonSerializerSettings);
         }
 
-        protected override async Task<InvocationResult<T>> InvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
+        protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
         {
             using (var invocationContent = new NodeInvocationContent(_jsonSerializer, nodeInvocationRequest))
-            using (HttpResponseMessage httpResponseMessage = await _httpClient.PostAsync(_endpoint, invocationContent, cancellationToken).ConfigureAwait(false))
             {
+                // All HttpResponseMessage.Dispose does is call HttpContent.Dispose. Using default options, this is unecessary, for the following reason:
+                // HttpClient loads the response content into a MemoryStream
+                // FinishSendAsyncBuffered - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpClient.cs#L468
+                // LoadIntoBufferAsync - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpContent.cs#L374
+                // Disposing a MemoryStream instance toggles some flags
+                // Dispose - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/Common/src/CoreLib/System/IO/MemoryStream.cs#L124
+                // MemoryStream doesn't use unmanaged resources, so calling Dispose on it is only necessary if you want to
+                // toggle those flags.
+                HttpResponseMessage httpResponseMessage = await _httpClient.PostAsync(_endpoint, invocationContent, cancellationToken).ConfigureAwait(false);
+
                 if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return new InvocationResult<T>(default(T), true);
+                    return (false, default(T));
                 }
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
@@ -98,7 +107,7 @@ namespace Jering.JavascriptUtils.Node
                         }
                     }
 
-                    return new InvocationResult<T>(value, false);
+                    return (true, value);
                 }
 
                 throw new InvocationException($"Http response received with unexpected status code: {httpResponseMessage.StatusCode}.");

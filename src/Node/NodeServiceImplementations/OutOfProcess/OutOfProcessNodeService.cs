@@ -22,13 +22,13 @@ namespace Jering.JavascriptUtils.Node
     {
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
 
+        protected readonly ILogger NodeServiceLogger;
         private readonly INodeProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
         private readonly IInvocationRequestFactory _invocationRequestDataFactory;
         private readonly OutOfProcessNodeServiceOptions _options;
-        protected readonly ILogger NodeServiceLogger;
+        private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
 
-        private SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
         private Process _nodeProcess;
         private bool _disposed;
 
@@ -60,7 +60,7 @@ namespace Jering.JavascriptUtils.Node
         /// <param name="nodeInvocationRequest">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        protected abstract Task<InvocationResult<T>> InvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
+        protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
@@ -77,7 +77,7 @@ namespace Jering.JavascriptUtils.Node
                     exportName: exportName,
                     args: args);
 
-            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
+            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -89,7 +89,7 @@ namespace Jering.JavascriptUtils.Node
                     exportName,
                     args);
 
-            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
+            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
@@ -101,10 +101,10 @@ namespace Jering.JavascriptUtils.Node
                     args: args,
                     moduleStreamSource: moduleStream);
 
-            return (await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Value;
+            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
-        public async Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             InvocationRequest invocationRequestData = _invocationRequestDataFactory.
                 Create(ModuleSourceType.Cache,
@@ -112,12 +112,10 @@ namespace Jering.JavascriptUtils.Node
                     exportName: exportName,
                     args: args);
 
-            InvocationResult<T> invocationResult = await InvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
-
-            return (!invocationResult.CacheMiss, invocationResult.Value);
+            return TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken);
         }
 
-        private async Task<InvocationResult<T>> InvokeCoreAsync<T>(InvocationRequest invocationRequestData, CancellationToken cancellationToken)
+        private async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequestData, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
@@ -130,6 +128,23 @@ namespace Jering.JavascriptUtils.Node
 
             try
             {
+                // Create combined CancellationToken only as required.
+                if (_options.TimeoutMS > 0)
+                {
+                    timeoutCTS = new CancellationTokenSource();
+                    timeoutCTS.CancelAfter(_options.TimeoutMS);
+
+                    if (cancellationToken != CancellationToken.None)
+                    {
+                        combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
+                        cancellationToken = combinedCTS.Token;
+                    }
+                    else
+                    {
+                        cancellationToken = timeoutCTS.Token;
+                    }
+                }
+
                 // If the the Node.js process has terminated for some reason, attempt to create a new process.
                 // Apart from the thread creating the process, all other threads will be blocked. If the new process 
                 // is created successfully, all threads will be released by the OutputDataReceived delegate in 
@@ -147,31 +162,14 @@ namespace Jering.JavascriptUtils.Node
                         Process newNodeProcess = _nodeProcessFactory.Create(_nodeServerScript);
                         ConnectToInputOutputStreams(newNodeProcess);
 
-                        await _processSemaphore.WaitAsync(_options.InvocationTimeoutMS, cancellationToken).ConfigureAwait(false);
+                        await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                         // Successfully connected to new node process
                         _nodeProcess = newNodeProcess;
                     }
                 }
 
-                // Create combined CancellationToken only as required.
-                if (_options.InvocationTimeoutMS > 0)
-                {
-                    timeoutCTS = new CancellationTokenSource();
-                    timeoutCTS.CancelAfter(_options.InvocationTimeoutMS);
-
-                    if (cancellationToken != CancellationToken.None)
-                    {
-                        combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
-                        cancellationToken = combinedCTS.Token;
-                    }
-                    else
-                    {
-                        cancellationToken = timeoutCTS.Token;
-                    }
-                }
-
-                return await InvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
+                return await TryInvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
 
             }
             catch (Exception exception)
@@ -188,7 +186,7 @@ namespace Jering.JavascriptUtils.Node
                 {
                     // This is very unlikely
                     throw new InvocationException(
-                        $"Attempt to connect to Node timed out after {_options.InvocationTimeoutMS}ms.",
+                        $"Attempt to connect to Node timed out after {_options.TimeoutMS}ms.",
                         string.Empty);
                 }
 
@@ -197,8 +195,8 @@ namespace Jering.JavascriptUtils.Node
                 // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
                 // descriptive error.
                 throw new InvocationException(
-                    $"The Node invocation timed out after {_options.InvocationTimeoutMS}ms.",
-                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeServiceOptions.InvocationTimeoutMS)} "
+                    $"The Node invocation timed out after {_options.TimeoutMS}ms.",
+                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeServiceOptions.TimeoutMS)} "
                     + $"property on {nameof(OutOfProcessNodeServiceOptions)}.\n\n"
                     + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
                     + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
