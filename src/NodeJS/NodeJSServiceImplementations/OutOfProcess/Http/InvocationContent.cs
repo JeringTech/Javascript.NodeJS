@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Jering.JavascriptUtils.Node
 {
-    public class NodeInvocationContent : HttpContent
+    public class InvocationContent : HttpContent
     {
         // Default encoding for StreamWriters - https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/IO/EncodingCache.cs
         private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -18,7 +18,7 @@ namespace Jering.JavascriptUtils.Node
         private readonly JsonSerializer _jsonSerializer;
         private readonly InvocationRequest _nodeInvocationRequest;
 
-        public NodeInvocationContent(JsonSerializer jsonSerializer, InvocationRequest nodeInvocationRequest)
+        public InvocationContent(JsonSerializer jsonSerializer, InvocationRequest nodeInvocationRequest)
         {
             _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
             _nodeInvocationRequest = nodeInvocationRequest ?? throw new ArgumentNullException(nameof(nodeInvocationRequest));

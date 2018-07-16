@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Jering.JavascriptUtils.Node
 {
-    public class NodeProcessOptions
+    public class NodeJSProcessOptions
     {
         /// <summary>
         /// If set, overrides the path to the root of your application. This path is used when locating Node.js modules relative to your project.

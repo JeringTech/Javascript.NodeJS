@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Jering.JavascriptUtils.Node.Tests
 {
-    public class OutOfProcessNodeServiceIntegrationTests
+    public class OutOfProcessNodeJSServiceIntegrationTests
     {
     }
 }

@@ -8,7 +8,7 @@ namespace Jering.JavascriptUtils.Node
     /// <summary>
     /// Represents an instance of Node.js to which Remote Procedure Calls (RPC) may be sent.
     /// </summary>
-    public interface INodeService : IDisposable
+    public interface INodeJSService : IDisposable
     {
         /// <summary>
         /// Asynchronously invokes code in the Node.js instance. 

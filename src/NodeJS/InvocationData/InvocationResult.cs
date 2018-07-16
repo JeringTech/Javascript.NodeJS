@@ -3,7 +3,7 @@
 namespace Jering.JavascriptUtils.Node
 {
     /// <summary>
-    /// Result for <see cref="INodeService.TryInvokeFromCacheAsync{T}"/>.
+    /// Result for <see cref="INodeJSService.TryInvokeFromCacheAsync{T}"/>.
     /// </summary>
     /// <typeparam name="T">Type of the expected return value.</typeparam>
     public class InvocationResult<T>

@@ -17,34 +17,34 @@ namespace Jering.JavascriptUtils.Node
     /// protocol, or any other RPC-type mechanism).
     /// </para>
     /// </summary>
-    /// <seealso cref="INodeService" />
-    public abstract class OutOfProcessNodeService : INodeService
+    /// <seealso cref="INodeJSService" />
+    public abstract class OutOfProcessNodeJSService : INodeJSService
     {
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
 
         protected readonly ILogger NodeServiceLogger;
-        private readonly INodeProcessFactory _nodeProcessFactory;
+        private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
         private readonly IInvocationRequestFactory _invocationRequestDataFactory;
-        private readonly OutOfProcessNodeServiceOptions _options;
+        private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
 
         private Process _nodeProcess;
         private bool _disposed;
 
         /// <summary>
-        /// Creates a new instance of <see cref="OutOfProcessNodeService"/>.
+        /// Creates a new instance of <see cref="OutOfProcessNodeJSService"/>.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
         /// <param name="nodeServerScript">The server script to run in the Node.js process.</param>
         /// <param name="invocationRequestDataFactory"></param>
         /// <param name="nodeServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="options"></param>
-        protected OutOfProcessNodeService(INodeProcessFactory nodeProcessFactory,
+        protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
             string nodeServerScript,
             IInvocationRequestFactory invocationRequestDataFactory,
             ILogger nodeServiceLogger,
-            OutOfProcessNodeServiceOptions options)
+            OutOfProcessNodeJSServiceOptions options)
         {
             _nodeProcessFactory = nodeProcessFactory;
             _nodeServerScript = nodeServerScript;
@@ -119,7 +119,7 @@ namespace Jering.JavascriptUtils.Node
         {
             if (_disposed)
             {
-                throw new ObjectDisposedException(nameof(OutOfProcessNodeService));
+                throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
             }
 
             // Disposables
@@ -196,8 +196,8 @@ namespace Jering.JavascriptUtils.Node
                 // descriptive error.
                 throw new InvocationException(
                     $"The Node invocation timed out after {_options.TimeoutMS}ms.",
-                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeServiceOptions.TimeoutMS)} "
-                    + $"property on {nameof(OutOfProcessNodeServiceOptions)}.\n\n"
+                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS)} "
+                    + $"property on {nameof(OutOfProcessNodeJSServiceOptions)}.\n\n"
                     + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
                     + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
                     + "the .NET code has no way to know that it is finished or has failed."
@@ -321,7 +321,7 @@ namespace Jering.JavascriptUtils.Node
         /// <summary>
         /// Implements the finalization part of the IDisposable pattern by calling Dispose(false).
         /// </summary>
-        ~OutOfProcessNodeService()
+        ~OutOfProcessNodeJSService()
         {
             Dispose(false);
         }

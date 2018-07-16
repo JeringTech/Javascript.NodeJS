@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Jering.JavascriptUtils.Node
 {
-    public class NodeProcessFactory : INodeProcessFactory
+    public class NodeJSProcessFactory : INodeJSProcessFactory
     {
-        private readonly NodeProcessOptions _nodeProcessOptions;
+        private readonly NodeJSProcessOptions _nodeProcessOptions;
 
-        public NodeProcessFactory(IOptions<NodeProcessOptions> optionsAccessor)
+        public NodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor)
         {
             _nodeProcessOptions = optionsAccessor.Value;
         }

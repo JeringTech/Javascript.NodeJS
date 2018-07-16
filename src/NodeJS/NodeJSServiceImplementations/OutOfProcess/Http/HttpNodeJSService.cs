@@ -21,7 +21,7 @@ namespace Jering.JavascriptUtils.Node
     /// accept RPC invocations.
     /// </summary>
     /// <seealso cref="HostingModels.BaseNodeInstance" />
-    public class HttpNodeService : OutOfProcessNodeService
+    public class HttpNodeJSService : OutOfProcessNodeJSService
     {
         private static readonly JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
         {
@@ -35,14 +35,14 @@ namespace Jering.JavascriptUtils.Node
         private bool _disposed;
         private string _endpoint;
 
-        public HttpNodeService(IOptions<OutOfProcessNodeServiceOptions> outOfProcessNodeHostOptionsAccessor,
+        public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
             IInvocationRequestFactory invocationRequestDataFactory,
-            INodeProcessFactory nodeProcessFactory,
+            INodeJSProcessFactory nodeProcessFactory,
             IHttpClientFactory httpClientFactory,
-            ILogger<HttpNodeService> nodeServiceLogger) :
+            ILogger<HttpNodeJSService> nodeServiceLogger) :
             base(nodeProcessFactory,
-                embeddedResourcesService.ReadAsString(typeof(HttpNodeService), "HttpServer.js"),
+                embeddedResourcesService.ReadAsString(typeof(HttpNodeJSService), "HttpServer.js"),
                 invocationRequestDataFactory,
                 nodeServiceLogger,
                 outOfProcessNodeHostOptionsAccessor.Value)
@@ -53,7 +53,7 @@ namespace Jering.JavascriptUtils.Node
 
         protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
         {
-            using (var invocationContent = new NodeInvocationContent(_jsonSerializer, nodeInvocationRequest))
+            using (var invocationContent = new InvocationContent(_jsonSerializer, nodeInvocationRequest))
             {
                 // All HttpResponseMessage.Dispose does is call HttpContent.Dispose. Using default options, this is unecessary, for the following reason:
                 // HttpClient loads the response content into a MemoryStream

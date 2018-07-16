@@ -6,7 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// Extension methods for setting up NodeServices in an <see cref="IServiceCollection" />.
     /// </summary>
-    public static class NodeServiceCollectionExtensions
+    public static class NodeJSServiceCollectionExtensions
     {
         /// <summary>
         /// Adds NodeServices support to the <paramref name="services"/>.
@@ -19,8 +19,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
             services.AddSingleton<IInvocationRequestFactory, InvocationRequestFactory>();
             services.AddSingleton<IHttpClientFactory, HttpClientFactory>();
-            services.AddSingleton<INodeProcessFactory, NodeProcessFactory>();
-            services.AddSingleton<INodeService, HttpNodeService>();
+            services.AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>();
+            services.AddSingleton<INodeJSService, HttpNodeJSService>();
         }
     }
 }

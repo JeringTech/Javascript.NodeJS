@@ -3,14 +3,14 @@
     /// <summary>
     /// Describes options used to configure an <see cref="INodeServices"/> instance.
     /// </summary>
-    public class OutOfProcessNodeServiceOptions
+    public class OutOfProcessNodeJSServiceOptions
     {
         //internal const string TimeoutConfigPropertyName = nameof(InvocationTimeoutMS);
         //private const int DefaultInvocationTimeoutMilliseconds = 60 * 1000;
         //private const string LogCategoryName = "Jering.JavascriptUtils.Node";
 
         /// <summary>
-        /// Creates a new instance of <see cref="OutOfProcessNodeServiceOptions"/>.
+        /// Creates a new instance of <see cref="OutOfProcessNodeJSServiceOptions"/>.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         //public OutOfProcessNodeHostOptions()

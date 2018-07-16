@@ -2,7 +2,7 @@
 
 namespace Jering.JavascriptUtils.Node
 {
-    public interface INodeProcessFactory
+    public interface INodeJSProcessFactory
     {
         /// <summary>
         /// Creates a Node.js process running <paramref name="nodeServerScript"/>.
