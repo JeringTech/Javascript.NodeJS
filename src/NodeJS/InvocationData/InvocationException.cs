@@ -13,6 +13,10 @@ namespace Jering.JavascriptUtils.Node
         /// </summary>
         public bool NodeInstanceUnavailable { get; }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="InvocationException"/>.
+        /// </summary>
+        /// <param name="message">A description of the exception.</param>
         public InvocationException(string message) : base(message)
         {
         }
@@ -21,7 +25,7 @@ namespace Jering.JavascriptUtils.Node
         /// Creates a new instance of <see cref="InvocationException"/>.
         /// </summary>
         /// <param name="message">A description of the exception.</param>
-        /// <param name="stack">Additional information, such as a Node.js stack trace, representing the exception.</param>
+        /// <param name="stack">Node.js stack trace, representing the exception.</param>
         public InvocationException(string message, string stack)
             : base(message + Environment.NewLine + stack)
         {
@@ -31,7 +35,7 @@ namespace Jering.JavascriptUtils.Node
         /// Creates a new instance of <see cref="InvocationException"/>.
         /// </summary>
         /// <param name="message">A description of the exception.</param>
-        /// <param name="stack">Additional information, such as a Node.js stack trace, representing the exception.</param>
+        /// <param name="stack">Node.js stack trace, representing the exception.</param>
         /// <param name="nodeInstanceUnavailable">Specifies a value for the <see cref="NodeInstanceUnavailable"/> flag.</param>
         public InvocationException(string message, string stack, bool nodeInstanceUnavailable)
             : this(message, stack)

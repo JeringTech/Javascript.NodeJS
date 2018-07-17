@@ -37,13 +37,11 @@ namespace Jering.JavascriptUtils.Node
 
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
-            IInvocationRequestFactory invocationRequestDataFactory,
             INodeJSProcessFactory nodeProcessFactory,
             IHttpClientFactory httpClientFactory,
             ILogger<HttpNodeJSService> nodeServiceLogger) :
             base(nodeProcessFactory,
                 embeddedResourcesService.ReadAsString(typeof(HttpNodeJSService), "HttpServer.js"),
-                invocationRequestDataFactory,
                 nodeServiceLogger,
                 outOfProcessNodeHostOptionsAccessor.Value)
         {
@@ -51,9 +49,9 @@ namespace Jering.JavascriptUtils.Node
             _jsonSerializer = JsonSerializer.Create(jsonSerializerSettings);
         }
 
-        protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken)
+        protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
-            using (var invocationContent = new InvocationContent(_jsonSerializer, nodeInvocationRequest))
+            using (var invocationContent = new InvocationContent(_jsonSerializer, invocationRequest))
             {
                 // All HttpResponseMessage.Dispose does is call HttpContent.Dispose. Using default options, this is unecessary, for the following reason:
                 // HttpClient loads the response content into a MemoryStream

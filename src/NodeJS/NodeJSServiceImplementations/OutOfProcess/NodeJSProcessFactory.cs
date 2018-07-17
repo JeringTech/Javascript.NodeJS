@@ -22,7 +22,7 @@ namespace Jering.JavascriptUtils.Node
             return CreateAndStartNodeProcess(startInfo);
         }
 
-        protected virtual ProcessStartInfo CreateNodeProcessStartInfo(string nodeServerScript)
+        internal ProcessStartInfo CreateNodeProcessStartInfo(string nodeServerScript)
         {
             nodeServerScript = EscapeCommandLineArg(nodeServerScript);
 
@@ -67,7 +67,7 @@ namespace Jering.JavascriptUtils.Node
             return startInfo;
         }
 
-        protected virtual Process CreateAndStartNodeProcess(ProcessStartInfo startInfo)
+        internal Process CreateAndStartNodeProcess(ProcessStartInfo startInfo)
         {
             try
             {

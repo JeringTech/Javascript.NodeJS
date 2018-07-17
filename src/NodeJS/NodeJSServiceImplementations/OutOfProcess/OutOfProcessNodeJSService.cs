@@ -25,7 +25,6 @@ namespace Jering.JavascriptUtils.Node
         protected readonly ILogger NodeServiceLogger;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _nodeServerScript;
-        private readonly IInvocationRequestFactory _invocationRequestDataFactory;
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
 
@@ -37,18 +36,16 @@ namespace Jering.JavascriptUtils.Node
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
         /// <param name="nodeServerScript">The server script to run in the Node.js process.</param>
-        /// <param name="invocationRequestDataFactory"></param>
+        /// <param name="invocationRequestFactory"></param>
         /// <param name="nodeServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="options"></param>
         protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
             string nodeServerScript,
-            IInvocationRequestFactory invocationRequestDataFactory,
             ILogger nodeServiceLogger,
             OutOfProcessNodeJSServiceOptions options)
         {
             _nodeProcessFactory = nodeProcessFactory;
             _nodeServerScript = nodeServerScript;
-            _invocationRequestDataFactory = invocationRequestDataFactory;
             NodeServiceLogger = nodeServiceLogger ?? throw new ArgumentNullException(nameof(nodeServiceLogger));
             _options = options;
         }
@@ -57,10 +54,10 @@ namespace Jering.JavascriptUtils.Node
         /// Asynchronously invokes code in the Node.js instance.
         /// </summary>
         /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="nodeInvocationRequest">Contains the data to be sent to the Node.js process.</param>
+        /// <param name="invocationRequest">Contains the data to be sent to the Node.js process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
-        protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest nodeInvocationRequest, CancellationToken cancellationToken);
+        protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
@@ -71,51 +68,47 @@ namespace Jering.JavascriptUtils.Node
 
         public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
-                Create(ModuleSourceType.File,
+            var invocationRequest = new InvocationRequest(ModuleSourceType.File,
                     modulePath,
                     exportName: exportName,
                     args: args);
 
-            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
+            return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
-                Create(ModuleSourceType.String,
+            var invocationRequest = new InvocationRequest(ModuleSourceType.String,
                     moduleString,
                     newCacheIdentifier,
                     exportName,
                     args);
 
-            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
+            return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
-                Create(ModuleSourceType.Stream,
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream,
                     newCacheIdentifier: newCacheIdentifier,
                     exportName: exportName,
                     args: args,
                     moduleStreamSource: moduleStream);
 
-            return (await TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false)).Item2;
+            return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            InvocationRequest invocationRequestData = _invocationRequestDataFactory.
-                Create(ModuleSourceType.Cache,
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Cache,
                     moduleCacheIdentifier,
                     exportName: exportName,
                     args: args);
 
-            return TryInvokeCoreAsync<T>(invocationRequestData, cancellationToken);
+            return TryInvokeCoreAsync<T>(invocationRequest, cancellationToken);
         }
 
-        private async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequestData, CancellationToken cancellationToken)
+        private async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
@@ -169,7 +162,7 @@ namespace Jering.JavascriptUtils.Node
                     }
                 }
 
-                return await TryInvokeAsync<T>(invocationRequestData, cancellationToken).ConfigureAwait(false);
+                return await TryInvokeAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false);
 
             }
             catch (Exception exception)

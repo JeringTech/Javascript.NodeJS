@@ -17,7 +17,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddLogging();
             services.AddOptions();
             services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
-            services.AddSingleton<IInvocationRequestFactory, InvocationRequestFactory>();
             services.AddSingleton<IHttpClientFactory, HttpClientFactory>();
             services.AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>();
             services.AddSingleton<INodeJSService, HttpNodeJSService>();
