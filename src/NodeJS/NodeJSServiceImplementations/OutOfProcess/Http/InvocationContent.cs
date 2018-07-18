@@ -7,25 +7,22 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     public class InvocationContent : HttpContent
     {
         // Default encoding for StreamWriters - https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/IO/EncodingCache.cs
         private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-        private const string BOUNDARY = "--Jering.JavascriptUtils.Node";
+        private const string BOUNDARY = "--Jering.JavascriptUtils.NodeJS";
 
-        private readonly JsonSerializer _jsonSerializer;
-        private readonly InvocationRequest _nodeInvocationRequest;
+        private readonly IJsonService _jsonService;
+        private readonly InvocationRequest _invocationRequest;
 
-        public InvocationContent(JsonSerializer jsonSerializer, InvocationRequest nodeInvocationRequest)
+        public InvocationContent(IJsonService jsonService, InvocationRequest invocationRequest, MediaTypeHeaderValue mediaTypeHeaderValue)
         {
-            _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
-            _nodeInvocationRequest = nodeInvocationRequest ?? throw new ArgumentNullException(nameof(nodeInvocationRequest));
-
-            Headers.ContentType = _nodeInvocationRequest.ModuleSourceType == ModuleSourceType.Stream ?
-                new MediaTypeHeaderValue("multipart/mixed") :
-                new MediaTypeHeaderValue("application/json");
+            _invocationRequest = invocationRequest ?? throw new ArgumentNullException(nameof(invocationRequest));
+            _jsonService = jsonService;
+            Headers.ContentType = mediaTypeHeaderValue;
         }
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
@@ -38,13 +35,13 @@ namespace Jering.JavascriptUtils.Node
             using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 1024, true))
             using (var jsonTextWriter = new JsonTextWriter(streamWriter))
             {
-                _jsonSerializer.Serialize(jsonTextWriter, _nodeInvocationRequest);
+                _jsonService.Serialize(jsonTextWriter, _invocationRequest);
 
-                if (_nodeInvocationRequest.ModuleStreamSource != null)
+                if (_invocationRequest.ModuleStreamSource != null)
                 {
                     streamWriter.Write(BOUNDARY);
                     streamWriter.Flush();
-                    await _nodeInvocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
+                    await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
                 }
             }
         }

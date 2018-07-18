@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     public interface INodeJSProcessFactory
     {

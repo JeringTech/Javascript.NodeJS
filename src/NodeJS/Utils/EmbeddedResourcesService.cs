@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// Contains methods for reading embedded resources.

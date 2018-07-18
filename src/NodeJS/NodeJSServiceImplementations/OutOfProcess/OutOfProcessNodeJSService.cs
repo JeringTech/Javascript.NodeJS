@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// <para>The primary responsibilities of this class are launching and maintaining a Node.js process.</para>
@@ -20,11 +22,12 @@ namespace Jering.JavascriptUtils.Node
     /// <seealso cref="INodeJSService" />
     public abstract class OutOfProcessNodeJSService : INodeJSService
     {
-        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.Node: Listening on ";
+        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.NodeJS: Listening on ";
 
         protected readonly ILogger NodeServiceLogger;
+        private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
-        private readonly string _nodeServerScript;
+        private readonly string _serverScriptName;
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
 
@@ -35,19 +38,21 @@ namespace Jering.JavascriptUtils.Node
         /// Creates a new instance of <see cref="OutOfProcessNodeJSService"/>.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeServerScript">The server script to run in the Node.js process.</param>
-        /// <param name="invocationRequestFactory"></param>
         /// <param name="nodeServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
-        /// <param name="options"></param>
+        /// <param name="optionsAccessor"></param>
+        /// <param name="embeddedResourcesService"></param>
+        /// <param name="serverScriptName"></param>
         protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
-            string nodeServerScript,
             ILogger nodeServiceLogger,
-            OutOfProcessNodeJSServiceOptions options)
+            IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
+            IEmbeddedResourcesService embeddedResourcesService,
+            string serverScriptName)
         {
             _nodeProcessFactory = nodeProcessFactory;
-            _nodeServerScript = nodeServerScript;
-            NodeServiceLogger = nodeServiceLogger ?? throw new ArgumentNullException(nameof(nodeServiceLogger));
-            _options = options;
+            NodeServiceLogger = nodeServiceLogger ?? new ConsoleLogger(nameof(INodeJSService), null, false);
+            _options = optionsAccessor?.Value ?? new OutOfProcessNodeJSServiceOptions();
+            _embeddedResourcesService = embeddedResourcesService;
+            _serverScriptName = serverScriptName;
         }
 
         /// <summary>
@@ -149,10 +154,11 @@ namespace Jering.JavascriptUtils.Node
                     // Double checked lock
                     if (_nodeProcess?.HasExited != false)
                     {
-                        // Release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
+                        // Even though process has exited, dispose instance to release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
                         _nodeProcess?.Dispose();
                         _nodeProcess = null;
-                        Process newNodeProcess = _nodeProcessFactory.Create(_nodeServerScript);
+                        string serverScript = _embeddedResourcesService.ReadAsString(GetType(), _serverScriptName); // This doesn't get called often, so don't bother caching serverScript
+                        Process newNodeProcess = _nodeProcessFactory.Create(serverScript);
                         ConnectToInputOutputStreams(newNodeProcess);
 
                         await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -220,12 +226,6 @@ namespace Jering.JavascriptUtils.Node
                     while (_processSemaphore.CurrentCount < 1)
                     {
                         _processSemaphore.Release();
-
-                        // TODO Remove this after testing
-                        if (NodeServiceLogger.IsEnabled(LogLevel.Debug))
-                        {
-                            NodeServiceLogger.LogDebug($"Node process creation semaphor count: {_processSemaphore.CurrentCount}");
-                        }
                     }
                 }
                 else

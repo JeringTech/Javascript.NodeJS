@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     public class NodeJSProcessFactory : INodeJSProcessFactory
     {

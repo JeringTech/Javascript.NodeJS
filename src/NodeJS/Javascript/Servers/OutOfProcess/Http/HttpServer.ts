@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as http from 'http';
 import * as stream from 'stream';
 import { AddressInfo } from 'net';
-import InvocationRequest from '../../../NodeInvocationData/InvocationRequest';
-import ModuleSourceType from '../../../NodeInvocationData/ModuleSourceType';
+import InvocationRequest from '../../../InvocationData/InvocationRequest';
+import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
 
 // Parse arguments
 const args: { [key: string]: string } = parseArgs(process.argv);
@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
                 if (req.headers['content-type'] == 'application/json') {
                     invocationRequest = JSON.parse(body);
                 } else if (req.headers['content-type'] == 'multipart/mixed') {
-                    let parts: string[] = body.split('--Jering.JavascriptUtils.Node');
+                    let parts: string[] = body.split('--Jering.JavascriptUtils.NodeJS');
                     invocationRequest = JSON.parse(parts[0]);
                     invocationRequest.moduleSource = parts[1];
                 }
@@ -131,7 +131,7 @@ const server = http.createServer((req, res) => {
     // Signal to HttpNodeHost which loopback IP address (IPv4 or IPv6) and port it should make its HTTP connections on
     // and that we are ready to process invocations.
     let info = server.address() as AddressInfo;
-    console.log(`[Jering.JavascriptUtils.Node: Listening on IP - ${info.address} Port - ${info.port}]`);
+    console.log(`[Jering.JavascriptUtils.NodeJS: Listening on IP - ${info.address} Port - ${info.port}]`);
 });
 
 function getTempIdentifier(invocationRequest: InvocationRequest): string {

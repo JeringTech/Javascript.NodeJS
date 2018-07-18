@@ -1,5 +1,4 @@
-using Jering.JavascriptUtils.Node;
-using Microsoft.Extensions.Logging;
+using Jering.JavascriptUtils.NodeJS;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -16,8 +15,10 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.AddLogging();
             services.AddOptions();
+            services.AddSingleton<IHttpContentFactory, InvocationContentFactory>();
+            services.AddSingleton<IJsonService, JsonService>();
             services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
-            services.AddSingleton<IHttpClientFactory, HttpClientFactory>();
+            services.AddSingleton<IHttpClientService, HttpClientService>();
             services.AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>();
             services.AddSingleton<INodeJSService, HttpNodeJSService>();
         }

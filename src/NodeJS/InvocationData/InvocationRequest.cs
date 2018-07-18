@@ -2,10 +2,10 @@
 using System;
 using System.IO;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Represents an invocation request for Node.js. This class can be extended for custom <see cref="OutOfProcessNodeJSService"/>s.
+    /// Represents an invocation request for Node.js.
     /// </summary>
     public class InvocationRequest
     {

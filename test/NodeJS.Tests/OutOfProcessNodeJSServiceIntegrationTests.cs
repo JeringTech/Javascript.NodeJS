@@ -1,7 +1,7 @@
 ﻿using System;
 using Xunit;
 
-namespace Jering.JavascriptUtils.Node.Tests
+namespace Jering.JavascriptUtils.NodeJS.Tests
 {
     public class OutOfProcessNodeJSServiceIntegrationTests
     {

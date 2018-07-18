@@ -1,6 +1,6 @@
 using System;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// Represents an exception caused by invoking Node.js code.

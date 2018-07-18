@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// Represents an instance of Node.js to which Remote Procedure Calls (RPC) may be sent.

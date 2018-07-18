@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -10,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// A specialisation of the OutOfProcessNodeInstance base class that uses HTTP to perform RPC invocations.
@@ -23,35 +22,36 @@ namespace Jering.JavascriptUtils.Node
     /// <seealso cref="HostingModels.BaseNodeInstance" />
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
-        private static readonly JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
-        {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore,
+        private const string SERVER_SCRIPT_NAME = "HttpServer.js";
 
-        };
+        private readonly IHttpContentFactory _httpContentFactory;
+        private readonly IJsonService _jsonService;
+        private readonly IHttpClientService _httpClientService;
 
-        private readonly HttpClient _httpClient;
-        private readonly JsonSerializer _jsonSerializer;
         private bool _disposed;
-        private string _endpoint;
+        internal string Endpoint;
 
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor,
+            IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
+            IHttpClientService httpClientService,
+            IJsonService jsonService,
             INodeJSProcessFactory nodeProcessFactory,
-            IHttpClientFactory httpClientFactory,
             ILogger<HttpNodeJSService> nodeServiceLogger) :
             base(nodeProcessFactory,
-                embeddedResourcesService.ReadAsString(typeof(HttpNodeJSService), "HttpServer.js"),
                 nodeServiceLogger,
-                outOfProcessNodeHostOptionsAccessor.Value)
+                outOfProcessNodeHostOptionsAccessor,
+                embeddedResourcesService,
+                SERVER_SCRIPT_NAME)
         {
-            _httpClient = httpClientFactory.Create();
-            _jsonSerializer = JsonSerializer.Create(jsonSerializerSettings);
+            _httpClientService = httpClientService;
+            _jsonService = jsonService;
+            _httpContentFactory = httpContentFactory;
         }
 
         protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
-            using (var invocationContent = new InvocationContent(_jsonSerializer, invocationRequest))
+            using (HttpContent httpContent = _httpContentFactory.Create(invocationRequest))
             {
                 // All HttpResponseMessage.Dispose does is call HttpContent.Dispose. Using default options, this is unecessary, for the following reason:
                 // HttpClient loads the response content into a MemoryStream
@@ -61,7 +61,7 @@ namespace Jering.JavascriptUtils.Node
                 // Dispose - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/Common/src/CoreLib/System/IO/MemoryStream.cs#L124
                 // MemoryStream doesn't use unmanaged resources, so calling Dispose on it is only necessary if you want to
                 // toggle those flags.
-                HttpResponseMessage httpResponseMessage = await _httpClient.PostAsync(_endpoint, invocationContent, cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage httpResponseMessage = await _httpClientService.PostAsync(Endpoint, httpContent, cancellationToken).ConfigureAwait(false);
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -74,7 +74,7 @@ namespace Jering.JavascriptUtils.Node
                     using (var stringReader = new StreamReader(responseStream))
                     using (var jsonTextReader = new JsonTextReader(stringReader))
                     {
-                        InvocationError invocationError = _jsonSerializer.Deserialize<InvocationError>(jsonTextReader);
+                        InvocationError invocationError = _jsonService.Deserialize<InvocationError>(jsonTextReader);
                         throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
                     }
                 }
@@ -101,7 +101,7 @@ namespace Jering.JavascriptUtils.Node
                         using (var streamReader = new StreamReader(stream))
                         using (var jsonTextReader = new JsonTextReader(streamReader))
                         {
-                            value = _jsonSerializer.Deserialize<T>(jsonTextReader);
+                            value = _jsonService.Deserialize<T>(jsonTextReader);
                         }
                     }
 
@@ -138,7 +138,7 @@ namespace Jering.JavascriptUtils.Node
                 }
                 else if (currentChar == ']')
                 {
-                    _endpoint = stringBuilder.ToString();
+                    Endpoint = stringBuilder.ToString();
                     return;
                 }
                 else
@@ -153,11 +153,6 @@ namespace Jering.JavascriptUtils.Node
             if (_disposed)
             {
                 return;
-            }
-
-            if (disposing)
-            {
-                _httpClient.Dispose();
             }
 
             base.Dispose(disposing);

@@ -5,63 +5,14 @@ using System.Diagnostics;
 using System.IO;
 using Xunit;
 
-namespace Jering.JavascriptUtils.Node.Tests
+namespace Jering.JavascriptUtils.NodeJS.Tests
 {
+    /// <summary>
+    /// These tests are de facto tests for HttpServer.ts. They serve the additional role of verifying that IPC works.
+    /// </summary>
     public class HttpNodeJSServiceIntegrationTests : IDisposable
     {
         private ServiceProvider _serviceProvider;
-
-        [Fact]
-        public async void InvokeFromFileAsync_InvokesJavascript()
-        {
-            const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
-
-            // Act
-            DummyResult result = await httpNodeService.
-                InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact]
-        public async void InvokeFromStringAsync_InvokesJavascript()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
-
-            // Act
-            DummyResult result = await httpNodeService.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact]
-        public async void InvokeFromStreamAsync_InvokesJavascript()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
-
-            DummyResult result;
-            using (var memoryStream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(memoryStream))
-            {
-                streamWriter.Write("module.exports = (callback, resultString) => callback(null, {result: resultString});");
-                streamWriter.Flush();
-                memoryStream.Position = 0;
-
-                // Act
-                result = await httpNodeService.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
-            }
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
 
         [Fact]
         public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
@@ -101,56 +52,60 @@ namespace Jering.JavascriptUtils.Node.Tests
             Assert.Null(value);
         }
 
-        // TryInvokeAsync is called by TryInvokeCoreAsync, which is private. We test it through InvokeFromStringAsync, since it is the simplest public invoke method.
         [Fact]
-        public async void TryInvokeAsync_ReturnsStreamValueIfTypeParameterIsStream()
+        public async void InvokeFromStreamAsync_InvokesJavascript()
         {
             // Arrange
             const string dummyResultString = "success";
             HttpNodeJSService httpNodeService = CreateHttpNodeService();
 
-            // Act
-            using (Stream result = await httpNodeService.InvokeFromStringAsync<Stream>("module.exports = (callback, resultString) => callback(null, resultString);", args: new[] { dummyResultString }).ConfigureAwait(false))
-            using (var streamReader = new StreamReader(result))
+            DummyResult result;
+            using (var memoryStream = new MemoryStream())
+            using (var streamWriter = new StreamWriter(memoryStream))
             {
-                // Assert
-                Assert.Equal(dummyResultString, await streamReader.ReadToEndAsync().ConfigureAwait(false));
+                streamWriter.Write("module.exports = (callback, resultString) => callback(null, {result: resultString});");
+                streamWriter.Flush();
+                memoryStream.Position = 0;
+
+                // Act
+                result = await httpNodeService.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
             }
-        }
-
-        [Fact]
-        public async void TryInvokeCoreAsync_ReturnsStringValueIfTypeParameterIsString()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
-
-            // Act
-            string result = await httpNodeService.
-                InvokeFromStringAsync<string>("module.exports = (callback, resultString) => callback(null, resultString);", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result);
-        }
-
-        [Fact]
-        public async void TryInvokeCoreAsync_InvokesSpecificExportIfExportNameIsProvided()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            const string dummyExportName = "dummyExportName";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
-
-            // Act
-            DummyResult result = await httpNodeService.
-                InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
             Assert.Equal(dummyResultString, result.Result);
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfModuleHasNoExports()
+        public async void InvokeFromStringAsync_InvokesJavascript()
+        {
+            // Arrange
+            const string dummyResultString = "success";
+            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+
+            // Act
+            DummyResult result = await httpNodeService.
+                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResultString, result.Result);
+        }
+
+        [Fact]
+        public async void InvokeFromFileAsync_InvokesJavascript()
+        {
+            const string dummyResultString = "success";
+            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+
+            // Act
+            DummyResult result = await httpNodeService.
+                InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new[] { dummyResultString }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResultString, result.Result);
+        }
+
+        [Fact]
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleHasNoExports()
         {
             // Arrange
             const string dummyModule = "return null;";
@@ -166,7 +121,7 @@ namespace Jering.JavascriptUtils.Node.Tests
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfThereIsNoModuleExportWithSpecifiedExportName()
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfThereIsNoModuleExportWithSpecifiedExportName()
         {
             // Arrange
             const string dummyExportName = "dummyExportName";
@@ -183,7 +138,7 @@ namespace Jering.JavascriptUtils.Node.Tests
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfModuleExportWithSpecifiedExportNameIsNotAFunction()
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleExportWithSpecifiedExportNameIsNotAFunction()
         {
             // Arrange
             const string dummyExportName = "dummyExportName";
@@ -199,7 +154,7 @@ namespace Jering.JavascriptUtils.Node.Tests
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
             HttpNodeJSService httpNodeService = CreateHttpNodeService();
@@ -214,7 +169,7 @@ namespace Jering.JavascriptUtils.Node.Tests
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfInvokedMethodCallsCallbackWithError()
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedMethodCallsCallbackWithError()
         {
             // Arrange
             const string dummyErrorString = "error";
@@ -227,6 +182,22 @@ namespace Jering.JavascriptUtils.Node.Tests
 
             // Assert
             Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
+        }
+
+        [Fact]
+        public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsProvided()
+        {
+            // Arrange
+            const string dummyResultString = "success";
+            const string dummyExportName = "dummyExportName";
+            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+
+            // Act
+            DummyResult result = await httpNodeService.
+                InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyResultString }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResultString, result.Result);
         }
 
         private HttpNodeJSService CreateHttpNodeService()

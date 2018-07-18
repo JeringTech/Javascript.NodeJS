@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Jering.JavascriptUtils.Node
+namespace Jering.JavascriptUtils.NodeJS
 {
     public interface IEmbeddedResourcesService
     {

@@ -1,4 +1,4 @@
-﻿namespace Jering.JavascriptUtils.Node
+﻿namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// Describes options used to configure an <see cref="INodeServices"/> instance.
@@ -7,7 +7,7 @@
     {
         //internal const string TimeoutConfigPropertyName = nameof(InvocationTimeoutMS);
         //private const int DefaultInvocationTimeoutMilliseconds = 60 * 1000;
-        //private const string LogCategoryName = "Jering.JavascriptUtils.Node";
+        //private const string LogCategoryName = "Jering.JavascriptUtils.NodeJS";
 
         /// <summary>
         /// Creates a new instance of <see cref="OutOfProcessNodeJSServiceOptions"/>.
