@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -47,7 +48,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
-            var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError){Content = new StreamContent(new MemoryStream())};
+            var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StreamContent(new MemoryStream()) };
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
             mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
@@ -139,11 +140,32 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         }
 
         [Fact]
-        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint()
+        public async Task TryInvokeAsync_ThrowsInvocationExceptionIfHttpResponseHasAnUnexpectedStatusCode()
         {
             // Arrange
-            const string dummyPort = "dummyPort";
-            const string dummyIP = "dummyIP";
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
+            Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
+            mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
+            var dummyHttpStatusCode = HttpStatusCode.NoContent;
+            var dummyHttpResponseMessage = new HttpResponseMessage(dummyHttpStatusCode);
+            Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
+            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
+
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal($"Http response received with unexpected status code: {dummyHttpStatusCode}.", result.Message);
+        }
+
+        [Theory]
+        [MemberData(nameof(OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data))]
+        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyIP, string dummyPort, string expectedResult)
+        {
+            // Arrange
             string dummyConnectionEstablishedMessage = $"[Jering.JavascriptUtils.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
 
@@ -151,7 +173,16 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
             // Assert
-            Assert.Equal($"http://{dummyIP}:{dummyPort}", testSubject.Endpoint);
+            Assert.Equal(expectedResult, testSubject.Endpoint);
+        }
+
+        public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
+        {
+            return new object[][]
+            {
+                new object[]{"127.0.0.1", "12345", "http://127.0.0.1:12345"}, // IPv4, arbitrary port
+                new object[]{"::1", "543", "http://[::1]:543"} // IPv6, arbitrary port
+            };
         }
 
         private class DummyClass

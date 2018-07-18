@@ -1,1 +1,2 @@
-﻿module.exports = (callback, resultString) => callback(null, { result: resultString });
+﻿// Used by HttpNodeJSServiceIntegrationTests
+module.exports = (callback, resultString) => callback(null, { result: resultString });

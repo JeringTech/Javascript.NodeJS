@@ -7,8 +7,8 @@ namespace Jering.JavascriptUtils.NodeJS
 {
     public class HttpClientService : IHttpClientService, IDisposable
     {
+        private readonly HttpClient _httpClient;
         private bool _disposed;
-        public HttpClient _httpClient;
 
         public HttpClientService()
         {

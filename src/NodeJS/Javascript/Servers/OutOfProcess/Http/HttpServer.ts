@@ -23,13 +23,14 @@ const server = http.createServer((req, res) => {
                 // Create InvocationRequest
                 let body: string = Buffer.concat(bodyChunks).toString();
                 let invocationRequest: InvocationRequest;
-                if (req.headers['content-type'] == 'application/json') {
-                    invocationRequest = JSON.parse(body);
-                } else if (req.headers['content-type'] == 'multipart/mixed') {
-                    let parts: string[] = body.split('--Jering.JavascriptUtils.NodeJS');
+                if (req.headers['content-type'] == 'multipart/mixed') {
+                    let parts: string[] = body.split('--Uiw6+hXl3k+5ia0cUYGhjA==');
                     invocationRequest = JSON.parse(parts[0]);
                     invocationRequest.moduleSource = parts[1];
+                } else {
+                    invocationRequest = JSON.parse(body);
                 }
+
 
                 // Get exports of module specified by InvocationRequest.moduleSource
                 let exports: any;

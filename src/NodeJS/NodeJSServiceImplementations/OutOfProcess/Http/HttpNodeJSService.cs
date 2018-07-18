@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,14 +11,13 @@ using System.Threading.Tasks;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// A specialisation of the OutOfProcessNodeInstance base class that uses HTTP to perform RPC invocations.
-    ///
-    /// The Node child process starts an HTTP listener on an arbitrary available port (except where a nonzero
-    /// port number is specified as a constructor parameter), and signals which port was selected using the same
-    /// input/output-based mechanism that the base class uses to determine when the child process is ready to
-    /// accept RPC invocations.
+    /// <para>An implementation of <see cref="OutOfProcessNodeJSService"/> that uses Http for inter-process communication.</para>
+    /// <para>
+    /// The NodeJS child process starts a Http server on an arbitrary port (unless otherwise specified
+    /// in <see cref="NodeJSProcessOptions"/>). The server receives invocation requests as Http requests,
+    /// performs the invocations and responds with Http responses.
+    /// </para>
     /// </summary>
-    /// <seealso cref="HostingModels.BaseNodeInstance" />
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
         private const string SERVER_SCRIPT_NAME = "HttpServer.js";
@@ -31,16 +29,16 @@ namespace Jering.JavascriptUtils.NodeJS
         private bool _disposed;
         internal string Endpoint;
 
-        public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor,
+        public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
             IHttpClientService httpClientService,
             IJsonService jsonService,
-            INodeJSProcessFactory nodeProcessFactory,
+            INodeJSProcessFactory nodeJSProcessFactory,
             ILogger<HttpNodeJSService> nodeServiceLogger) :
-            base(nodeProcessFactory,
+            base(nodeJSProcessFactory,
                 nodeServiceLogger,
-                outOfProcessNodeHostOptionsAccessor,
+                outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 SERVER_SCRIPT_NAME)
         {
@@ -57,10 +55,9 @@ namespace Jering.JavascriptUtils.NodeJS
                 // HttpClient loads the response content into a MemoryStream
                 // FinishSendAsyncBuffered - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpClient.cs#L468
                 // LoadIntoBufferAsync - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpContent.cs#L374
-                // Disposing a MemoryStream instance toggles some flags
+                // Disposing a MemoryStream instance just toggles some flags
                 // Dispose - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/Common/src/CoreLib/System/IO/MemoryStream.cs#L124
-                // MemoryStream doesn't use unmanaged resources, so calling Dispose on it is only necessary if you want to
-                // toggle those flags.
+                // Since memoryStreams don't use unmanaged resources, calling Dispose on HttpResponseMessage is unecessary.
                 HttpResponseMessage httpResponseMessage = await _httpClientService.PostAsync(Endpoint, httpContent, cancellationToken).ConfigureAwait(false);
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
@@ -70,9 +67,9 @@ namespace Jering.JavascriptUtils.NodeJS
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
                 {
-                    using (Stream responseStream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                    using (var stringReader = new StreamReader(responseStream))
-                    using (var jsonTextReader = new JsonTextReader(stringReader))
+                    using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                    using (var streamReader = new StreamReader(stream))
+                    using (var jsonTextReader = new JsonTextReader(streamReader))
                     {
                         InvocationError invocationError = _jsonService.Deserialize<InvocationError>(jsonTextReader);
                         throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);

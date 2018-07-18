@@ -1,5 +1,4 @@
 ﻿using System.Net.Http;
-using System.Net.Http.Headers;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
@@ -14,11 +13,7 @@ namespace Jering.JavascriptUtils.NodeJS
 
         public HttpContent Create(InvocationRequest invocationRequest)
         {
-            MediaTypeHeaderValue mediaTypeHeaderValue = invocationRequest.ModuleSourceType == ModuleSourceType.Stream ?
-                new MediaTypeHeaderValue("multipart/mixed") :
-                new MediaTypeHeaderValue("application/json");
-
-            return new InvocationContent(_jsonService, invocationRequest, mediaTypeHeaderValue);
+            return new InvocationContent(_jsonService, invocationRequest);
         }
     }
 }

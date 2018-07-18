@@ -3,7 +3,7 @@
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Implement this interface and overwrite the default dependency injection service to do custom JSON serialization/deserialization. 
+    /// To perform custom JSON serialization/deserialization, implement this interface and overwrite the default DI service for IJsonService. 
     /// </summary>
     public interface IJsonService
     {
