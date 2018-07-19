@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// <para>The primary responsibilities of this class are launching and maintaining a Node.js process.</para>
+    /// <para>The primary responsibilities of this class are launching and maintaining a NodeJS process.</para>
     /// <para>
     /// This abstract base class uses the input/output streams of the child process to perform a simple handshake
     /// to determine when the child process is ready to accept invocations. This is agnostic to the mechanism that
@@ -40,7 +40,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// Creates a new instance of <see cref="OutOfProcessNodeJSService"/>.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeJSServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
+        /// <param name="nodeJSServiceLogger">The <see cref="ILogger"/> to which the NodeJS process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="optionsAccessor"></param>
         /// <param name="embeddedResourcesService"></param>
         /// <param name="serverScriptAssembly"></param>
@@ -61,16 +61,16 @@ namespace Jering.JavascriptUtils.NodeJS
         }
 
         /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
+        /// Asynchronously invokes code in the NodeJS instance.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="invocationRequest">Contains the data to be sent to the Node.js process.</param>
+        /// <typeparam name="T">The JSON-serializable data type that the NodeJS code will asynchronously return.</typeparam>
+        /// <param name="invocationRequest">Contains the data to be sent to the NodeJS process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
         protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Called when the connection established message from the Node.js process is received. The server script can be used to customize the message to provide
+        /// Called when the connection established message from the NodeJS process is received. The server script can be used to customize the message to provide
         /// information on the server, such as the port is is listening on.
         /// </summary>
         /// <param name="connectionEstablishedMessage"></param>
@@ -156,7 +156,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     _connected = false;
                 }
 
-                // If the the Node.js process has not been started has has been terminated for some reason, attempt to create a 
+                // If the the NodeJS process has not been started has has been terminated for some reason, attempt to create a 
                 // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
                 // is created successfully, all threads will be released by the OutputDataReceived delegate in 
                 // ConnectToInputOutputStreams.
@@ -216,7 +216,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     $"The Node invocation timed out after {_options.TimeoutMS}ms.",
                     $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS)} "
                     + $"property on {nameof(OutOfProcessNodeJSServiceOptions)}.\n\n"
-                    + "The first debugging step is to ensure that your Node.js function always invokes the supplied "
+                    + "The first debugging step is to ensure that your NodeJS function always invokes the supplied "
                     + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
                     + "the .NET code has no way to know that it is finished or has failed."
                 );

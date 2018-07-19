@@ -5,12 +5,12 @@ using Microsoft.Extensions.Options;
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
-    /// Extension methods for setting up NodeServices in an <see cref="IServiceCollection" />.
+    /// Extension methods for setting up NodeJS in an <see cref="IServiceCollection" />.
     /// </summary>
     public static class NodeJSServiceCollectionExtensions
     {
         /// <summary>
-        /// Adds NodeServices support to the <paramref name="services"/>.
+        /// Adds NodeJS support to the <paramref name="services"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         public static void AddNodeJS(this IServiceCollection services)

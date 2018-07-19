@@ -6,59 +6,61 @@ using System.Threading.Tasks;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Represents an instance of Node.js to which Remote Procedure Calls (RPC) may be sent.
+    /// A service that provides ways to invoke code in NodeJS.
     /// </summary>
     public interface INodeJSService : IDisposable
     {
         /// <summary>
-        /// Asynchronously invokes code in the Node.js instance. 
+        /// Asynchronously invokes code contained in a file, in NodeJS. The module is cached by the NodeJS process if it isn't already cached. If it is already cached, it is invoked from the 
+        /// cache.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="modulePath">The path to the Node.js module (i.e., JavaScript file) relative to your project root that contains the code to be invoked.</param>
-        /// <param name="exportName">If set, specifies the name of the property in the Node.js module's exports to be invoked. If not set, the module's exports
+        /// <typeparam name="T">The type of the object this function will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
+        /// <param name="modulePath">The path to the NodeJS module (i.e., JavaScript file) relative to your project root.</param>
+        /// <param name="exportName">If set, specifies the name of the property (in the module's exports) to be invoked. If not set, the module's exports
         /// is assumed to be a function, and is invoked.</param>
-        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{T}"/> representing the completion of the RPC call.</returns>
+        /// <returns>A <see cref="Task{T}"/> representing the completion of the invocation.</returns>
         Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
+        /// Asynchronously invokes code in NodeJS, optionally caching the module in the NodeJS process. A module cached using this function can be invoked using <see cref="TryInvokeFromCacheAsync"/>.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="moduleString">In string form, the Node.js module (i.e., JavaScript file) to be invoked.</param>
-        /// <param name="newCacheIdentifier">If specified, the Node.js module's exports will be cached by the Node.js process, using this string as its identifier. </param>
-        /// <param name="exportName">If specified, used as the name of the property in the Node.js module's exports to be invoked. Otherwise, the module's exports object
+        /// <typeparam name="T">The type of the object this function will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
+        /// <param name="moduleString">The NodeJS module as a string.</param>
+        /// <param name="newCacheIdentifier">If specified, the NodeJS module's exports will be cached by the NodeJS process, using this string as its identifier. If unspecified,
+        /// the NodeJS module's exports will not be cached.</param>
+        /// <param name="exportName">If set, specifies the name of the property (in the module's exports) to be invoked. If not set, the module's exports
         /// is assumed to be a function, and is invoked.</param>
-        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{T}"/> representing the completion of the RPC call.</returns>
+        /// <returns>A <see cref="Task{T}"/> representing the completion of the invocation.</returns>
         Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Asynchronously invokes code in the Node.js instance.
+        /// Asynchronously invokes code in NodeJS, optionally caching the module in the NodeJS process. A module cached using this function can be invoked using <see cref="TryInvokeFromCacheAsync"/>.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="moduleStream">In <see cref="Stream"/> form,, the Node.js module (i.e., JavaScript file) to be invoked.</param>
-        /// <param name="newCacheIdentifier">If specified, the Node.js module's exports will be cached by the Node.js process, using this string as its identifier. </param>
-        /// <param name="exportName">If specified, used as the name of the property in the Node.js module's exports to be invoked. Otherwise, the module's exports object
+        /// <typeparam name="T">The type of the object this function will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
+        /// <param name="moduleStream">The NodeJS module as a <see cref="Stream"/>.</param>
+        /// <param name="newCacheIdentifier">If specified, the NodeJS module's exports will be cached by the NodeJS process, using this string as its identifier. If unspecified,
+        /// the NodeJS module's exports will not be cached.</param>
+        /// <param name="exportName">If set, specifies the name of the property (in the module's exports) to be invoked. If not set, the module's exports
         /// is assumed to be a function, and is invoked.</param>
-        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{T}"/> representing the completion of the RPC call.</returns>
+        /// <returns>A <see cref="Task{T}"/> representing the completion of the invocation.</returns>
         Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Asynchronously attempts to invoke code from the Node.js process's cache.
+        /// Asynchronously attempts to invoke code from the NodeJS process's cache.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the Node.js code will asynchronously return.</typeparam>
-        /// <param name="moduleCacheIdentifier">The cache identifier of the Node.js module (i.e., JavaScript file) to be invoked.</param>
-        /// <param name="exportName">If specified, used as the name of the property in the Node.js module's exports to be invoked. Otherwise, the module's exports object
+        /// <typeparam name="T">The type of the object this function will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
+        /// <param name="moduleCacheIdentifier">The cache identifier of the NodeJS module to be invoked.</param>
+        /// <param name="exportName">If set, specifies the name of the property (in the module's exports) to be invoked. If not set, the module's exports
         /// is assumed to be a function, and is invoked.</param>
-        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the invoked Node.js function.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{InvocationResult{T}}"/> representing the completion of the RPC call. Since this method is asynchronous, it cannot have an out parameter.
-        /// Therefore, it returns both a bool indicating success or failure and the resulting value of the invocation wrapped in <see cref="InvocationResult{T}"/>.</returns>
+        /// <returns>A <see cref="Task{(bool, T)}"/> representing the completion of the invocation. The bool in the value tuple is true on success.</returns>
         Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }
