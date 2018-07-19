@@ -46,7 +46,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         }
 
         [Fact]
-        public void Constructor_CorrectlyCreatesInvocationRequestIfSuccessful()
+        public void Constructor_CreatesInvocationRequestIfSuccessful()
         {
             // Arrange
             const string dummyModuleSource = "dummyModuleSource";

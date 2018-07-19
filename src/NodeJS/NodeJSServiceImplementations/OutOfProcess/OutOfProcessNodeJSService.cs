@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,35 +24,40 @@ namespace Jering.JavascriptUtils.NodeJS
     {
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.NodeJS: Listening on ";
 
-        protected readonly ILogger NodeServiceLogger;
+        protected readonly ILogger NodeJSServiceLogger;
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _serverScriptName;
+        private readonly Assembly _serverScriptAssembly;
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
 
         private Process _nodeProcess;
+        private bool _connected;
         private bool _disposed;
 
         /// <summary>
         /// Creates a new instance of <see cref="OutOfProcessNodeJSService"/>.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
+        /// <param name="nodeJSServiceLogger">The <see cref="ILogger"/> to which the Node.js process's stdout/stderr (and other log information) will be redirected to.</param>
         /// <param name="optionsAccessor"></param>
         /// <param name="embeddedResourcesService"></param>
+        /// <param name="serverScriptAssembly"></param>
         /// <param name="serverScriptName"></param>
         protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
-            ILogger nodeServiceLogger,
+            ILogger nodeJSServiceLogger,
             IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
+            Assembly serverScriptAssembly,
             string serverScriptName)
         {
             _nodeProcessFactory = nodeProcessFactory;
-            NodeServiceLogger = nodeServiceLogger ?? new ConsoleLogger(nameof(INodeJSService), null, false);
+            NodeJSServiceLogger = nodeJSServiceLogger;
             _options = optionsAccessor?.Value ?? new OutOfProcessNodeJSServiceOptions();
             _embeddedResourcesService = embeddedResourcesService;
             _serverScriptName = serverScriptName;
+            _serverScriptAssembly = serverScriptAssembly;
         }
 
         /// <summary>
@@ -113,7 +118,7 @@ namespace Jering.JavascriptUtils.NodeJS
             return TryInvokeCoreAsync<T>(invocationRequest, cancellationToken);
         }
 
-        private async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+        internal async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
@@ -143,28 +148,42 @@ namespace Jering.JavascriptUtils.NodeJS
                     }
                 }
 
-                // If the the Node.js process has terminated for some reason, attempt to create a new process.
-                // Apart from the thread creating the process, all other threads will be blocked. If the new process 
+                // Once ConnectToInputOutStreams is called, _nodeProcess will not be null and _nodeProcess.HasExited will be false.
+                // Therefore, there is no risk of _connected being set to false while waiting for or after receiving the connection established
+                // message.
+                if (_nodeProcess?.HasExited != false)
+                {
+                    _connected = false;
+                }
+
+                // If the the Node.js process has not been started has has been terminated for some reason, attempt to create a 
+                // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
                 // is created successfully, all threads will be released by the OutputDataReceived delegate in 
                 // ConnectToInputOutputStreams.
-                if (_nodeProcess?.HasExited != false && !_disposed)
+                if (!_connected)
                 {
+                    if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                    {
+                        NodeJSServiceLogger.LogDebug($"Before first semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                    }
+
                     await _processSemaphore.WaitAsync().ConfigureAwait(false);
 
                     // Double checked lock
-                    if (_nodeProcess?.HasExited != false)
+                    if (!_connected)
                     {
                         // Even though process has exited, dispose instance to release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
                         _nodeProcess?.Dispose();
-                        _nodeProcess = null;
-                        string serverScript = _embeddedResourcesService.ReadAsString(GetType(), _serverScriptName); // This doesn't get called often, so don't bother caching serverScript
-                        Process newNodeProcess = _nodeProcessFactory.Create(serverScript);
-                        ConnectToInputOutputStreams(newNodeProcess);
+                        string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
+                        _nodeProcess = _nodeProcessFactory.Create(serverScript);
+                        ConnectToInputOutputStreams(_nodeProcess);
+
+                        if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                        {
+                            NodeJSServiceLogger.LogDebug($"Before second semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                        }
 
                         await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        // Successfully connected to new node process
-                        _nodeProcess = newNodeProcess;
                     }
                 }
 
@@ -206,7 +225,6 @@ namespace Jering.JavascriptUtils.NodeJS
 
         protected virtual void ConnectToInputOutputStreams(Process nodeProcess)
         {
-            bool connectionEstablished = false;
             var outputStringBuilder = new StringBuilder();
             var errorStringBuilder = new StringBuilder();
 
@@ -217,14 +235,19 @@ namespace Jering.JavascriptUtils.NodeJS
                     return;
                 }
 
-                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START) && !connectionEstablished)
+                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START) && !_connected)
                 {
                     OnConnectionEstablishedMessageReceived(evt.Data);
-                    connectionEstablished = true;
+                    _connected = true;
 
                     // Release all threads by resetting CurrentCount to 1
                     while (_processSemaphore.CurrentCount < 1)
                     {
+                        if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                        {
+                            NodeJSServiceLogger.LogDebug($"Releasing semaphore, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                        }
+
                         _processSemaphore.Release();
                     }
                 }
@@ -234,7 +257,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
                     if (TryCreateMessage(outputStringBuilder, evt.Data, out string message))
                     {
-                        NodeServiceLogger.LogInformation(message);
+                        NodeJSServiceLogger.LogDebug(message);
                     }
                 }
             };
@@ -248,7 +271,7 @@ namespace Jering.JavascriptUtils.NodeJS
 
                 if (TryCreateMessage(errorStringBuilder, evt.Data, out string message))
                 {
-                    NodeServiceLogger.LogError(message);
+                    NodeJSServiceLogger.LogError(message);
                 }
             };
 

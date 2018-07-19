@@ -1,28 +1,27 @@
 ﻿using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
     public class NodeJSProcessFactory : INodeJSProcessFactory
     {
-        private readonly NodeJSProcessOptions _nodeProcessOptions;
+        private readonly NodeJSProcessOptions _nodeJSProcessOptions;
 
         public NodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor)
         {
-            _nodeProcessOptions = optionsAccessor.Value;
+            _nodeJSProcessOptions = optionsAccessor?.Value ?? new NodeJSProcessOptions();
         }
 
-        public Process Create(string nodeServerScript)
+        public Process Create(string serverScript)
         {
-            ProcessStartInfo startInfo = CreateNodeProcessStartInfo(nodeServerScript);
+            ProcessStartInfo startInfo = CreateStartInfo(serverScript);
 
-            return CreateAndStartNodeProcess(startInfo);
+            return CreateProcess(startInfo);
         }
 
-        internal ProcessStartInfo CreateNodeProcessStartInfo(string nodeServerScript)
+        internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
         {
             nodeServerScript = EscapeCommandLineArg(nodeServerScript);
 
@@ -30,20 +29,20 @@ namespace Jering.JavascriptUtils.NodeJS
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")
             {
-                Arguments = $"{_nodeProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeProcessOptions.Port}",
+                Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = _nodeProcessOptions.ProjectPath
+                WorkingDirectory = _nodeJSProcessOptions.ProjectPath
             };
 
             // Append environment Variables
-            if (_nodeProcessOptions.EnvironmentVariables != null)
+            if (_nodeJSProcessOptions.EnvironmentVariables != null)
             {
-                foreach (var envVarKey in _nodeProcessOptions.EnvironmentVariables.Keys)
+                foreach (var envVarKey in _nodeJSProcessOptions.EnvironmentVariables.Keys)
                 {
-                    string envVarValue = _nodeProcessOptions.EnvironmentVariables[envVarKey];
+                    string envVarValue = _nodeJSProcessOptions.EnvironmentVariables[envVarKey];
                     if (envVarValue != null)
                     {
                         startInfo.Environment[envVarKey] = envVarValue;
@@ -51,23 +50,10 @@ namespace Jering.JavascriptUtils.NodeJS
                 }
             }
 
-            // Append projectPath to NODE_PATH so it can locate node_modules. ProjectPath may be null if only bundles/self-contained-scripts
-            // will be executed.
-            if (_nodeProcessOptions.ProjectPath != null)
-            {
-                string existingNodePath = Environment.GetEnvironmentVariable("NODE_PATH") ?? string.Empty;
-                if (existingNodePath != string.Empty)
-                {
-                    existingNodePath += Path.PathSeparator;
-                }
-
-                startInfo.Environment["NODE_PATH"] = existingNodePath + Path.Combine(_nodeProcessOptions.ProjectPath, "node_modules");
-            }
-
             return startInfo;
         }
 
-        internal Process CreateAndStartNodeProcess(ProcessStartInfo startInfo)
+        private Process CreateProcess(ProcessStartInfo startInfo)
         {
             try
             {
@@ -95,6 +81,7 @@ namespace Jering.JavascriptUtils.NodeJS
         }
 
         // TODO verify that this escaping works for non-windows platforms
+        // https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/
         internal string EscapeCommandLineArg(string arg)
         {
             var stringBuilder = new StringBuilder();

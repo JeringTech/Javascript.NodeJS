@@ -40,6 +40,7 @@ namespace Jering.JavascriptUtils.NodeJS
                 nodeServiceLogger,
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
+                typeof(HttpNodeJSService).Assembly,
                 SERVER_SCRIPT_NAME)
         {
             _httpClientService = httpClientService;

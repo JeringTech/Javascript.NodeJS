@@ -9,22 +9,32 @@ namespace Jering.JavascriptUtils.NodeJS
     /// </summary>
     public class EmbeddedResourcesService : IEmbeddedResourcesService
     {
-        public string ReadAsString(Type assemblyContainingType, string name)
+        public string ReadAsString(Assembly embeddedResourceAssembly, string name)
         {
-            Assembly asm = assemblyContainingType.GetTypeInfo().Assembly;
-
-            using (Stream stream = asm.GetManifestResourceStream(name))
+            using (Stream stream = embeddedResourceAssembly.GetManifestResourceStream(name))
             using (var streamReader = new StreamReader(stream))
             {
                 return streamReader.ReadToEnd();
             }
         }
 
-        public Stream ReadAsStream(Type assemblyContainingType, string name)
+        public string ReadAsString(Type typeFromEmbeddedResourceAssembly, string name)
         {
-            Assembly asm = assemblyContainingType.GetTypeInfo().Assembly;
+            Assembly asm = typeFromEmbeddedResourceAssembly.GetTypeInfo().Assembly;
 
-            return asm.GetManifestResourceStream(name);
+            return ReadAsString(asm, name);
+        }
+
+        public Stream ReadAsStream(Assembly embeddedResourceAssembly, string name)
+        {
+            return embeddedResourceAssembly.GetManifestResourceStream(name);
+        }
+
+        public Stream ReadAsStream(Type typeFromEmbeddedResourceAssembly, string name)
+        {
+            Assembly asm = typeFromEmbeddedResourceAssembly.GetTypeInfo().Assembly;
+
+            return ReadAsStream(asm, name);
         }
     }
 }
