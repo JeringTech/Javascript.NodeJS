@@ -17,13 +17,14 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
             services.AddOptions();
+            services.AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>();
+
             services.AddSingleton<IHttpContentFactory, InvocationContentFactory>();
             services.AddSingleton<IJsonService, JsonService>();
             services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
             services.AddSingleton<IHttpClientService, HttpClientService>();
             services.AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>();
             services.AddSingleton<INodeJSService, HttpNodeJSService>();
-            services.AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>();
         }
     }
 }

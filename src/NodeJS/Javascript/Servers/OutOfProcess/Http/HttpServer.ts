@@ -10,6 +10,10 @@ import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
 // Parse arguments
 const args: { [key: string]: string } = parseArgs(process.argv);
 
+// Overwrite writing to output streams
+demarcateMessageEndings(process.stdout);
+demarcateMessageEndings(process.stderr);
+
 // Start auto-termination loop
 exitWhenParentExits(parseInt(args.parentPid), true, 1000);
 
@@ -198,4 +202,20 @@ function processExists(pid: number) {
         }
         return false;
     }
+}
+
+function demarcateMessageEndings(outputStream: NodeJS.WritableStream) {
+    const origWriteFunction = outputStream.write;
+    outputStream.write = <any>function (value: any) {
+        // Only interfere with the write if it's definitely a string
+        if (typeof value === 'string') {
+            // Node appends a new line character at the end of the message. This facilitates reading of the stream: the process reading it reads messages line by line -
+            // characters stay in its buffer until a new line character is received. This means that the null terminating character must appear before the last
+            // new line character of the message. This approach is slightly heavy handed in that it removes all whitespace at the end of the message, generally,
+            // such whitespace is pointless.
+            arguments[0] = arguments[0].trimEnd() + '\0\n';
+        }
+
+        origWriteFunction.apply(this, arguments);
+    };
 }

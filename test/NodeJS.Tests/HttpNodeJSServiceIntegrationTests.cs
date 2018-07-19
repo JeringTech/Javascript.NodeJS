@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Xunit;
 
 namespace Jering.JavascriptUtils.NodeJS.Tests
@@ -20,16 +21,16 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
             // Cache
-            await httpNodeService.
+            await testSubject.
                 InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
                     dummyCacheIdentifier,
                     args: new[] { dummyResultString }).
                 ConfigureAwait(false);
 
             // Act
-            (bool success, DummyResult value) = await httpNodeService.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
+            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
             Assert.True(success);
@@ -42,10 +43,10 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
-            (bool success, DummyResult value) = await httpNodeService.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
+            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
             Assert.False(success);
@@ -57,7 +58,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             // Arrange
             const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             DummyResult result;
             using (var memoryStream = new MemoryStream())
@@ -68,7 +69,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 memoryStream.Position = 0;
 
                 // Act
-                result = await httpNodeService.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
+                result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
             }
 
             // Assert
@@ -80,10 +81,10 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             // Arrange
             const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
-            DummyResult result = await httpNodeService.
+            DummyResult result = await testSubject.
                 InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
@@ -94,10 +95,10 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         public async void InvokeFromFileAsync_InvokesJavascript()
         {
             const string dummyResultString = "success";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
-            DummyResult result = await httpNodeService.
+            DummyResult result = await testSubject.
                 InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
@@ -109,11 +110,11 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             // Arrange
             const string dummyModule = "return null;";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                httpNodeService.InvokeFromStringAsync<DummyResult>(dummyModule)).
+                testSubject.InvokeFromStringAsync<DummyResult>(dummyModule)).
                 ConfigureAwait(false);
 
             // Assert
@@ -126,11 +127,11 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             // Arrange
             const string dummyExportName = "dummyExportName";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                httpNodeService.InvokeFromStringAsync<DummyResult>("module.exports = (callback) => callback(null, {result: 'success'});", dummyCacheIdentifier, dummyExportName)).
+                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = (callback) => callback(null, {result: 'success'});", dummyCacheIdentifier, dummyExportName)).
                 ConfigureAwait(false);
 
             // Assert
@@ -142,11 +143,11 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             // Arrange
             const string dummyExportName = "dummyExportName";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                httpNodeService.InvokeFromStringAsync<DummyResult>($"module.exports = {{{dummyExportName}: 'not a function'}};", exportName: dummyExportName)).
+                testSubject.InvokeFromStringAsync<DummyResult>($"module.exports = {{{dummyExportName}: 'not a function'}};", exportName: dummyExportName)).
                 ConfigureAwait(false);
 
             // Assert
@@ -157,11 +158,11 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                httpNodeService.InvokeFromStringAsync<DummyResult>("module.exports = {result: 'not a function'};")).
+                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = {result: 'not a function'};")).
                 ConfigureAwait(false);
 
             // Assert
@@ -173,11 +174,11 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             // Arrange
             const string dummyErrorString = "error";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                httpNodeService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, errorString) => callback(new Error(errorString));", args: new[] { dummyErrorString })).
+                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = (callback, errorString) => callback(new Error(errorString));", args: new[] { dummyErrorString })).
                 ConfigureAwait(false);
 
             // Assert
@@ -190,20 +191,51 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyExportName = "dummyExportName";
-            HttpNodeJSService httpNodeService = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeService();
 
             // Act
-            DummyResult result = await httpNodeService.
+            DummyResult result = await testSubject.
                 InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyResultString }).ConfigureAwait(false);
 
             // Assert
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        private HttpNodeJSService CreateHttpNodeService()
+        // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
+        [Fact]
+        public async void AllInvokeMethods_ReceiveAndLogMessages()
+        {
+            // Arrange
+            const string dummySinglelineString = "dummySingleLineString";
+            const string dummyMultilineString = "dummy\nMultiline\nString\n";
+            var resultStringBuilder = new StringBuilder();
+            HttpNodeJSService testSubject = CreateHttpNodeService(resultStringBuilder);
+
+            // Act
+            await testSubject.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => {{ console.log('{dummySinglelineString}'); console.log(`{dummyMultilineString}`); callback();}}").ConfigureAwait(false);
+            string result = resultStringBuilder.ToString();
+
+            // Assert
+            Assert.Equal($"{dummySinglelineString}\n{dummyMultilineString}", result, ignoreLineEndingDifferences: true);
+        }
+
+        /// <summary>
+        /// Specify <paramref name="stringLoggerStringBuilder"/> to retrieve all log output.
+        /// </summary>
+        /// <param name="stringLoggerStringBuilder"></param>
+        private HttpNodeJSService CreateHttpNodeService(StringBuilder stringLoggerStringBuilder = null)
         {
             IServiceCollection services = new ServiceCollection();
             services.AddNode(); // Default INodeService is HttpNodeService
+            services.AddLogging(lb =>
+            {
+                lb.AddDebug();
+                if (stringLoggerStringBuilder != null)
+                {
+                    lb.AddProvider(new StringLoggerProvider(stringLoggerStringBuilder));
+                }
+            });
 
             if (Debugger.IsAttached)
             {
@@ -212,10 +244,53 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             }
             _serviceProvider = services.BuildServiceProvider();
 
-            ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddDebug();
-
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
+        }
+
+        // Used by AllInvokeMethods_ReceiveAndLogMessages to validate output from the NodeJS process
+        public class StringLogger : ILogger
+        {
+            private readonly StringBuilder _stringBuilder;
+
+            public StringLogger(StringBuilder stringBuilder)
+            {
+                _stringBuilder = stringBuilder;
+            }
+
+            public IDisposable BeginScope<TState>(TState state)
+            {
+                return null;
+            }
+
+            public bool IsEnabled(LogLevel logLevel)
+            {
+                return true;
+            }
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            {
+                _stringBuilder.AppendLine(formatter(state, exception));
+            }
+        }
+
+        // Used by AllInvokeMethods_ReceiveAndLogMessages to validate output from the NodeJS process
+        public class StringLoggerProvider : ILoggerProvider
+        {
+            private readonly StringBuilder _stringBuilder;
+
+            public StringLoggerProvider(StringBuilder stringBuilder)
+            {
+                _stringBuilder = stringBuilder;
+            }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new StringLogger(_stringBuilder);
+            }
+
+            public void Dispose()
+            {
+            }
         }
 
         private class DummyResult

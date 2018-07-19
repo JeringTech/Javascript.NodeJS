@@ -68,8 +68,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             services.AddNode();
             services.AddLogging(lb =>
             {
-                lb.AddDebug();
-                lb.SetMinimumLevel(LogLevel.Debug);
+                lb.AddDebug().SetMinimumLevel(LogLevel.Debug);
             });
             services.AddSingleton<INodeJSService, DummyNodeJSService>(); // Override default service
             _serviceProvider = services.BuildServiceProvider();

@@ -257,7 +257,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
                     if (TryCreateMessage(outputStringBuilder, evt.Data, out string message))
                     {
-                        NodeJSServiceLogger.LogDebug(message);
+                        NodeJSServiceLogger.LogInformation(message);
                     }
                 }
             };
@@ -281,15 +281,19 @@ namespace Jering.JavascriptUtils.NodeJS
 
         private bool TryCreateMessage(StringBuilder stringBuilder, string newLine, out string message)
         {
-            stringBuilder.AppendLine(newLine);
-
-            if (stringBuilder[stringBuilder.Length - 1] != '\0')
+            // OutputDataReceived is called everytime a newline character is read. The event data supplied to the callback
+            // is a string containing all the characters between the previous newline character and the most recent one.
+            // In other words, the stream is read line by line. The last line in each message ends with a null terminating 
+            // character (see HttpServer).
+            if (newLine[newLine.Length - 1] != '\0')
             {
+                stringBuilder.AppendLine(newLine);
                 message = null;
                 return false;
             }
 
-            stringBuilder.Length--;
+            stringBuilder.Append(newLine);
+            stringBuilder.Length--; // Remove null terminating character
             message = stringBuilder.ToString();
             stringBuilder.Length = 0;
 
