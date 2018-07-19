@@ -65,7 +65,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         private DummyNodeJSService CreateDummyNodeService()
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddNode();
+            services.AddNodeJS();
             services.AddLogging(lb =>
             {
                 lb.AddDebug().SetMinimumLevel(LogLevel.Debug);

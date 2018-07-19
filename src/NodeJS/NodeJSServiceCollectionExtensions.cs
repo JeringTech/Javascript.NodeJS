@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Adds NodeServices support to the <paramref name="services"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        public static void AddNode(this IServiceCollection services)
+        public static void AddNodeJS(this IServiceCollection services)
         {
             services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
             services.AddOptions();

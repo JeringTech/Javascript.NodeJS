@@ -227,7 +227,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         private HttpNodeJSService CreateHttpNodeService(StringBuilder stringLoggerStringBuilder = null)
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddNode(); // Default INodeService is HttpNodeService
+            services.AddNodeJS(); // Default INodeService is HttpNodeService
             services.AddLogging(lb =>
             {
                 lb.AddDebug();
