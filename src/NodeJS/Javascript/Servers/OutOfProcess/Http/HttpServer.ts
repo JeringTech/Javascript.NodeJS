@@ -20,6 +20,9 @@ exitWhenParentExits(parseInt(args.parentPid), true, 1000);
 // Patch lstat - issue explained in this comment: https://github.com/aspnet/JavaScriptServices/issues/1101#issue-241971678
 patchLStat();
 
+// Set by NodeJSProcessFactory
+let projectDir = process.cwd();
+
 // Start server
 const server = http.createServer((req, res) => {
     let bodyChunks = [];
@@ -68,7 +71,7 @@ const server = http.createServer((req, res) => {
 
                     exports = module.exports;
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
-                    const resolvedPath = path.resolve(process.cwd(), invocationRequest.moduleSource);
+                    const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
                     exports = __non_webpack_require__(resolvedPath);
                 } else {
                     respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}.`);
@@ -209,8 +212,6 @@ function processExists(pid: number) {
 
 // https://github.com/aspnet/JavaScriptServices/blob/4763ad5b8c0575f030a3cac8518767f4bd192c9b/src/Microsoft.AspNetCore.NodeServices/TypeScript/Util/PatchModuleResolutionLStat.ts
 function patchLStat() {
-    const appRootDir = process.cwd();
-
     function patchedLStat(pathToStatLong: string, fsReqWrap?: any) {
         try {
             // If the lstat completes without errors, we don't modify its behavior at all
@@ -227,7 +228,7 @@ function patchLStat() {
                 // ancestor directories are symlinks or not. If there's a genuine file
                 // permissions issue, it will still surface later when Node actually
                 // tries to read the file.
-                return origLStat.call(this, appRootDir, fsReqWrap);
+                return origLStat.call(this, projectDir, fsReqWrap);
             } else {
                 // In any other case, preserve the original error
                 throw ex;
@@ -241,7 +242,7 @@ function patchLStat() {
     if (/^win/.test(process.platform)) {
         try {
             // Get the app's root dir in Node's internal "long" format (e.g., \\?\C:\dir\subdir)
-            appRootDirLong = (path as any)._makeLong(appRootDir);
+            appRootDirLong = (path as any)._makeLong(projectDir);
 
             // Actually apply the patch, being as defensive as possible
             const bindingFs = (process as any).binding('fs');
