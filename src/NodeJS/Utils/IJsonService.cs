@@ -9,5 +9,6 @@ namespace Jering.JavascriptUtils.NodeJS
     {
         T Deserialize<T>(JsonReader jsonReader);
         void Serialize(JsonWriter jsonWriter, object value);
+        string Serialize(object value);
     }
 }
