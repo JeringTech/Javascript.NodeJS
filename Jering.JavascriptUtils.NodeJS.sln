@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.NodeJS.Tests", "test\NodeJS.Tests\Jering.JavascriptUtils.NodeJS.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.NodeJS.Performance", "test\NodeJS.Performance\Jering.JavascriptUtils.NodeJS.Performance.csproj", "{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB3D3274-0BDE-4C06-8165-9508862D267C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
