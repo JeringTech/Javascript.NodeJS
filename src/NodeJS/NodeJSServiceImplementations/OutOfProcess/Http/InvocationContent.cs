@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -18,10 +17,9 @@ namespace Jering.JavascriptUtils.NodeJS
     /// </summary>
     public class InvocationContent : HttpContent
     {
-        // Default encoding for StreamWriters - https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/IO/EncodingCache.cs
-        private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
         // Arbitrary boundary
         internal const string BOUNDARY = "--Uiw6+hXl3k+5ia0cUYGhjA==";
+        internal static byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes(BOUNDARY);
 
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;
@@ -38,23 +36,20 @@ namespace Jering.JavascriptUtils.NodeJS
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
-            // By default, when StreamWriter is disposed, it closes the stream it writes to. In this instance, the stream is a HttpContentStream 
-            // that will be further utilized by the framework. If the StreamWriter is allowed to close it, an exception will be thrown by the framework
-            // when it attempts to write to it. The StreamWriter constructor that allows leaveOpen to be specified requires encoding and bufferSize to be specified,
-            // here they are simply the defaults used by StreamWriter's other constructors - 
-            // https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/IO/StreamWriter.cs.
-            using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 1024, true))
-            using (var jsonTextWriter = new JsonTextWriter(streamWriter))
-            {
-                _jsonService.Serialize(jsonTextWriter, _invocationRequest);
+            // TODO why is this faster than writing directly to the stream?
+            string json = _jsonService.Serialize(_invocationRequest);
+            await stream.WriteAsync(Encoding.UTF8.GetBytes(json), 0, json.Length).ConfigureAwait(false);
 
-                if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
-                {
-                    streamWriter.Write(BOUNDARY);
-                    streamWriter.Flush();
-                    await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
-                }
+            if(_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
+            {
+                await stream.WriteAsync(BOUNDARY_BYTES, 0, BOUNDARY_BYTES.Length).ConfigureAwait(false);
+                await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
             }
+
+            //var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true);
+            //var jsonWriter = new JsonTextWriter(streamWriter);
+            //_jsonService.Serialize(jsonWriter, _invocationRequest);
+            //await streamWriter.FlushAsync().ConfigureAwait(false);
         }
 
         protected override bool TryComputeLength(out long length)
