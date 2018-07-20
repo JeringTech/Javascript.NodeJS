@@ -1,8 +1,8 @@
-using Jering.JavascriptUtils.NodeJS;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// Extension methods for setting up NodeJS in an <see cref="IServiceCollection" />.
