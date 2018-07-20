@@ -134,8 +134,7 @@ namespace Jering.JavascriptUtils.NodeJS
                 // Create combined CancellationToken only as required.
                 if (_options.TimeoutMS > 0)
                 {
-                    timeoutCTS = new CancellationTokenSource();
-                    timeoutCTS.CancelAfter(_options.TimeoutMS);
+                    timeoutCTS = new CancellationTokenSource(_options.TimeoutMS);
 
                     if (cancellationToken != CancellationToken.None)
                     {
@@ -192,6 +191,8 @@ namespace Jering.JavascriptUtils.NodeJS
             }
             catch (Exception exception)
             {
+                // TODO do CancellationTokenSources use unmanaged resources?
+                // If exception is not caught by an enclosing try-catch block, finally will never be called.
                 timeoutCTS?.Dispose();
                 combinedCTS?.Dispose();
 
@@ -220,6 +221,11 @@ namespace Jering.JavascriptUtils.NodeJS
                     + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
                     + "the .NET code has no way to know that it is finished or has failed."
                 );
+            }
+            finally
+            {
+                timeoutCTS?.Dispose();
+                combinedCTS?.Dispose();
             }
         }
 
