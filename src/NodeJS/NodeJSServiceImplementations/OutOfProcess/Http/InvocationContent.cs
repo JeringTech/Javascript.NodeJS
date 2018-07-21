@@ -38,7 +38,8 @@ namespace Jering.JavascriptUtils.NodeJS
         {
             // TODO why is this faster than writing directly to the stream?
             string json = _jsonService.Serialize(_invocationRequest);
-            await stream.WriteAsync(Encoding.UTF8.GetBytes(json), 0, json.Length).ConfigureAwait(false);
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
+            await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
 
             if(_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
