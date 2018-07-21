@@ -6,12 +6,7 @@ namespace Jering.JavascriptUtils.NodeJS.Performance
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<InvokeFromFile>();
-        }
-
-        public class DummyResult
-        {
-            public string Result { get; set; }
+            BenchmarkRunner.Run<Benchmarks>();
         }
     }
 }
