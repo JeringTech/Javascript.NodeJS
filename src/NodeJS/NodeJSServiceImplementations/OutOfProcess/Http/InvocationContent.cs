@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Newtonsoft.Json;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -17,6 +18,8 @@ namespace Jering.JavascriptUtils.NodeJS
     /// </summary>
     public class InvocationContent : HttpContent
     {
+        //private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
         // Arbitrary boundary
         internal const string BOUNDARY = "--Uiw6+hXl3k+5ia0cUYGhjA==";
         internal static byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes(BOUNDARY);
@@ -29,8 +32,9 @@ namespace Jering.JavascriptUtils.NodeJS
             _invocationRequest = invocationRequest;
             _jsonService = jsonService;
 
-            if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream) {
-                Headers.ContentType =  new MediaTypeHeaderValue("multipart/mixed");
+            if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
+            {
+                Headers.ContentType = new MediaTypeHeaderValue("multipart/mixed");
             }
         }
 
@@ -41,16 +45,18 @@ namespace Jering.JavascriptUtils.NodeJS
             byte[] bytes = Encoding.UTF8.GetBytes(json);
             await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
 
-            if(_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
+            //using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
+            //using (var jsonWriter = new JsonTextWriter(streamWriter))
+            //{
+            //    _jsonService.Serialize(jsonWriter, _invocationRequest);
+            //};
+
+            if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
                 await stream.WriteAsync(BOUNDARY_BYTES, 0, BOUNDARY_BYTES.Length).ConfigureAwait(false);
                 await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
             }
 
-            //var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true);
-            //var jsonWriter = new JsonTextWriter(streamWriter);
-            //_jsonService.Serialize(jsonWriter, _invocationRequest);
-            //await streamWriter.FlushAsync().ConfigureAwait(false);
         }
 
         protected override bool TryComputeLength(out long length)
