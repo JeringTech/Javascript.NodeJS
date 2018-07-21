@@ -57,19 +57,30 @@ const server = http.createServer((req, res) => {
                     exports = cachedModule.exports;
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.Stream ||
                     invocationRequest.moduleSourceType === ModuleSourceType.String) {
-                    let module = new Module(null, null);
-                    module._compile(invocationRequest.moduleSource, 'anonymous');
-
+                    // Check if already cached
                     if (invocationRequest.newCacheIdentifier != null) {
-                        // Notes on module caching:
-                        // When a module is required using require, it is cached in Module._cache using its absolute file path as its key.
-                        // When Module._load tries to load the same module again, it first resolves the absolute file path of the module, then it 
-                        // checks if the module exists in the cache. Custom keys for in memory modules cause an error at the file resolution step.
-                        // To make modules with custom keys requirable by other modules, require must be monkey patched.
-                        Module._cache[invocationRequest.newCacheIdentifier] = module;
+                        cachedModule = Module._cache[invocationRequest.newCacheIdentifier];
+                        if (cachedModule != null) {
+                            exports = cachedModule.exports;
+                        }
                     }
 
-                    exports = module.exports;
+                    // Not cached
+                    if (exports == null) {
+                        let module = new Module(null, null);
+                        module._compile(invocationRequest.moduleSource, 'anonymous');
+
+                        if (invocationRequest.newCacheIdentifier != null) {
+                            // Notes on module caching:
+                            // When a module is required using require, it is cached in Module._cache using its absolute file path as its key.
+                            // When Module._load tries to load the same module again, it first resolves the absolute file path of the module, then it 
+                            // checks if the module exists in the cache. Custom keys for in memory modules cause an error at the file resolution step.
+                            // To make modules with custom keys requirable by other modules, require must be monkey patched.
+                            Module._cache[invocationRequest.newCacheIdentifier] = module;
+                        }
+
+                        exports = module.exports;
+                    }
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
                     exports = __non_webpack_require__(resolvedPath);
