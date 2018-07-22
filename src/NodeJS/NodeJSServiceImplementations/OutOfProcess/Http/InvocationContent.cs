@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System.Buffers;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -40,16 +42,38 @@ namespace Jering.JavascriptUtils.NodeJS
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
-            // TODO why is this faster than writing directly to the stream?
-            string json = _jsonService.Serialize(_invocationRequest);
-            byte[] bytes = Encoding.UTF8.GetBytes(json);
-            await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+            char[] chars = null;
+            byte[] bytes = null;
+            try
+            {
+                // TODO can be better
+                var stringBuilder = new StringBuilder(256);
+                var stringWriter = new StringWriter(stringBuilder, CultureInfo.InvariantCulture);
+                var jsonTextWriter = new JsonTextWriter(stringWriter);
+                _jsonService.Serialize(jsonTextWriter, _invocationRequest);
 
-            //using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
-            //using (var jsonWriter = new JsonTextWriter(streamWriter))
-            //{
-            //    _jsonService.Serialize(jsonWriter, _invocationRequest);
-            //};
+                int numChars = stringBuilder.Length;
+                chars = ArrayPool<char>.Shared.Rent(numChars);
+                stringBuilder.CopyTo(0, chars, 0, numChars);
+
+                int numBytes = Encoding.UTF8.GetByteCount(chars, 0, numChars);
+                bytes = ArrayPool<byte>.Shared.Rent(numBytes);
+                Encoding.UTF8.GetBytes(chars, 0, numChars, bytes, 0);
+                await stream.WriteAsync(bytes, 0, numBytes).ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+                ArrayPool<char>.Shared.Return(chars);
+            }
+
+            // TODO Stream writer allocates both a char and byte[], it is currently slower than just serializing to string 
+            // (at least for small payloads) - https://github.com/dotnet/corefx/issues/23874
+            // using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
+            // using (var jsonWriter = new JsonTextWriter(streamWriter))
+            // {
+            //     _jsonService.Serialize(jsonWriter, _invocationRequest);
+            // };
 
             if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
