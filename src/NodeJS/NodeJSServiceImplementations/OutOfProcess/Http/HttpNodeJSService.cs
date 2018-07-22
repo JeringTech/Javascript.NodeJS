@@ -88,7 +88,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     }
                     else if (typeof(T) == typeof(string))
                     {
-                        // Stream reader closes the stream when it is diposed
+                        // Stream reader closes the stream when it is disposed
                         using (var streamReader = new StreamReader(stream))
                         {
                             value = (T)(object)await streamReader.ReadToEndAsync().ConfigureAwait(false);
