@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.NodeJS.ruleset</CodeAnalysisRuleSet>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
@@ -28,6 +29,7 @@
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
         <PackageReference Include="Roslynator.Analyzers" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
         <PackageReference Include="Roslynator.CodeFixes" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
+        <PackageReference Include="System.Buffers" Version="4.5.0" />
         <PackageReference Include="Yarn.MSBuild" Version="1.7.0" PrivateAssets="All" ExcludeAssets="Runtime" />
     </ItemGroup>
 
