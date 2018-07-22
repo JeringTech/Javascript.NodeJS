@@ -27,18 +27,6 @@ namespace Jering.JavascriptUtils.NodeJS
             _jsonSerializer.Serialize(jsonWriter, value);
         }
 
-        public string Serialize(object value)
-        {
-            // TODO can be pooled to reduce allocations
-            var stringBuilder = new StringBuilder(256);
-            var stringWriter = new StringWriter(stringBuilder, CultureInfo.InvariantCulture);
-            var jsonTextWriter = new JsonTextWriter(stringWriter);
-
-            _jsonSerializer.Serialize(jsonTextWriter, value);
-
-            return stringBuilder.ToString();
-        }
-
         public T Deserialize<T>(JsonReader jsonReader)
         {
             return _jsonSerializer.Deserialize<T>(jsonReader);
