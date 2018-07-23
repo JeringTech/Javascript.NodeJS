@@ -73,5 +73,6 @@
         <Rule Id="RCS1008" Action="Warning" />
         <Rule Id="RCS1123" Action="Hidden" />
         <Rule Id="RCS1029" Action="Hidden" />
+        <Rule Id="RCS1194" Action="Hidden" />
     </Rules>
 </RuleSet>
