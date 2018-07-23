@@ -6,17 +6,26 @@ using System.Collections.Generic;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
-    // These configurations correspond to some of the configurations in the Microsoft.AspNetCore.NodeServices.NodeServiceOptions constructor.
-    // The goal of providing these configurations is to make it easier to switch between this library and the NodeServices library.
+    /// <summary>
+    /// A <see cref="IConfigureOptions{TOptions}"/> implementation for configuring the singleton <see cref="NodeJSProcessOptions"/> for an application.
+    /// </summary>
     public class ConfigureNodeJSProcessOptions : IConfigureOptions<NodeJSProcessOptions>
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
+        /// <summary>
+        /// Creates a <see cref="ConfigureNodeJSProcessOptions"/> instance.
+        /// </summary>
+        /// <param name="serviceScopeFactory"></param>
         public ConfigureNodeJSProcessOptions(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
 
+        /// <summary>
+        /// Configures a <see cref="NodeJSProcessOptions"/> using data from the application's <see cref="IServiceProvider"/>.
+        /// </summary>
+        /// <param name="options">The target <see cref="NodeJSProcessOptions"/> to configure.</param>
         public void Configure(NodeJSProcessOptions options)
         {
             // Create a scope to avoid leaking unintended singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
@@ -28,7 +37,7 @@ namespace Jering.JavascriptUtils.NodeJS
                 if (hostingEnvironment != null)
                 {
                     options.ProjectPath = hostingEnvironment.ContentRootPath;
-                    if(options.EnvironmentVariables == null)
+                    if (options.EnvironmentVariables == null)
                     {
                         options.EnvironmentVariables = new Dictionary<string, string>();
                     }

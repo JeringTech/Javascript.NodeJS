@@ -12,11 +12,8 @@ namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
     /// <para>An implementation of <see cref="OutOfProcessNodeJSService"/> that uses Http for inter-process communication.</para>
-    /// <para>
-    /// The NodeJS child process starts a Http server on an arbitrary port (unless otherwise specified
-    /// in <see cref="NodeJSProcessOptions"/>). The server receives invocation requests as Http requests,
-    /// performs the invocations and responds with Http responses.
-    /// </para>
+    /// <para>The NodeJS child process starts a Http server on an arbitrary port (unless otherwise specified
+    /// using <see cref="NodeJSProcessOptions.Port"/>) and receives invocation requests as Http requests.</para>
     /// </summary>
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
@@ -29,6 +26,16 @@ namespace Jering.JavascriptUtils.NodeJS
         private bool _disposed;
         internal string Endpoint;
 
+        /// <summary>
+        /// Creates a <see cref="HttpNodeJSService"/> instance.
+        /// </summary>
+        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
+        /// <param name="httpContentFactory"></param>
+        /// <param name="embeddedResourcesService"></param>
+        /// <param name="httpClientService"></param>
+        /// <param name="jsonService"></param>
+        /// <param name="nodeJSProcessFactory"></param>
+        /// <param name="nodeServiceLogger"></param>
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
@@ -48,6 +55,7 @@ namespace Jering.JavascriptUtils.NodeJS
             _httpContentFactory = httpContentFactory;
         }
 
+        /// <inheritdoc />
         protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             using (HttpContent httpContent = _httpContentFactory.Create(invocationRequest))
@@ -110,6 +118,7 @@ namespace Jering.JavascriptUtils.NodeJS
             }
         }
 
+        /// <inheritdoc />
         protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
         {
             // Start after message start and "IP - "
@@ -146,6 +155,7 @@ namespace Jering.JavascriptUtils.NodeJS
             }
         }
 
+        /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
             if (_disposed)

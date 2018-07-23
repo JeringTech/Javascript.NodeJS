@@ -5,11 +5,17 @@ using System.Threading.Tasks;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
+    /// <summary>
+    /// The default implementation of <see cref="IHttpClientService"/>.
+    /// </summary>
     public class HttpClientService : IHttpClientService, IDisposable
     {
         private readonly HttpClient _httpClient;
         private bool _disposed;
 
+        /// <summary>
+        /// Create a <see cref="HttpClientService"/> instance.
+        /// </summary>
         public HttpClientService()
         {
             _httpClient = new HttpClient()
@@ -18,11 +24,15 @@ namespace Jering.JavascriptUtils.NodeJS
             };
         }
 
+        /// <inheritdoc />
         public Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken)
         {
             return _httpClient.PostAsync(requestUri, content, cancellationToken);
         }
 
+        /// <summary>
+        /// Disposes the underlying <see cref="HttpClient"/>.
+        /// </summary>
         public void Dispose()
         {
             if (!_disposed)

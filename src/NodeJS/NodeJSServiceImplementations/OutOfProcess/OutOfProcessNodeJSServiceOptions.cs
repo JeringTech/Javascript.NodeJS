@@ -1,11 +1,13 @@
 ﻿namespace Jering.JavascriptUtils.NodeJS
 {
+    /// <summary>
+    /// Options for an <see cref="OutOfProcessNodeJSService"/>.
+    /// </summary>
     public class OutOfProcessNodeJSServiceOptions
     {
         /// <summary>
-        /// Specifies the maximum duration, to wait for the Node.js process to connect and to wait for responses to invocations. 
-        /// Generally, these tasks should complete in under a millisecond, so this default should be sufficient.
+        /// Specifies the maximum duration, to wait for the NodeJS process to connect and to wait for responses to invocations.
         /// </summary>
-        public int TimeoutMS { get; set; } = 1000;
+        public int TimeoutMS { get; set; } = 5000;
     }
 }

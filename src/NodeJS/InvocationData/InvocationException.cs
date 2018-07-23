@@ -3,44 +3,26 @@ using System;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Represents an exception caused by invoking Node.js code.
+    /// Represents an exception caused by an error caught in NodeJS.
     /// </summary>
     public class InvocationException : Exception
     {
         /// <summary>
-        /// If true, indicates that the invocation failed because the Node.js instance could not be reached. For example,
-        /// it might have already shut down or previously crashed.
+        /// Creates an <see cref="InvocationException"/> instance.
         /// </summary>
-        public bool NodeInstanceUnavailable { get; }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="InvocationException"/>.
-        /// </summary>
-        /// <param name="message">A description of the exception.</param>
+        /// <param name="message">A description of the NodeJS error.</param>
         public InvocationException(string message) : base(message)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="InvocationException"/>.
+        /// Creates an <see cref="InvocationException"/> instance.
         /// </summary>
-        /// <param name="message">A description of the exception.</param>
-        /// <param name="stack">Node.js stack trace, representing the exception.</param>
+        /// <param name="message">A description of the NodeJS error.</param>
+        /// <param name="stack">The NodeJS error's stack trace.</param>
         public InvocationException(string message, string stack)
             : base(message + Environment.NewLine + stack)
         {
-        }
-
-        /// <summary>
-        /// Creates a new instance of <see cref="InvocationException"/>.
-        /// </summary>
-        /// <param name="message">A description of the exception.</param>
-        /// <param name="stack">Node.js stack trace, representing the exception.</param>
-        /// <param name="nodeInstanceUnavailable">Specifies a value for the <see cref="NodeInstanceUnavailable"/> flag.</param>
-        public InvocationException(string message, string stack, bool nodeInstanceUnavailable)
-            : this(message, stack)
-        {
-            NodeInstanceUnavailable = nodeInstanceUnavailable;
         }
     }
 }

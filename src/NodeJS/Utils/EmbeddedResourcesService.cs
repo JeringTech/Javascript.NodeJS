@@ -5,10 +5,11 @@ using System.Reflection;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Contains methods for reading embedded resources.
+    /// The default implementation of <see cref="IEmbeddedResourcesService"/>.
     /// </summary>
     public class EmbeddedResourcesService : IEmbeddedResourcesService
     {
+        /// <inheritdoc />
         public string ReadAsString(Assembly embeddedResourceAssembly, string name)
         {
             using (Stream stream = embeddedResourceAssembly.GetManifestResourceStream(name))
@@ -18,6 +19,7 @@ namespace Jering.JavascriptUtils.NodeJS
             }
         }
 
+        /// <inheritdoc />
         public string ReadAsString(Type typeFromEmbeddedResourceAssembly, string name)
         {
             Assembly asm = typeFromEmbeddedResourceAssembly.GetTypeInfo().Assembly;
@@ -25,11 +27,13 @@ namespace Jering.JavascriptUtils.NodeJS
             return ReadAsString(asm, name);
         }
 
+        /// <inheritdoc />
         public Stream ReadAsStream(Assembly embeddedResourceAssembly, string name)
         {
             return embeddedResourceAssembly.GetManifestResourceStream(name);
         }
 
+        /// <inheritdoc />
         public Stream ReadAsStream(Type typeFromEmbeddedResourceAssembly, string name)
         {
             Assembly asm = typeFromEmbeddedResourceAssembly.GetTypeInfo().Assembly;

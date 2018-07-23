@@ -10,16 +10,17 @@
         <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.NodeJS.ruleset</CodeAnalysisRuleSet>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+        <HttpServerBundleName>HttpServer.js</HttpServerBundleName>
     </PropertyGroup>
 
     <ItemGroup>
         <JavascriptInputs Include="Javascript\**" Exclude="$(DefaultItemExcludes)" />
         <!-- TODO if there are multiple outputs, e.g tcp server -->
-        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\HttpServer.js" />
+        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(HttpServerBundleName)" />
         <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
         <UpToDateCheckInput Include="@(JavascriptInputs)" />
         <!-- TODO if there are multiple outputs, e.g tcp server -->
-        <EmbeddedResource Include="@(JavascriptOutputs)" LogicalName="HttpServer.js" />
+        <EmbeddedResource Include="@(JavascriptOutputs)" LogicalName="$(HttpServerBundleName)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -27,15 +28,15 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.1" />
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+        <PackageReference Include="System.Buffers" Version="4.5.0" />
         <PackageReference Include="Roslynator.Analyzers" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
         <PackageReference Include="Roslynator.CodeFixes" Version="1.9.0" PrivateAssets="All" ExcludeAssets="Runtime" />
-        <PackageReference Include="System.Buffers" Version="4.5.0" />
         <PackageReference Include="Yarn.MSBuild" Version="1.7.0" PrivateAssets="All" ExcludeAssets="Runtime" />
     </ItemGroup>
 
     <!-- TODO one target per bundle or one target for all bundles? will have to generalize webpack.config if one target per bundle. -->
     <Target Name="JavascriptBuild" BeforeTargets="BeforeBuild" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
-        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\$(HttpServerBundleName)" />
     </Target>
 
 </Project>

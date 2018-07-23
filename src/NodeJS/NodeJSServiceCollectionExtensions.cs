@@ -10,9 +10,9 @@ namespace Jering.JavascriptUtils.NodeJS
     public static class NodeJSServiceCollectionExtensions
     {
         /// <summary>
-        /// Adds NodeJS support to the <paramref name="services"/>.
+        /// Adds NodeJS support to the an <see cref="IServiceCollection"/>.
         /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <param name="services">The target <see cref="IServiceCollection"/>.</param>
         public static void AddNodeJS(this IServiceCollection services)
         {
             services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());

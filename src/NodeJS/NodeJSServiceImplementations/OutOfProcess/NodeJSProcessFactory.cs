@@ -5,15 +5,23 @@ using System.Text;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
+    /// <summary>
+    /// The default <see cref="INodeJSProcessFactory"/> implementation.
+    /// </summary>
     public class NodeJSProcessFactory : INodeJSProcessFactory
     {
         private readonly NodeJSProcessOptions _nodeJSProcessOptions;
 
+        /// <summary>
+        /// Creates a <see cref="NodeJSProcessFactory"/> instance.
+        /// </summary>
+        /// <param name="optionsAccessor"></param>
         public NodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor)
         {
             _nodeJSProcessOptions = optionsAccessor?.Value ?? new NodeJSProcessOptions();
         }
 
+        /// <inheritdoc />
         public Process Create(string serverScript)
         {
             ProcessStartInfo startInfo = CreateStartInfo(serverScript);
@@ -25,7 +33,6 @@ namespace Jering.JavascriptUtils.NodeJS
         {
             nodeServerScript = EscapeCommandLineArg(nodeServerScript);
 
-            // This method is virtual, as it provides a way to override the NODE_PATH or the path to node.exe
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")
             {
@@ -72,7 +79,7 @@ namespace Jering.JavascriptUtils.NodeJS
             catch (Exception ex)
             {
                 string message = "Failed to start Node process. To resolve this:.\n\n"
-                            + "[1] Ensure that Node.js is installed and can be found in one of the PATH directories.\n"
+                            + "[1] Ensure that NodeJS is installed and can be found in one of the PATH directories.\n"
                             + $"    Current PATH enviroment variable is: { Environment.GetEnvironmentVariable("PATH") }\n"
                             + "    Make sure the Node executable is in one of those directories, or update your PATH.\n\n"
                             + "[2] See the InnerException for further details of the cause.";

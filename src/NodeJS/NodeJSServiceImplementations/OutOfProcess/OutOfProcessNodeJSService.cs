@@ -11,20 +11,25 @@ using System.Threading.Tasks;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// <para>The primary responsibilities of this class are launching and maintaining a NodeJS process.</para>
-    /// <para>
-    /// This abstract base class uses the input/output streams of the child process to perform a simple handshake
-    /// to determine when the child process is ready to accept invocations. This is agnostic to the mechanism that
+    /// <para>An abstract <see cref="INodeJSService"/> implementation that facilitates working with an out of process NodeJS instance.</para>
+    /// <para>The primary responsibilities of this class are launching and maintaining a NodeJS process.
+    /// This class uses the stdout stream of the child process to perform a simple handshake with the NodeJS process. This is agnostic to the mechanism that
     /// derived classes use to actually perform the invocations (e.g., they could use HTTP-RPC, or a binary TCP
-    /// protocol, or any other RPC-type mechanism).
-    /// </para>
+    /// protocol, or any other RPC-type mechanism).</para>
     /// </summary>
     /// <seealso cref="INodeJSService" />
     public abstract class OutOfProcessNodeJSService : INodeJSService
     {
+        /// <summary>
+        /// Start of the message used to perform a handshake with the NodeJS process.
+        /// </summary>
         protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.NodeJS: Listening on ";
 
+        /// <summary>
+        /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.
+        /// </summary>
         protected readonly ILogger NodeJSServiceLogger;
+
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _serverScriptName;
@@ -37,10 +42,10 @@ namespace Jering.JavascriptUtils.NodeJS
         private bool _disposed;
 
         /// <summary>
-        /// Creates a new instance of <see cref="OutOfProcessNodeJSService"/>.
+        /// Creates an<see cref="OutOfProcessNodeJSService"/> instance.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeJSServiceLogger">The <see cref="ILogger"/> to which the NodeJS process's stdout/stderr (and other log information) will be redirected to.</param>
+        /// <param name="nodeJSServiceLogger"></param>
         /// <param name="optionsAccessor"></param>
         /// <param name="embeddedResourcesService"></param>
         /// <param name="serverScriptAssembly"></param>
@@ -63,19 +68,21 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <summary>
         /// Asynchronously invokes code in the NodeJS instance.
         /// </summary>
-        /// <typeparam name="T">The JSON-serializable data type that the NodeJS code will asynchronously return.</typeparam>
-        /// <param name="invocationRequest">Contains the data to be sent to the NodeJS process.</param>
+        /// <typeparam name="T">The type of the object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
+        /// <param name="invocationRequest">The invocation request to send to the NodeJS process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
-        /// <returns>A <see cref="Task{TResult}"/> representing the completion of the RPC call.</returns>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Called when the connection established message from the NodeJS process is received. The server script can be used to customize the message to provide
-        /// information on the server, such as the port is is listening on.
+        /// <para>This method is called when the connection established message from the NodeJS process is received.</para>
+        /// <para>The message can be used to complete the handshake with the
+        /// NodeJS process, for example by delivering a port and an IP address to use in further communications.</para>
         /// </summary>
-        /// <param name="connectionEstablishedMessage"></param>
+        /// <param name="connectionEstablishedMessage">The connection established message.</param>
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
+        /// <inheritdoc />
         public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.File,
@@ -86,6 +93,7 @@ namespace Jering.JavascriptUtils.NodeJS
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
+        /// <inheritdoc />
         public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.String,
@@ -97,6 +105,7 @@ namespace Jering.JavascriptUtils.NodeJS
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
+        /// <inheritdoc />
         public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.Stream,
@@ -108,6 +117,7 @@ namespace Jering.JavascriptUtils.NodeJS
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
+        /// <inheritdoc />
         public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.Cache,
@@ -187,7 +197,6 @@ namespace Jering.JavascriptUtils.NodeJS
                 }
 
                 return await TryInvokeAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false);
-
             }
             catch (Exception exception)
             {
@@ -229,7 +238,7 @@ namespace Jering.JavascriptUtils.NodeJS
             }
         }
 
-        protected virtual void ConnectToInputOutputStreams(Process nodeProcess)
+        private void ConnectToInputOutputStreams(Process nodeProcess)
         {
             var outputStringBuilder = new StringBuilder();
             var errorStringBuilder = new StringBuilder();

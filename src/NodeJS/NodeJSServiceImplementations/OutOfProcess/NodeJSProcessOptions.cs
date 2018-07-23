@@ -1,31 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Hosting;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Jering.JavascriptUtils.NodeJS
 {
-    // TODO make configurable using serviceprovider
-    // https://andrewlock.net/access-services-inside-options-and-startup-using-configureoptions/
+    /// <summary>
+    /// Options for a NodeJS process.
+    /// </summary>
     public class NodeJSProcessOptions
     {
         /// <summary>
-        /// The path is used when locating Node.js modules. Defaults to the directory of the entry assembly for you application.
+        /// <para>The path used for resolving NodeJS modules.</para>
+        /// <para>If the application is an ASP.NET Core application, this value defaults to <see cref="IHostingEnvironment.ContentRootPath"/>.
+        /// Otherwise, it defaults to the directory of the application's entry assembly.</para>
         /// </summary>
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
         /// <summary>
-        /// <para>Node.js and V8 options in the form [Node.js options] [V8 options]. </para>
-        /// <para>The full list of Node.js options can be found here: https://nodejs.org/api/cli.html#cli_options.</para>
+        /// <para>NodeJS and V8 options in the form [NodeJS options] [V8 options].</para>
+        /// <para>The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options.</para>
         /// </summary>
         public string NodeAndV8Options { get; set; }
 
         /// <summary>
-        /// The port that the server running on Node.js will listen on. If set to 0, the OS will choose the port. Defaults to 0.
+        /// <para>The port that the server running on NodeJS will listen on.</para>
+        /// <para>If set to 0, the OS will choose the port. This value defaults to 0.</para>
         /// </summary>
         public int Port { get; set; }
 
         /// <summary>
-        /// <para>If set, starts the Node.js instance with the specified environment variables.</para>
-        /// <para>The full list of Node.js environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
+        /// <para>If set, starts the NodeJS instance with the specified environment variables.</para>
+        /// <para>The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
         /// </summary>
         public IDictionary<string, string> EnvironmentVariables { get; set; }
     }

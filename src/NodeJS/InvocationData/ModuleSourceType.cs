@@ -1,17 +1,28 @@
 ﻿namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// Source type of modules to be invoked in Node.js.
+    /// Source type of the module to be invoked in NodeJS.
     /// </summary>
     public enum ModuleSourceType
     {
         /// <summary>
-        /// Cached in Node.js.
+        /// A module cached in NodeJS.
         /// </summary>
         Cache,
 
+        /// <summary>
+        /// A file.
+        /// </summary>
         File,
+
+        /// <summary>
+        /// A string.
+        /// </summary>
         String,
+
+        /// <summary>
+        /// A Stream.
+        /// </summary>
         Stream
     }
 }
