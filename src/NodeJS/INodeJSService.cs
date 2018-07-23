@@ -11,7 +11,7 @@ namespace Jering.JavascriptUtils.NodeJS
     public interface INodeJSService : IDisposable
     {
         /// <summary>
-        /// Invokes code contained in a file in NodeJS.
+        /// Invokes a function exported by a NodeJS module.
         /// </summary>
         /// <typeparam name="T">The type of object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
         /// <param name="modulePath">The path to the NodeJS module (i.e., JavaScript file) relative to <see cref="NodeJSProcessOptions.ProjectPath"/>.</param>
@@ -23,7 +23,7 @@ namespace Jering.JavascriptUtils.NodeJS
         Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Invokes code in NodeJS.
+        /// Invokes a function exported by a NodeJS module.
         /// </summary>
         /// <typeparam name="T">The type of object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
         /// <param name="moduleString">The NodeJS module as a string.</param>
@@ -37,7 +37,7 @@ namespace Jering.JavascriptUtils.NodeJS
         Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Invokes code in NodeJS, optionally caching the module in the NodeJS process. A module cached using this method can be invoked using <see cref="TryInvokeFromCacheAsync"/>.
+        /// Invokes a function exported by a NodeJS module.
         /// </summary>
         /// <typeparam name="T">The type of object this function will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
         /// <param name="moduleStream">The NodeJS module as a <see cref="Stream"/>.</param>
@@ -51,10 +51,10 @@ namespace Jering.JavascriptUtils.NodeJS
         Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Asynchronously attempts to invoke code from the NodeJS process's cache.
+        /// Attempts to invoke a function exported by a NodeJS module.
         /// </summary>
         /// <typeparam name="T">The type of object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
-        /// <param name="moduleCacheIdentifier">The cache identifier of the NodeJS module to be invoked.</param>
+        /// <param name="moduleCacheIdentifier">The cache identifier of the NodeJS module.</param>
         /// <param name="exportName">If set, specifies the name of the function in the module's exports to be invoked. If unspecified, the module's exports object
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.</param>

@@ -12,8 +12,8 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
     public class OutOfProcessNodeJSServiceIntegrationTests : IDisposable
     {
         private ServiceProvider _serviceProvider;
-        private const int _numThreads = 5;
-        private static readonly CountdownEvent _countdownEvent = new CountdownEvent(_numThreads); // Only used by 1 test, okay that its static
+        private const int _numThreads = 5; // Arbitrary
+        private static readonly CountdownEvent _countdownEvent = new CountdownEvent(_numThreads); // Only used by 1 test
 
         // TODO are there better techniques for testing multi-threaded code? 
         [Fact]
@@ -35,7 +35,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             _countdownEvent.Wait();
 
             // Assert
-            // If DummyNodeJSService.TryInvokeAsync gets called by each thread, it means the NodeJS process was successfully started by a thread and that the other two 
+            // If DummyNodeJSService.TryInvokeAsync gets called by each thread, it means the NodeJS process was successfully started by a thread and that the other 
             // threads were successfully resumed once the process was live.
             Assert.Equal(0, _countdownEvent.CurrentCount);
         }
