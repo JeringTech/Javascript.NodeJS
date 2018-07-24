@@ -11,10 +11,12 @@ build_script:
     dotnet pack --no-build -c Release /p:version=$env:APPVEYOR_REPO_TAG_NAME
 test_script:
 - ps: |
-    cd .\test\Node.Tests
+    cd .\test\NodeJS.Tests
     dotnet test -v n -c Release -l trx -r ./ --no-build .\Jering.JavascriptUtils.NodeJS.Tests.csproj
-    $wc = New-Object 'System.Net.WebClient'
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
+    if($LastExitCode -eq 0){
+        $wc = New-Object 'System.Net.WebClient'
+        $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
+    }
 artifacts:
   - path: '**/*.nupkg'
 deploy:
