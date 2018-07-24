@@ -13,10 +13,11 @@ test_script:
 - ps: |
     cd .\test\NodeJS.Tests
     dotnet test -v n -c Release -l trx -r ./ --no-build .\Jering.JavascriptUtils.NodeJS.Tests.csproj
-    if($LastExitCode -eq 0){
-        $wc = New-Object 'System.Net.WebClient'
-        $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
+    if($LastExitCode -ne 0){
+        throw "Tests failed."
     }
+    $wc = New-Object 'System.Net.WebClient'
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
 artifacts:
   - path: '**/*.nupkg'
 deploy:
