@@ -1,16 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <Description>Invoke Javascript at Runtime from .NET Applications.</Description>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <PackageId>Jering.JavascriptUtils.NodeJS</PackageId>
+        <Authors>JeremyTCD</Authors>
+        <Description>Invoke Both In-Memory and File Based Javascript from .Net Applications.</Description>
+        <Copyright>© JeremyTCD. All rights reserved.</Copyright>        
+        <PackageProjectUrl>https://github.com/JeremyTCD/JavascriptUtils.NodeJS</PackageProjectUrl>
+        <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/License.txt</PackageLicenseUrl>
+        <PackageReleaseNotes>$(PackageProjectUrl)/blob/master/Changelog.md</PackageReleaseNotes>
+        <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+        <PackageTags>javascript node nodejs</PackageTags>
+        <RepositoryType>git</RepositoryType>
+        <IncludeSymbols>true</IncludeSymbols>
     </PropertyGroup>
 
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.NodeJS.ruleset</CodeAnalysisRuleSet>
+        <HttpServerBundleName>HttpServer.js</HttpServerBundleName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
-        <HttpServerBundleName>HttpServer.js</HttpServerBundleName>
     </PropertyGroup>
 
     <ItemGroup>
