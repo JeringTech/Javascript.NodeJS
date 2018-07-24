@@ -19,7 +19,7 @@ test_script:
     $wc = New-Object 'System.Net.WebClient'
     $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
 artifacts:
-  - path: '**/*.nupkg'
+  - path: '.\src\NodeJS\bin\Release\*.nupkg'
 deploy:
   provider: NuGet
   api_key:
