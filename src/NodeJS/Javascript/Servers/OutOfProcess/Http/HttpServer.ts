@@ -277,7 +277,7 @@ function demarcateMessageEndings(outputStream: NodeJS.WritableStream) {
             // characters stay in its buffer until a new line character is received. This means that the null terminating character must appear before the last
             // new line character of the message. This approach is slightly heavy handed in that it removes all whitespace at the end of the message, generally,
             // such whitespace is pointless.
-            arguments[0] = arguments[0].trimEnd() + '\0\n';
+            arguments[0] = arguments[0].trimRight() + '\0\n';
         }
 
         origWriteFunction.apply(this, arguments);
