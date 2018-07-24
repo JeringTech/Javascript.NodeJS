@@ -210,7 +210,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     throw;
                 }
 
-                if (_nodeProcess == null)
+                if (!_connected)
                 {
                     // This is very unlikely
                     throw new InvocationException(
@@ -250,7 +250,7 @@ namespace Jering.JavascriptUtils.NodeJS
                     return;
                 }
 
-                if (evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START) && !_connected)
+                if (!_connected && evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
                 {
                     OnConnectionEstablishedMessageReceived(evt.Data);
                     _connected = true;
