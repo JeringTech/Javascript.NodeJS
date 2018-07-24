@@ -6,7 +6,7 @@ install:
     nuget install inheritdoc -Version 1.2.0.1
 build_script:
 - ps: |
-    dotnet build -c Release
+    dotnet build -c Release -v diag
     & $env:USERPROFILE\.nuget\packages\inheritdoc\1.2.0.1\tools\InheritDoc.exe -o -b .\src\NodeJS\bin\Release\netstandard2.0
     dotnet pack --no-build -c Release /p:version=$env:APPVEYOR_REPO_TAG_NAME
 test_script:
