@@ -22,6 +22,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             HttpNodeJSService testSubject = CreateHttpNodeService();
+
             // Cache
             await testSubject.
                 InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
@@ -226,7 +227,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         /// <param name="stringLoggerStringBuilder"></param>
         private HttpNodeJSService CreateHttpNodeService(StringBuilder stringLoggerStringBuilder = null)
         {
-            IServiceCollection services = new ServiceCollection();
+            var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
             services.AddLogging(lb =>
             {
