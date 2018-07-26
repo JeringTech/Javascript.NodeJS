@@ -8,6 +8,6 @@
         /// <summary>
         /// Specifies the maximum duration, to wait for the NodeJS process to connect and to wait for responses to invocations.
         /// </summary>
-        public int TimeoutMS { get; set; } = 60000;
+        public int TimeoutMS { get; set; } = 10000;
     }
 }
