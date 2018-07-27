@@ -22,7 +22,7 @@ This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/e
 this library provides ways to invoke in-memory Javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
 
 ## Prerequisites
-[NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable.
+NodeJS must be installed and node.exe's directory must be added to the `Path` environment variable.
 
 ## Installation
 Using Package Manager:
@@ -38,7 +38,7 @@ Familiarity with the following concepts will make it easier to use this library 
 of those who haven't had much experience with NodeJS, if you're already familiar with the following concepts, feel free to skip this section.
 
 ### What is NodeJS?
-NodeJS is a javascript runtime. Essentially, it provides some built-in libraries and executes javascript. Similarities can be drawn to the
+[NodeJS](https://nodejs.org/en/) is a javascript runtime. Essentially, it provides some built-in libraries and executes javascript. Similarities can be drawn to the
 [Core Common Language Runtime (CoreCLR)](https://github.com/dotnet/coreclr), which provides a set of base libraries and executes C#.  
 
 Under the hood, NodeJS uses [V8](https://developers.google.com/v8/) to execute javascript. While this library could have been built to invoke javascript directly in V8,
@@ -46,23 +46,23 @@ invoking javascript in NodeJS affords both access to NodeJS's built-in modules a
 
 ### NodeJS Modules
 NodeJS modules are a kind of javascript module. The concept of javascript modules can seem far more complicated than it really is,
-not least because of the existence of competing specifications (CommonJS, AMD, ES6), and the existence of multiple implementations of each specification (SystemJS, RequireJS, 
-Dojo, NodeJS). In reality, javascript modules like NodeJS modules are really simple. In the following sections, we will go through the what, how and why of NodeJS modules.
+not least because of the existence of competing specifications (CommonJS, AMD, ES6, ...), and the existence of multiple implementations of each specification (SystemJS, RequireJS, 
+Dojo, NodeJS, ...). In reality, javascript modules such as NodeJS modules are really simple. In the following sections, we will go through the what, how and why of NodeJS modules.
 
 #### What is a NodeJS Module?
 The following is a valid NodeJS module. Lets imagine that it exists in a file, `flavours.js`:
 ```javascript
-// Note that the module variable isn't declared
+// Note that the module variable isn't declared (no "var module = {}")
 module.exports = ['chocolate', 'strawberry', 'vanilla'];
 ```
-The following is another valid NodeJS module, we will use it as an entry script (to be supplied to `node.exe`). Lets imagine that it exists in a file, `printer.js`, 
+The following is another valid NodeJS module, we will use it as an entry script (to be supplied to `node` on the command line). Lets imagine that it exists in a file, `printer.js`, 
 in the same directory as `flavours.js`:
 ```javascript
 var flavours = require('./flavours.js');
 
 flavours.forEach((flavour) => console.log(flavour));
 ```
-If we run `node.exe printer.js` in the command line, the flavours get printed:
+If we run `node printer.js` on the command line, the flavours get printed:
 ```powershell
 PS C:\NodeJS_Modules_Example> node printer.js
 chocolate
@@ -105,7 +105,7 @@ flavours.push('apple');
 flavours.push('green tea');
 flavours.push('sea salt');
 
-// Require the module again, require returns a reference to the same array
+// Require the module again, turns out that require returns a reference to the same array
 flavours = require('./flavours.js');
 
 flavours.forEach((flavour) => console.log(flavour));
@@ -142,7 +142,7 @@ function CoolLibraryPublicFunction(){
 }
 
 // Contents of myScript.js
-var myVar = CoolLibrary1PublicFunction();
+var myVar = CoolLibraryPublicFunction();
 
 ... // Do something with myVar
 ```
@@ -151,8 +151,7 @@ can we hide the private object? We can encapsulate cool library in a function:
 ```javascript
 var module = {};
 
-// This is an immediately invoked function expression - https://developer.mozilla.org/en-US/docs/Glossary/IIFE, shorthand
-// for assigning the function to a variable then calling it.
+// This is an immediately invoked function expression shorthand for assigning the function to a variable then calling it - https://developer.mozilla.org/en-US/docs/Glossary/IIFE
 (function(module){
     // Contents of coolLibrary.js
     var coolLibraryPrivateObject = ...;
@@ -169,7 +168,7 @@ var myVar = module.exports(); // We assigned CoolLibraryPublicFunction to module
 
 ... // Do something with myVar
 ```
-Apart from hiding private objects, this pattern also prevents the global namespace from being polluted.  
+We've successfully hidden `coolLibraryPrivateObject` from the global scope using a module-esque pattern. Apart from hiding private objects, this pattern also prevents the global namespace from being polluted.  
 
 NodeJS modules serve the same purposes. By wrapping modules in functions, NodeJS creates a closure for each module so internal details
 can be kept private.
@@ -187,7 +186,7 @@ INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService
 ```
 `INodeJSService` is a singleton service and `INodeJSService`'s members are thread safe.
 Where possible, inject `INodeJSService` into your types or keep a reference to a shared `INodeJSService` instance. 
-Try to avoid creating multiple `INodeJSService` instances, since each instance spawns a NodeJS process. 
+Try to avoid creating multiple `INodeJSService` instances since each instance spawns a NodeJS process. 
 
 When you're done, you can manually dispose of an `INodeJSService` instance by calling
 ```csharp
@@ -217,7 +216,7 @@ TODO
 Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 ```
 #### Description
-Invokes a function exported by a NodeJS module.
+Invokes a function exported by a NodeJS module on disk.
 #### Parameters
 - `T`
   - Description: The type of object this method will return. It can be a JSON-serializable type, `string`, or `Stream`.
@@ -232,7 +231,7 @@ Invokes a function exported by a NodeJS module.
 
 - `args`
   - Type: `object[]`
-  - Description: The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.
+  - Description: The sequence of JSON-serializable and/or `string` arguments to be passed to the function to invoke.
 
 - `cancellationToken`
   - Type: `CancellationToken`
@@ -245,7 +244,7 @@ The task object representing the asynchronous operation.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 #### Example
-With exampleModule.js (placed in `NodeJSProcessOptions.ProjectPath`):
+Using exampleModule.js (placed in `NodeJSProcessOptions.ProjectPath`):
 ```javascript
 module.exports = (callback, message) => callback(null, { resultMessage: message });
 ```
@@ -258,7 +257,7 @@ public class Result
 ```
 The following assertion will pass:
 ```csharp
-Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", args: new[] { "success" }).ConfigureAwait(false);
+Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", args: new[] { "success" });
 
 Assert.Equal("success", result.ResultMessage);
 ```
@@ -269,18 +268,18 @@ Assert.Equal("success", result.ResultMessage);
 Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 ```
 #### Description
-Invokes a function exported by a NodeJS module.
+Invokes a function exported by a NodeJS module in string form.
 #### Parameters
 - `T`
   - Description: The type of object this method will return. It can be a JSON-serializable type, `string`, or `Stream`.
  
 - `moduleString`
   - Type: `string`
-  - Description: The NodeJS module as a `string`.
+  - Description: The module in `string` form.
 
 - `newCacheIdentifier`
   - Type: `string`
-  - Description: The key for the NodeJS module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
+  - Description: The cache identifier for the module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
 
 - `exportName`
   - Type: `string`
@@ -288,7 +287,7 @@ Invokes a function exported by a NodeJS module.
 
 - `args`
   - Type: `object[]`
-  - Description: The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.
+  - Description: The sequence of JSON-serializable and/or `string` arguments to be passed to the function to invoke.
 
 - `cancellationToken`
   - Type: `CancellationToken`
@@ -301,7 +300,7 @@ The task object representing the asynchronous operation.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 #### Example
-With the class `Result`:
+Using the class `Result`:
 ```csharp
 public class Result
 {
@@ -310,7 +309,8 @@ public class Result
 ```
 The following assertion will pass:
 ```csharp
-Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", args: new[] { "success" }).ConfigureAwait(false);
+Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
+    args: new[] { "success" });
 
 Assert.Equal("success", result.ResultMessage);
 ```
@@ -320,18 +320,18 @@ Assert.Equal("success", result.ResultMessage);
 Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 ```
 #### Description
-Invokes a function exported by a NodeJS module.
+Invokes a function exported by a NodeJS module in Stream form.
 #### Parameters
 - `T`
   - Description: The type of object this method will return. It can be a JSON-serializable type, `string`, or `Stream`.
  
 - `moduleStream`
   - Type: `Stream`
-  - Description: The NodeJS module as a `Stream`.
+  - Description: The module in `Stream` form.
 
 - `newCacheIdentifier`
   - Type: `string`
-  - Description: The key for the NodeJS module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
+  - Description: The cache identifier for the module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
 
 - `exportName`
   - Type: `string`
@@ -339,7 +339,7 @@ Invokes a function exported by a NodeJS module.
 
 - `args`
   - Type: `object[]`
-  - Description: The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.
+  - Description: The sequence of JSON-serializable and/or `string` arguments to be passed to the function to invoke.
 
 - `cancellationToken`
   - Type: `CancellationToken`
@@ -352,7 +352,7 @@ The task object representing the asynchronous operation.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 #### Example
-With the class `Result`:
+Using the class `Result`:
 ```csharp
 public class Result
 {
@@ -364,12 +364,12 @@ The following assertion will pass:
 using (var memoryStream = new MemoryStream())
 using (var streamWriter = new StreamWriter(memoryStream))
 {
-    // Write the module to a MemoryStream is for demonstration purposes.
+    // Write the module to a MemoryStream for demonstration purposes.
     streamWriter.Write("module.exports = (callback, message) => callback(null, {resultMessage: message});");
     streamWriter.Flush();
     memoryStream.Position = 0;
 
-    Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" }).ConfigureAwait(false);
+    Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" });
     
     Assert.Equal("success", result.ResultMessage);
 }
@@ -380,14 +380,14 @@ using (var streamWriter = new StreamWriter(memoryStream))
 Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
 ```
 #### Description
-Attempts to invoke a function exported by a NodeJS module.
+Attempts to invoke a function exported by a NodeJS module cached by NodeJS.
 #### Parameters
 - `T`
   - Description: The type of object this method will return. It can be a JSON-serializable type, `string`, or `Stream`.
  
 - `moduleCacheIdentifier`
   - Type: `string`
-  - Description: The cache identifier of the NodeJS module.
+  - Description: The cache identifier of the module.
 
 - `exportName`
   - Type: `string`
@@ -395,7 +395,7 @@ Attempts to invoke a function exported by a NodeJS module.
 
 - `args`
   - Type: `object[]`
-  - Description: The sequence of JSON-serializable arguments to be passed to the NodeJS function to invoke.
+  - Description: The sequence of JSON-serializable and/or `string` arguments to be passed to the function to invoke.
 
 - `cancellationToken`
   - Type: `CancellationToken`
@@ -409,13 +409,45 @@ success and false otherwise.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 #### Example
-TODO
+Using the class `Result`:
+```csharp
+public class Result
+{
+    public string ResultMessage { get; set; }
+}
+```
+The following assertion will pass:
+```csharp
+// Cache the module
+string cacheIdentifier = "exampleModule";
+await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
+    cacheIdentifier,
+    args: new[] { "success" });
+
+// Invoke from cache
+(bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
+
+Assert.True(success);
+Assert.Equal("success", result.ResultMessage);
+```
 
 ## Extensibility
 TODO
 
 ## Performance
-TODO
+This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices). While the main
+addition to this library is ways to invoke in-memory javascript, this library does also provide better performance (note that INodeServices has only 1 benchmark because it 
+only supports invoking javascript from a file):
+<table>
+<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr></thead>
+<tbody>
+<tr><td>INodeJSService_InvokeFromCache</td><td>0.1118 ms</td><td>0.001162 ms</td><td>0.001030 ms</td><td>2.3193</td><td>3.33 KB</td></tr>
+<tr><td>INodeJSService_InvokeFromFile</td><td>0.1138 ms</td><td>0.001248 ms</td><td>0.001167 ms</td><td>2.1973</td><td>3.4 KB</td></tr>
+<tr><td>INodeServices</td><td>0.1334 ms</td><td>0.001488 ms</td><td>0.001391 ms</td><td>1.9531</td><td>4.14 KB</td></tr>
+</tbody>
+</table>
+
+The [benchmarks](https://github.com/JeremyTCD/JavascriptUtils.NodeJS/blob/master/test/NodeJS.Performance/Benchmarks.cs).
 
 ## Building
 This project can be built using Visual Studio 2017.
