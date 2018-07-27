@@ -17,8 +17,8 @@ namespace Jering.JavascriptUtils.NodeJS.Performance
         private INodeJSService _nodeJSService;
         private INodeServices _nodeServices;
 
-        [GlobalSetup(Target = nameof(NodeJSService_InvokeFromFile))]
-        public void NodeJSService_InvokeFromFile_Setup()
+        [GlobalSetup(Target = nameof(INodeJSService_InvokeFromFile))]
+        public void INodeJSService_InvokeFromFile_Setup()
         {
             ServiceCollection services = new ServiceCollection();
             services.AddNodeJS();
@@ -29,14 +29,14 @@ namespace Jering.JavascriptUtils.NodeJS.Performance
         }
 
         [Benchmark]
-        public async Task<DummyResult> NodeJSService_InvokeFromFile()
+        public async Task<DummyResult> INodeJSService_InvokeFromFile()
         {
             DummyResult result = await _nodeJSService.InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new object[] { $"success {_counter++}" });
             return result;
         }
 
-        [GlobalSetup(Target = nameof(NodeJSService_InvokeFromCache))]
-        public void NodeJSService_InvokeFromCache_Setup()
+        [GlobalSetup(Target = nameof(INodeJSService_InvokeFromCache))]
+        public void INodeJSService_InvokeFromCache_Setup()
         {
             ServiceCollection services = new ServiceCollection();
             services.AddNodeJS();
@@ -49,14 +49,14 @@ namespace Jering.JavascriptUtils.NodeJS.Performance
         }
 
         [Benchmark]
-        public async Task<DummyResult> NodeJSService_InvokeFromCache()
+        public async Task<DummyResult> INodeJSService_InvokeFromCache()
         {
             (bool success, DummyResult result) = await _nodeJSService.TryInvokeFromCacheAsync<DummyResult>(DUMMY_MODULE_IDENTIFIER, args: new object[] { $"success {_counter++}" });
             return result;
         }
 
-        [GlobalSetup(Target = nameof(NodeServices))]
-        public void NodeServices_Setup()
+        [GlobalSetup(Target = nameof(INodeServices))]
+        public void INodeServices_Setup()
         {
             ServiceCollection services = new ServiceCollection();
             services.AddNodeServices(options =>
@@ -70,7 +70,7 @@ namespace Jering.JavascriptUtils.NodeJS.Performance
         }
 
         [Benchmark]
-        public async Task<DummyResult> NodeServices()
+        public async Task<DummyResult> INodeServices()
         {
             DummyResult result = await _nodeServices.InvokeAsync<DummyResult>("dummyModule.js", $"success {_counter++}");
             return result;
