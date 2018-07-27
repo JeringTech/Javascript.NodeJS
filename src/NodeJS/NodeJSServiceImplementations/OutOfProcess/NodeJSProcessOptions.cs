@@ -12,7 +12,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <summary>
         /// <para>The path used for resolving NodeJS modules.</para>
         /// <para>If the application is an ASP.NET Core application, this value defaults to <see cref="IHostingEnvironment.ContentRootPath"/>.
-        /// Otherwise, it defaults to the directory of the application's entry assembly.</para>
+        /// Otherwise, it defaults to the current working directory.</para>
         /// </summary>
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
@@ -29,7 +29,7 @@ namespace Jering.JavascriptUtils.NodeJS
         public int Port { get; set; }
 
         /// <summary>
-        /// <para>If set, starts the NodeJS instance with the specified environment variables.</para>
+        /// <para>The environment variables to be set for the NodeJS process.</para>
         /// <para>The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
         /// </summary>
         public IDictionary<string, string> EnvironmentVariables { get; set; }

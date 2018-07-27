@@ -6,7 +6,8 @@
     public class OutOfProcessNodeJSServiceOptions
     {
         /// <summary>
-        /// Specifies the maximum duration, to wait for the NodeJS process to connect and to wait for responses to invocations.
+        /// The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations.
+        /// If set to -1, the maximum duration will be infinite.
         /// </summary>
         public int TimeoutMS { get; set; } = 10000;
     }
