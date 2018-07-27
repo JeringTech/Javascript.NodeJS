@@ -5,17 +5,17 @@
 <!-- TODO tests badge, this service should work - https://github.com/monkey3310/appveyor-shields-badges/blob/master/README.md -->
 
 ## Table of Contents
-[Overview](#Overview)  
-[Prerequisites](#Prerequisites)  
-[Installation](#Installation)  
-[Concepts](#Concepts)  
-[Usage](#Usage)  
-[API](#api)  
-[Extensibility](#Extensibility)  
-[Performance](#Performance)  
-[Building](#Building)  
-[Contributing](#Contributing)  
-[About](#About)  
+[Overview](#overview)  
+[Prerequisites](#prerequisites)  
+[Installation](#installation)  
+[Concepts](#concepts)  
+[Usage](#usage)  
+[API](#api)<!-- todo [Extensibility](#extensibility)-->  
+[Performance](#performance)  
+[Building](#building)  
+[Related Projects](#related-projects)  
+[Contributing](#contributing)  
+[About](#about)  
 
 ## Overview
 This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/en/), from .Net applications. On top of providing a way to invoke javascript from `.js` files on disk,
@@ -151,7 +151,7 @@ can we hide the private object? We can encapsulate cool library in a function:
 ```javascript
 var module = {};
 
-// This is an immediately invoked function expression shorthand for assigning the function to a variable then calling it - https://developer.mozilla.org/en-US/docs/Glossary/IIFE
+// This is an immediately invoked function expression, shorthand for assigning the function to a variable then calling it - https://developer.mozilla.org/en-US/docs/Glossary/IIFE
 (function(module){
     // Contents of coolLibrary.js
     var coolLibraryPrivateObject = ...;
@@ -168,14 +168,14 @@ var myVar = module.exports(); // We assigned CoolLibraryPublicFunction to module
 
 ... // Do something with myVar
 ```
-We've successfully hidden `coolLibraryPrivateObject` from the global scope using a module-esque pattern. Apart from hiding private objects, this pattern also prevents the global namespace from being polluted.  
+We've successfully hidden `coolLibraryPrivateObject` from the global scope using a module-esque pattern. Apart from hiding private objects, this pattern also prevents global namespace pollution.  
 
-NodeJS modules serve the same purposes. By wrapping modules in functions, NodeJS creates a closure for each module so internal details
+NodeJS modules serve a similar purpose. By wrapping modules in functions, NodeJS creates a closure for each module so internal details
 can be kept private.
 
 ## Usage
 ### Creating INodeJSService
-This library uses depedency injection (DI) to facilitate [extensibility](#extensibility) and testability.
+This library uses depedency injection (DI) to facilitate extensibility<!-- todo [extensibility](#extensibility) --> and testability.
 You can use any DI framework that has adapters for [Microsoft.Extensions.DependencyInjection](https://github.com/aspnet/DependencyInjection).
 Here, we'll use the vanilla Microsoft.Extensions.DependencyInjection framework:
 ```csharp
@@ -186,7 +186,7 @@ INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService
 ```
 `INodeJSService` is a singleton service and `INodeJSService`'s members are thread safe.
 Where possible, inject `INodeJSService` into your types or keep a reference to a shared `INodeJSService` instance. 
-Try to avoid creating multiple `INodeJSService` instances since each instance spawns a NodeJS process. 
+Try to avoid creating multiple `INodeJSService` instances since by default, each instance spawns a NodeJS process. 
 
 When you're done, you can manually dispose of an `INodeJSService` instance by calling
 ```csharp
@@ -202,12 +202,181 @@ NodeJS process when the application shuts down - if the application shuts down g
 itself when it detects that its parent has been killed. 
 Essentially, manually disposing of `INodeJSService` instances is not mandatory.
 
-### Configuring INodeJSService
-TODO
-
 ### Using INodeJSService
-TODO
+#### Basics
+To invoke javascript, we'll first need to create a NodeJS module that exports a function or an object containing functions. These functions must take
+a callback as their first argument, and they must call the callback.
+The callback takes two optional arguments:
+- The first argument must be an error or an error message. It must be an instance of type [`Error`](https://nodejs.org/api/errors.html#errors_class_error) or a `string`.
+- The second argument is the result. It must be an instance of a JSON-serializable type, a `string`, or a [`stream.Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable). 
+ 
+This sort of callback is known as an [error-first callback](https://nodejs.org/api/errors.html#errors_error_first_callbacks).
+Such callbacks are commonly used for [error handling](https://nodejs.org/api/errors.html#errors_error_propagation_and_interception) in NodeJS asynchronous code (check out the [NodeJS event loop](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+if you'd like to learn more about how asynchrony works in NodeJS).
 
+This is a module that exports a valid function:
+```
+module.exports = (callback) => {
+    ... // Do something
+
+    callback(null, result);
+}
+```
+And this is a module that exports an object containing valid functions:
+```
+module.exports = {
+    doSomething: (callback) => {
+        ... // Do something
+
+        callback(null, result);
+    },
+    doSomethingElse: (callback) => {
+        ... // Do something else
+
+        callback(null, result);
+    }
+}
+```
+
+#### Invoking Javascript From a File
+If we have a file named `exampleModule.js` (located in [`NodeJSProcessOptions.ProjectPath`](#nodejsprocessoptions)), with contents:
+```javascript
+module.exports = (callback, message) => callback(null, { resultMessage: message });
+```
+And the class `Result`:
+```csharp
+public class Result
+{
+    public string ResultMessage { get; set; }
+}
+```
+We can invoke the javascript using [`InvokeFromFileAsync`](#inodejsservice.invokefromfileasync):
+```csharp
+Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", args: new[] { "success" });
+
+Assert.Equal("success", result.ResultMessage);
+```
+If we change `exampleModule.js` to export an object containing functions:
+```javascript
+module.exports = {
+    appendExclamationMark: (callback, message) => callback(null, { resultMessage: message + '!' }),
+    appendFullStop: (callback, message) => callback(null, { resultMessage: message + '.' })
+}
+```
+We can invoke javascript by providing an export name to `InvokeFromFileAsync`:
+```csharp
+Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", "appendExclamationMark", args: new[] { "success" });
+
+Assert.Equal("success!", result.ResultMessage);
+```
+When using `InvokeFromFileAsync`, NodeJS always caches the module, using the absolute path of the `.js` file as the module's cache identifier. This is great for
+performance, since the file will not be read more than once.
+
+#### Invoking Javascript in String Form
+Using the class `Result`:
+```csharp
+public class Result
+{
+    public string ResultMessage { get; set; }
+}
+```
+We can invoke javascript in string form using [`InvokeFromStringAsync`](#inodejsservice.invokefromstringasync) :
+```csharp
+Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
+    args: new[] { "success" });
+
+Assert.Equal("success", result.ResultMessage);
+```
+
+If we're going to invoke the module repeatedly, it would make sense to have NodeJS cache the module so that it doesn't need to be kept in 
+memory and sent with every invocation. To cache the module, we must specify a custom cache identifier, since unlike a file, a string has no 
+"absolute file path" for NodeJS to use as a cache identifier. Once NodeJS has cached the module, we should invoke logic directly from the NodeJS cache: 
+```csharp
+string cacheIdentifier = "exampleModule";
+
+// Try to invoke from the NodeJS cache
+(bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
+// If the NodeJS process dies and gets restarted, the module will have to be re-cached, so we must always check whether success is false
+if(!success)
+{
+    // Retrieve the module string
+    string moduleString = ...; 
+    // Cache and invoke the module
+    result = await nodeJSService.InvokeFromStringAsync<Result>(moduleString, cacheIdentifier, args: new[] { "success" });
+}
+
+Assert.Equal("success", result.ResultMessage);
+```
+
+Like when [invoking javascript form a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, we can invoke a function by specifying
+an export name.  
+#### Invoking Javascript in Stream Form
+Using the class `Result`:
+```csharp
+public class Result
+{
+    public string ResultMessage { get; set; }
+}
+```
+We can invoke javascript in Stream form using [`InvokeFromStreamAsync`](#inodejsservice.invokefromstreamasync) :
+```csharp
+using (var memoryStream = new MemoryStream())
+using (var streamWriter = new StreamWriter(memoryStream))
+{
+    // Write the module to a MemoryStream for demonstration purposes.
+    streamWriter.Write("module.exports = (callback, message) => callback(null, {resultMessage: message});");
+    streamWriter.Flush();
+    memoryStream.Position = 0;
+
+    Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" });
+    
+    Assert.Equal("success", result.ResultMessage);
+}
+```
+`InvokeFromStreamAsync` behaves in a similar manner to `InvokeFromStringAsync`, refer to [Invoking Javascript in String Form](#invoking-javascript-in-string-form) for details on caching and more. 
+The utility of this method is in providing a way to avoid allocating a string if the source of the module is a Stream. Avoiding `string` allocations can improve performance.
+
+### Configuring INodeJSService
+This library uses the [ASP.NET Core options pattern](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-2.1). While developed for ASP.NET Core,
+this pattern can be used by other types of applications. The NodeJS process and the service that manages the process are both configurable, for example:
+
+ ```csharp
+var services = new ServiceCollection();
+services.AddNodeJS();
+
+// Options for the NodeJSProcess, here we enable debugging
+services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk");
+
+// Options for the service that manages the process, here we make its timeout infinite
+services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
+
+ServiceProvider serviceProvider = services.BuildServiceProvider();
+INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
+```
+The next two sections list all available options.
+
+#### NodeJSProcessOptions
+| Option | Type | Description | Default |  
+| ------ | ---- | ----------- | ------- |
+| ProjectPath | `string` | The path used for resolving NodeJS modules on disk. | If the application is an ASP.NET Core application, this value defaults to `IHostingEnvironment.ContentRootPath`. Otherwise, it defaults to the current working directory. |
+| NodeAndV8Options | `string` | NodeJS and V8 options in the form "[NodeJS options] [V8 options]". The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options. | null |
+| Port | `int` | The port that the server running on NodeJS will listen on. If set to 0, the OS will choose the port. | 0 |
+| EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. | null |
+
+#### OutOfProcessNodeJSServiceOptions
+| Option | Type | Description | Default |  
+| ------ | ---- | ----------- | ------- |
+| TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to initialize and to wait for responses to invocations. If set to -1, the maximum duration will be infinite. | 10000 |
+
+
+### Debugging Javascript
+These are the steps for debugging javascript invoked using INodeJSService:
+1. Create an INodeJSService using the example options in the previous section (`NodeJSProcessOptions.NodeAndV8Options` = `--inspect-brk` and `OutOfProcessNodeJSServiceOptions.TimeoutMS` = `-1`).
+2. Add [`debugger`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger) statements to your javascript module.
+3. Call a [javascript invoking method](#api). 
+4. Navigate to `chrome://inspect/#device` in Chrome.
+5. Click "Option dedicated DevTools for Node".
+6. Click continue to advance to your `debugger` statements.
 
 ## API
 ### INodeJSService.InvokeFromFileAsync
@@ -244,7 +413,7 @@ The task object representing the asynchronous operation.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 #### Example
-Using exampleModule.js (placed in `NodeJSProcessOptions.ProjectPath`):
+If we have a file named `exampleModule.js` (located in `NodeJSProcessOptions.ProjectPath`), with contents:
 ```javascript
 module.exports = (callback, message) => callback(null, { resultMessage: message });
 ```
@@ -431,12 +600,11 @@ Assert.True(success);
 Assert.Equal("success", result.ResultMessage);
 ```
 
-## Extensibility
-TODO
+<!-- TODO ## Extensibility -->
 
 ## Performance
 This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices). While the main
-addition to this library is ways to invoke in-memory javascript, this library does also provide better performance (note that INodeServices has only 1 benchmark because it 
+additions to this library are ways to invoke in-memory javascript, this library also provides better performance (note that INodeServices has only 1 benchmark because it 
 only supports invoking javascript from a file):
 <table>
 <thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr></thead>
