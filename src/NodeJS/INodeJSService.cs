@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Jering.JavascriptUtils.NodeJS
 {
     /// <summary>
-    /// A service that provides ways to invoke code in NodeJS.
+    /// An abstraction for invoking code in NodeJS.
     /// </summary>
     public interface INodeJSService : IDisposable
     {
