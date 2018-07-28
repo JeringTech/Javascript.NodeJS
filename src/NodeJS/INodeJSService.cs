@@ -30,7 +30,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// </summary>
         /// <typeparam name="T">The type of object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
         /// <param name="moduleString">The module in string form.</param>
-        /// <param name="newCacheIdentifier">The cache identifier for the module in the NodeJS module cache. If unspecified, the module will not be cached.</param>
+        /// <param name="newCacheIdentifier">The module's cache identifier in the NodeJS module cache. If unspecified, the module will not be cached.</param>
         /// <param name="exportName">The name of the function in the module's exports to be invoked. If unspecified, the module's exports object
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable and/or string arguments to be passed to the function to invoke.</param>
@@ -46,7 +46,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// </summary>
         /// <typeparam name="T">The type of object this method will return. It can be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
         /// <param name="moduleStream">The module in Stream form.</param>
-        /// <param name="newCacheIdentifier">The cache identifier for the module in the NodeJS module cache. If unspecified, the module will not be cached.</param>
+        /// <param name="newCacheIdentifier">The module's cache identifier in the NodeJS module cache. If unspecified, the module will not be cached.</param>
         /// <param name="exportName">The name of the function in the module's exports to be invoked. If unspecified, the module's exports object
         /// is assumed to be a function, and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable and/or string arguments to be passed to the function to invoke.</param>
