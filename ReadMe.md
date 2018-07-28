@@ -10,7 +10,8 @@
 [Installation](#installation)  
 [Concepts](#concepts)  
 [Usage](#usage)  
-[API](#api)<!-- todo [Extensibility](#extensibility)-->  
+[API](#api)  
+[Extensibility](#extensibility)  
 [Performance](#performance)  
 [Building](#building)  
 [Related Projects](#related-projects)  
@@ -22,7 +23,7 @@ This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/e
 this library provides ways to invoke in-memory Javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
 
 ## Prerequisites
-NodeJS must be installed and node.exe's directory must be added to the `Path` environment variable.
+[NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable.
 
 ## Installation
 Using Package Manager:
@@ -111,8 +112,8 @@ flavours = require('./flavours.js');
 flavours.forEach((flavour) => console.log(flavour));
 ```
 
-Running `node.exe printer.js` in the command line prints the following console output:
-```
+Running `node printer.js` on the command line prints the following flavours:
+```powershell
 PS C:\Users\Jeremy\Desktop\JSTest> node entry.js
 chocolate
 strawberry
@@ -175,7 +176,7 @@ can be kept private.
 
 ## Usage
 ### Creating INodeJSService
-This library uses depedency injection (DI) to facilitate extensibility<!-- todo [extensibility](#extensibility) --> and testability.
+This library uses depedency injection (DI) to facilitate [extensibility](#extensibility) and testability.
 You can use any DI framework that has adapters for [Microsoft.Extensions.DependencyInjection](https://github.com/aspnet/DependencyInjection).
 Here, we'll use the vanilla Microsoft.Extensions.DependencyInjection framework:
 ```csharp
@@ -184,6 +185,9 @@ services.AddNodeJS();
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
 ```
+The default implementation of `INodeJSService` is `HttpNodeJSService`. It starts a Http server in a NodeJS process and sends invocation requests
+over Http. For simplicty's sake, this ReadMe assumes that `INodeJSService`'s default implementation is used.
+
 `INodeJSService` is a singleton service and `INodeJSService`'s members are thread safe.
 Where possible, inject `INodeJSService` into your types or keep a reference to a shared `INodeJSService` instance. 
 Try to avoid creating multiple `INodeJSService` instances since by default, each instance spawns a NodeJS process. 
@@ -243,7 +247,7 @@ If we have a file named `exampleModule.js` (located in [`NodeJSProcessOptions.Pr
 ```javascript
 module.exports = (callback, message) => callback(null, { resultMessage: message });
 ```
-And the class `Result`:
+And we have the class `Result`:
 ```csharp
 public class Result
 {
@@ -263,7 +267,7 @@ module.exports = {
     appendFullStop: (callback, message) => callback(null, { resultMessage: message + '.' })
 }
 ```
-We can invoke javascript by providing an export name to `InvokeFromFileAsync`:
+We can invoke javascript by providing an export's name to `InvokeFromFileAsync`:
 ```csharp
 Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", "appendExclamationMark", args: new[] { "success" });
 
@@ -273,13 +277,6 @@ When using `InvokeFromFileAsync`, NodeJS always caches the module, using the abs
 performance, since the file will not be read more than once.
 
 #### Invoking Javascript in String Form
-Using the class `Result`:
-```csharp
-public class Result
-{
-    public string ResultMessage { get; set; }
-}
-```
 We can invoke javascript in string form using [`InvokeFromStringAsync`](#inodejsservice.invokefromstringasync) :
 ```csharp
 Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
@@ -296,11 +293,11 @@ string cacheIdentifier = "exampleModule";
 
 // Try to invoke from the NodeJS cache
 (bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
-// If the NodeJS process dies and gets restarted, the module will have to be re-cached, so we must always check whether success is false
+// If the NodeJS process dies and restarts, the module will have to be re-cached, so we must always check whether success is false
 if(!success)
 {
-    // Retrieve the module string
-    string moduleString = ...; 
+    // Retrieve the module string, this is a trivialized example for demonstration purposes
+    string moduleString = "module.exports = (callback, message) => callback(null, { resultMessage: message });"; 
     // Cache and invoke the module
     result = await nodeJSService.InvokeFromStringAsync<Result>(moduleString, cacheIdentifier, args: new[] { "success" });
 }
@@ -309,15 +306,8 @@ Assert.Equal("success", result.ResultMessage);
 ```
 
 Like when [invoking javascript form a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, we can invoke a function by specifying
-an export name.  
+an export's name.  
 #### Invoking Javascript in Stream Form
-Using the class `Result`:
-```csharp
-public class Result
-{
-    public string ResultMessage { get; set; }
-}
-```
 We can invoke javascript in Stream form using [`InvokeFromStreamAsync`](#inodejsservice.invokefromstreamasync) :
 ```csharp
 using (var memoryStream = new MemoryStream())
@@ -358,7 +348,7 @@ The next two sections list all available options.
 #### NodeJSProcessOptions
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
-| ProjectPath | `string` | The path used for resolving NodeJS modules on disk. | If the application is an ASP.NET Core application, this value defaults to `IHostingEnvironment.ContentRootPath`. Otherwise, it defaults to the current working directory. |
+| ProjectPath | `string` | The base path for resolving paths of NodeJS modules on disk. | If the application is an ASP.NET Core application, this value defaults to `IHostingEnvironment.ContentRootPath`. Otherwise, it defaults to the current working directory. |
 | NodeAndV8Options | `string` | NodeJS and V8 options in the form "[NodeJS options] [V8 options]". The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options. | null |
 | Port | `int` | The port that the server running on NodeJS will listen on. If set to 0, the OS will choose the port. | 0 |
 | EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. | null |
@@ -375,7 +365,7 @@ These are the steps for debugging javascript invoked using INodeJSService:
 2. Add [`debugger`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger) statements to your javascript module.
 3. Call a [javascript invoking method](#api). 
 4. Navigate to `chrome://inspect/#device` in Chrome.
-5. Click "Option dedicated DevTools for Node".
+5. Click "Open dedicated DevTools for Node".
 6. Click continue to advance to your `debugger` statements.
 
 ## API
@@ -417,7 +407,7 @@ If we have a file named `exampleModule.js` (located in `NodeJSProcessOptions.Pro
 ```javascript
 module.exports = (callback, message) => callback(null, { resultMessage: message });
 ```
-And the class `Result`:
+And we have the class `Result`:
 ```csharp
 public class Result
 {
@@ -448,7 +438,7 @@ Invokes a function exported by a NodeJS module in string form.
 
 - `newCacheIdentifier`
   - Type: `string`
-  - Description: The cache identifier for the module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
+  - Description: The modules's cache identifier in the NodeJS module cache. If unspecified, the module will not be cached.
 
 - `exportName`
   - Type: `string`
@@ -500,7 +490,7 @@ Invokes a function exported by a NodeJS module in Stream form.
 
 - `newCacheIdentifier`
   - Type: `string`
-  - Description: The cache identifier for the module in the NodeJS module cache. If unspecified, the NodeJS module will not be cached.
+  - Description: The modules's cache identifier in the NodeJS module cache. If unspecified, the module will not be cached.
 
 - `exportName`
   - Type: `string`
@@ -600,7 +590,45 @@ Assert.True(success);
 Assert.Equal("success", result.ResultMessage);
 ```
 
-<!-- TODO ## Extensibility -->
+## Extensibility
+This library's behaviour can be customized by implementing public interfaces and overwriting their default DI services. For example, if we have objects that
+can't be serialized using the default JSON serialization logic, we can implement `IJsonService`:
+```csharp
+// Create a custom implementation of IJsonService
+public class MyJsonService : IJsonService
+{
+    public T Deserialize<T>(JsonReader jsonReader)
+    {
+        ... // Custom deserializetion logic
+    }
+
+    public void Serialize(JsonWriter jsonWriter, object value)
+    {
+        ... // Custom serialization logic
+    }
+}
+```
+And overwrite its default DI service:
+```csharp
+var services = new ServiceCollection();
+services.AddNodeJS();
+
+// Overwrite the default DI service
+services.AddSingleton<IJsonService, MyJsonService>();
+
+ServiceProvider serviceProvider = services.BuildServiceProvider();
+INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
+```
+This is the list of implementable interfaces:
+
+| Interface | Description |
+| --------- | ----------- |
+| `IJsonService` | An abstraction for JSON serialization/deserialization. |
+| `IHttpClientService` | An abstraction for `HttpClient`. |
+| `INodeJSProcessFactory` | An abstraction for NodeJS process creation. |
+| `IHttpContentFactory` | An abstraction for `HttpContent` creation. |
+| `INodeJSService` | An abstraction for invoking code in NodeJS. |
+| `IEmbeddedResourcesService` | An abstraction for reading of embedded resources. |
 
 ## Performance
 This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices). While the main
