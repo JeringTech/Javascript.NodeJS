@@ -33,7 +33,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <param name="invocationRequest">The invocation request to transmit over Http.</param>
         public InvocationContent(IJsonService jsonService, InvocationRequest invocationRequest)
         {
-            _invocationRequest = invocationRequest; 
+            _invocationRequest = invocationRequest;
             _jsonService = jsonService;
 
             if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
@@ -72,8 +72,15 @@ namespace Jering.JavascriptUtils.NodeJS
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(bytes);
-                ArrayPool<char>.Shared.Return(chars);
+                if (bytes != null)
+                {
+                    ArrayPool<byte>.Shared.Return(bytes);
+                }
+
+                if (chars != null)
+                {
+                    ArrayPool<char>.Shared.Return(chars);
+                }
             }
 
             // TODO Stream writer allocates both a char[] and a byte[] for buffering, it is slower than just serializing to string and writing the string to the stream
