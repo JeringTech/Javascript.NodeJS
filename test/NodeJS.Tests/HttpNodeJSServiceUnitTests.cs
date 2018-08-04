@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Jering.IocServices.System.Net.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
@@ -28,7 +29,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.NotFound);
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
 
             // Act
@@ -50,7 +51,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StreamContent(new MemoryStream()) };
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.Deserialize<InvocationError>(It.IsAny<JsonTextReader>())).Returns(dummyInvocationError);
@@ -74,7 +75,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(new MemoryStream()) };
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object);
 
@@ -99,7 +100,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             var dummyMemoryStream = new MemoryStream(Encoding.UTF8.GetBytes(dummyValue));
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(dummyMemoryStream) };
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object);
 
@@ -122,7 +123,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(new MemoryStream()) };
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             var dummyObject = new DummyClass();
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.Deserialize<DummyClass>(It.IsAny<JsonTextReader>())).Returns(dummyObject);
@@ -147,10 +148,10 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
-            var dummyHttpStatusCode = HttpStatusCode.NoContent;
+            const HttpStatusCode dummyHttpStatusCode = HttpStatusCode.NoContent;
             var dummyHttpResponseMessage = new HttpResponseMessage(dummyHttpStatusCode);
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.PostAsync(null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
+            mockHttpClientService.Setup(h => h.PostAsync((Uri)null, mockRequestHttpContent.Object, CancellationToken.None)).ReturnsAsync(dummyHttpResponseMessage);
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
 
             // Act and assert
@@ -173,15 +174,15 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
             // Assert
-            Assert.Equal(expectedResult, testSubject.Endpoint);
+            Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
         {
             return new object[][]
             {
-                new object[]{"127.0.0.1", "12345", "http://127.0.0.1:12345"}, // IPv4, arbitrary port
-                new object[]{"::1", "543", "http://[::1]:543"} // IPv6, arbitrary port
+                new object[]{"127.0.0.1", "12345", "http://127.0.0.1:12345/"}, // IPv4, arbitrary port
+                new object[]{"::1", "543", "http://[::1]:543/"} // IPv6, arbitrary port
             };
         }
 

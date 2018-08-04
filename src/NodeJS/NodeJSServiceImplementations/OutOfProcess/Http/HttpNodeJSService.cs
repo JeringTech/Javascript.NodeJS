@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -24,7 +25,7 @@ namespace Jering.JavascriptUtils.NodeJS
         private readonly IHttpClientService _httpClientService;
 
         private bool _disposed;
-        internal string Endpoint;
+        internal Uri Endpoint;
 
         /// <summary>
         /// Creates a <see cref="HttpNodeJSService"/> instance.
@@ -145,7 +146,7 @@ namespace Jering.JavascriptUtils.NodeJS
                 }
                 else if (currentChar == ']')
                 {
-                    Endpoint = stringBuilder.ToString();
+                    Endpoint = new Uri(stringBuilder.ToString());
                     return;
                 }
                 else
