@@ -196,7 +196,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             IHttpClientService httpClientService = null,
             IJsonService jsonService = null,
             INodeJSProcessFactory nodeProcessFactory = null,
-            ILogger<HttpNodeJSService> nodeServiceLogger = null)
+            ILoggerFactory loggerFactory = null)
         {
             return new ExposedHttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
                 httpContentFactory,
@@ -204,7 +204,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 httpClientService,
                 jsonService,
                 nodeProcessFactory,
-                nodeServiceLogger);
+                loggerFactory);
         }
 
         private class ExposedHttpNodeJSService : HttpNodeJSService
@@ -215,8 +215,8 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 IHttpClientService httpClientService,
                 IJsonService jsonService,
                 INodeJSProcessFactory nodeProcessFactory,
-                ILogger<HttpNodeJSService> nodeServiceLogger) :
-                base(outOfProcessNodeHostOptionsAccessor, httpContentFactory, embeddedResourcesService, httpClientService, jsonService, nodeProcessFactory, nodeServiceLogger)
+                ILoggerFactory loggerFactory) :
+                base(outOfProcessNodeHostOptionsAccessor, httpContentFactory, embeddedResourcesService, httpClientService, jsonService, nodeProcessFactory, loggerFactory)
             {
             }
 

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Jering.JavascriptUtils.NodeJS
@@ -15,7 +14,8 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <param name="services">The target <see cref="IServiceCollection"/>.</param>
         public static void AddNodeJS(this IServiceCollection services)
         {
-            services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
+            // Third party services
+            services.AddLogging();
             services.AddOptions();
             services.AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>();
 

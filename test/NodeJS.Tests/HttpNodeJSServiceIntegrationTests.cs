@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Jering.IocServices.System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -215,6 +216,9 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             // Act
             await testSubject.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => {{ console.log('{dummySinglelineString}'); console.log(`{dummyMultilineString}`); callback();}}").ConfigureAwait(false);
+            // Disposing of HttpNodeServices causes Process.WaitForExit(500) to be called on the node process, this give it time to flush its output.
+            // This isn't super clean.
+            _serviceProvider.Dispose();
             string result = resultStringBuilder.ToString();
 
             // Assert
@@ -243,6 +247,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk");
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
             }
+
             _serviceProvider = services.BuildServiceProvider();
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;

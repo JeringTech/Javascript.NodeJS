@@ -36,16 +36,16 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <param name="httpClientService"></param>
         /// <param name="jsonService"></param>
         /// <param name="nodeJSProcessFactory"></param>
-        /// <param name="nodeServiceLogger"></param>
+        /// <param name="loggerFactory"></param>
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
             IHttpClientService httpClientService,
             IJsonService jsonService,
             INodeJSProcessFactory nodeJSProcessFactory,
-            ILogger<HttpNodeJSService> nodeServiceLogger) :
+            ILoggerFactory loggerFactory) :
             base(nodeJSProcessFactory,
-                nodeServiceLogger,
+                loggerFactory?.CreateLogger<HttpNodeJSService>(),
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 typeof(HttpNodeJSService).Assembly,

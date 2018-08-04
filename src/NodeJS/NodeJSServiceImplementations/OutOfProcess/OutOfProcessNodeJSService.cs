@@ -27,8 +27,9 @@ namespace Jering.JavascriptUtils.NodeJS
 
         /// <summary>
         /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.
+        /// Can be null, in which case, no logging will occur.
         /// </summary>
-        protected readonly ILogger NodeJSServiceLogger;
+        protected readonly ILogger Logger;
 
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
@@ -45,20 +46,20 @@ namespace Jering.JavascriptUtils.NodeJS
         /// Creates an<see cref="OutOfProcessNodeJSService"/> instance.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
-        /// <param name="nodeJSServiceLogger"></param>
+        /// <param name="logger"></param>
         /// <param name="optionsAccessor"></param>
         /// <param name="embeddedResourcesService"></param>
         /// <param name="serverScriptAssembly"></param>
         /// <param name="serverScriptName"></param>
         protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
-            ILogger nodeJSServiceLogger,
+            ILogger logger,
             IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
             Assembly serverScriptAssembly,
             string serverScriptName)
         {
             _nodeProcessFactory = nodeProcessFactory;
-            NodeJSServiceLogger = nodeJSServiceLogger;
+            Logger = logger;
             _options = optionsAccessor?.Value ?? new OutOfProcessNodeJSServiceOptions();
             _embeddedResourcesService = embeddedResourcesService;
             _serverScriptName = serverScriptName;
@@ -171,9 +172,9 @@ namespace Jering.JavascriptUtils.NodeJS
                 // ConnectToInputOutputStreams.
                 if (!_connected)
                 {
-                    if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                    if (Logger?.IsEnabled(LogLevel.Debug) == true)
                     {
-                        NodeJSServiceLogger.LogDebug($"Before first semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                        Logger.LogDebug($"Before first semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
                     }
 
                     await _processSemaphore.WaitAsync().ConfigureAwait(false);
@@ -187,9 +188,9 @@ namespace Jering.JavascriptUtils.NodeJS
                         _nodeProcess = _nodeProcessFactory.Create(serverScript);
                         ConnectToInputOutputStreams(_nodeProcess);
 
-                        if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                        if (Logger?.IsEnabled(LogLevel.Debug) == true)
                         {
-                            NodeJSServiceLogger.LogDebug($"Before second semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                            Logger.LogDebug($"Before second semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
                         }
 
                         await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -258,22 +259,19 @@ namespace Jering.JavascriptUtils.NodeJS
                     // Release all threads by resetting CurrentCount to 1
                     while (_processSemaphore.CurrentCount < 1)
                     {
-                        if (NodeJSServiceLogger.IsEnabled(LogLevel.Debug))
+                        if (Logger?.IsEnabled(LogLevel.Debug) == true)
                         {
-                            NodeJSServiceLogger.LogDebug($"Releasing semaphore, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                            Logger.LogDebug($"Releasing semaphore, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
                         }
 
                         _processSemaphore.Release();
                     }
                 }
-                else
+                else if (Logger != null && TryCreateMessage(outputStringBuilder, evt.Data, out string message))
                 {
                     // Process output is received line by line. The last line of a message ends with a \0 (null character),
                     // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
-                    if (TryCreateMessage(outputStringBuilder, evt.Data, out string message))
-                    {
-                        NodeJSServiceLogger.LogInformation(message);
-                    }
+                    Logger.LogInformation(message);
                 }
             };
 
@@ -284,9 +282,9 @@ namespace Jering.JavascriptUtils.NodeJS
                     return;
                 }
 
-                if (TryCreateMessage(errorStringBuilder, evt.Data, out string message))
+                if (Logger != null && TryCreateMessage(errorStringBuilder, evt.Data, out string message))
                 {
-                    NodeJSServiceLogger.LogError(message);
+                    Logger.LogError(message);
                 }
             };
 
