@@ -1,5 +1,4 @@
-﻿using Jering.IocServices.System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -14,7 +13,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
     /// </summary>
     public class HttpNodeJSServiceIntegrationTests : IDisposable
     {
-        private ServiceProvider _serviceProvider;
+        private IServiceProvider _serviceProvider;
 
         [Fact]
         public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
@@ -218,7 +217,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 InvokeFromStringAsync<string>($"module.exports = (callback) => {{ console.log('{dummySinglelineString}'); console.log(`{dummyMultilineString}`); callback();}}").ConfigureAwait(false);
             // Disposing of HttpNodeServices causes Process.WaitForExit(500) to be called on the node process, this give it time to flush its output.
             // This isn't super clean.
-            _serviceProvider.Dispose();
+            ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();
 
             // Assert
@@ -233,14 +232,6 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
-            services.AddLogging(lb =>
-            {
-                lb.AddDebug();
-                if (stringLoggerStringBuilder != null)
-                {
-                    lb.AddProvider(new StringLoggerProvider(stringLoggerStringBuilder));
-                }
-            });
 
             if (Debugger.IsAttached)
             {
@@ -249,6 +240,13 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             }
 
             _serviceProvider = services.BuildServiceProvider();
+
+            ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+            loggerFactory.AddDebug();
+            if (stringLoggerStringBuilder != null)
+            {
+                loggerFactory.AddProvider(new StringLoggerProvider(stringLoggerStringBuilder));
+            }
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
         }
@@ -270,7 +268,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
 
             public bool IsEnabled(LogLevel logLevel)
             {
-                return true;
+                return logLevel >= LogLevel.Information;
             }
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -306,7 +304,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
 
         public void Dispose()
         {
-            _serviceProvider?.Dispose();
+            ((IDisposable)_serviceProvider).Dispose();
         }
     }
 }

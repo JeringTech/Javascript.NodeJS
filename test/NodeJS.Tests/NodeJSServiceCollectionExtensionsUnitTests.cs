@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using Xunit;
 
 namespace Jering.JavascriptUtils.NodeJS.Tests
@@ -15,7 +16,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
             services.AddNodeJS();
 
             // Assert
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
             INodeJSService result = serviceProvider.GetRequiredService<INodeJSService>(); // As long as this doesn't throw, the dependency graph is valid
         }
     }

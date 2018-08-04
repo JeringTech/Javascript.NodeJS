@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
 {
     public class OutOfProcessNodeJSServiceIntegrationTests : IDisposable
     {
-        private ServiceProvider _serviceProvider;
+        private IServiceProvider _serviceProvider;
         private const int _numThreads = 5; // Arbitrary
         private static readonly CountdownEvent _countdownEvent = new CountdownEvent(_numThreads); // Only used by 1 test
 
@@ -46,7 +47,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
                 ILogger<DummyNodeJSService> nodeServiceLogger,
                 IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
                 IEmbeddedResourcesService embeddedResourcesService) :
-                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).Assembly, "HttpServer.js") // TODO somehow get HttpServer into test assembly?
+                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).GetTypeInfo().Assembly, "HttpServer.js") // TODO somehow get HttpServer into test assembly?
             {
             }
 
@@ -66,19 +67,27 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         {
             IServiceCollection services = new ServiceCollection();
             services.AddNodeJS();
+#if NETCOREAPP2_1
             services.AddLogging(lb =>
             {
                 lb.AddDebug().SetMinimumLevel(LogLevel.Debug);
             });
+#endif
+
             services.AddSingleton<INodeJSService, DummyNodeJSService>(); // Override default service
             _serviceProvider = services.BuildServiceProvider();
 
+#if NETCOREAPP1_0
+            ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+            // Setting min level like this doesn't work for netcoreapp2.1
+            loggerFactory.AddDebug(LogLevel.Debug);
+#endif
             return _serviceProvider.GetRequiredService<INodeJSService>() as DummyNodeJSService;
         }
 
         public void Dispose()
         {
-            _serviceProvider?.Dispose();
+            ((IDisposable)_serviceProvider).Dispose();
         }
     }
 }

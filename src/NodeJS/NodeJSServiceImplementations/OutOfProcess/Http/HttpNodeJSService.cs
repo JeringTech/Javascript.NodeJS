@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace Jering.JavascriptUtils.NodeJS
                 loggerFactory?.CreateLogger<HttpNodeJSService>(),
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
-                typeof(HttpNodeJSService).Assembly,
+                typeof(HttpNodeJSService).GetTypeInfo().Assembly,
                 SERVER_SCRIPT_NAME)
         {
             _httpClientService = httpClientService;
