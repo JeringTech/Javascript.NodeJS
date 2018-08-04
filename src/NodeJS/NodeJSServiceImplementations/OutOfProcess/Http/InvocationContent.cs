@@ -84,7 +84,8 @@ namespace Jering.JavascriptUtils.NodeJS
             }
 
             // TODO Stream writer allocates both a char[] and a byte[] for buffering, it is slower than just serializing to string and writing the string to the stream
-            // (at least for small-average size payloads). Support for ArrayPool buffers is coming - https://github.com/dotnet/corefx/issues/23874
+            // (at least for small-average size payloads). Support for ArrayPool buffers is coming - https://github.com/dotnet/corefx/issues/23874, might need to target
+            // netcoreapp1.1
             // using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
             // using (var jsonWriter = new JsonTextWriter(streamWriter))
             // {
