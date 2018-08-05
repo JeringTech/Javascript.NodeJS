@@ -16,8 +16,8 @@ test_script:
     if($LastExitCode -ne 0){
         throw "Tests failed."
     }
-    $wc = New-Object 'System.Net.WebClient'
-    $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
+    # $wc = New-Object 'System.Net.WebClient'
+    # $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\*.trx))
 artifacts:
   - path: '.\src\NodeJS\bin\Release\*.nupkg'
 deploy:
