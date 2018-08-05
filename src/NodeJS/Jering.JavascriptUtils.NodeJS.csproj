@@ -58,7 +58,7 @@
     </ItemGroup>
 
     <!-- TODO one target per bundle or one target for all bundles? will have to generalize webpack.config if one target per bundle. -->
-    <Target Name="JavascriptBuild" BeforeTargets="BeforeBuild" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+    <Target Name="JavascriptBuild" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
         <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
     </Target>
 
