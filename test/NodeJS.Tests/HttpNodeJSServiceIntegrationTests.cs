@@ -6,7 +6,7 @@ using System.IO;
 using System.Text;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     /// <summary>
     /// These tests are de facto tests for HttpServer.ts. They serve the additional role of verifying that IPC works.

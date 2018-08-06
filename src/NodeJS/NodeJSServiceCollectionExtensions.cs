@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Extension methods for setting up NodeJS in an <see cref="IServiceCollection" />.

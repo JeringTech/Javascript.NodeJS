@@ -1,4 +1,5 @@
-﻿namespace Jering.JavascriptUtils.NodeJS
+﻿
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Represents an error caught in NodeJS.

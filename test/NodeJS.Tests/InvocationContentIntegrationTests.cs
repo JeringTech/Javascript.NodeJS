@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class InvocationContentIntegrationTests
     {

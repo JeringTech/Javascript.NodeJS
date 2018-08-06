@@ -1,7 +1,7 @@
-# Jering.JavascriptUtils.NodeJS
-[![Build status](https://ci.appveyor.com/api/projects/status/wawhrh1nvy5fae2s?svg=true)](https://ci.appveyor.com/project/JeremyTCD/javascriptutils-nodejs)
+# Jering.Javascript.NodeJS
+[![Build status](https://ci.appveyor.com/api/projects/status/wawhrh1nvy5fae2s?svg=true)](https://ci.appveyor.com/project/JeremyTCD/javascript-nodejs)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/Pkcs11Interop/Pkcs11Interop/blob/master/LICENSE.md)
-[![NuGet](https://img.shields.io/nuget/vpre/Jering.JavascriptUtils.NodeJS.svg?label=nuget)](https://www.nuget.org/packages/Jering.JavascriptUtils.NodeJS/)
+[![NuGet](https://img.shields.io/nuget/vpre/Jering.Javascript.NodeJS.svg?label=nuget)](https://www.nuget.org/packages/Jering.Javascript.NodeJS/)
 <!-- TODO tests badge, this service should work - https://github.com/monkey3310/appveyor-shields-badges/blob/master/README.md -->
 
 ## Table of Contents
@@ -21,7 +21,7 @@
 
 ## Overview
 This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/en/), from .Net applications. On top of providing a way to invoke javascript from `.js` files on disk,
-this library provides ways to invoke in-memory Javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
+this library provides ways to invoke in-memory javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
 
 ## Target Frameworks
 - .NET Standard 1.3
@@ -33,11 +33,11 @@ this library provides ways to invoke in-memory Javascript in `string` or `Stream
 ## Installation
 Using Package Manager:
 ```
-PM> Install-Package Jering.JavascriptUtils.NodeJS
+PM> Install-Package Jering.Javascript.NodeJS
 ```
 Using .Net CLI:
 ```
-> dotnet add package Jering.JavascriptUtils.NodeJS
+> dotnet add package Jering.Javascript.NodeJS
 ```
 ## Concepts
 Familiarity with the following concepts will make it easier to use this library effectively. I've included this section for the benefit
@@ -649,15 +649,15 @@ only supports invoking javascript from a file):
 </tbody>
 </table>
 
-The [benchmarks](https://github.com/JeremyTCD/JavascriptUtils.NodeJS/blob/master/test/NodeJS.Performance/Benchmarks.cs).
+The [benchmarks](https://github.com/JeremyTCD/Javascript.NodeJS/blob/master/test/NodeJS.Performance/Benchmarks.cs).
 
 ## Building
 This project can be built using Visual Studio 2017.
 
 ## Related Projects
 #### Projects Using this Library
-[Jering.WebUtils.SyntaxHighlighters.HighlightJS](https://github.com/JeremyTCD/WebUtils.SyntaxHighlighters.HighlightJS) - A C# Wrapper for the Syntax Highlighter, HighlightJS.  
-[Jering.WebUtils.SyntaxHighlighters.Prism](https://github.com/JeremyTCD/WebUtils.SyntaxHighlighters.Prism) - A C# Wrapper for the Syntax Highlighter, Prism.
+[Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeremyTCD/Web.SyntaxHighlighters.HighlightJS) - A C# Wrapper for the Syntax Highlighter, HighlightJS.  
+[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeremyTCD/Web.SyntaxHighlighters.Prism) - A C# Wrapper for the Syntax Highlighter, Prism.
 
 ## Contributing
 Contributions are welcome!  

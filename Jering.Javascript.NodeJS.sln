@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 15.0.26730.03
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.NodeJS", "src\NodeJS\Jering.JavascriptUtils.NodeJS.csproj", "{66B77203-1469-41DF-92F2-2BE6900BD36F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS", "src\NodeJS\Jering.Javascript.NodeJS.csproj", "{66B77203-1469-41DF-92F2-2BE6900BD36F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B78BFF8F-5D42-4B0E-B32D-EA12717F590D}"
 	ProjectSection(SolutionItems) = preProject
@@ -11,16 +11,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Changelog.md = Changelog.md
-		Jering.JavascriptUtils.NodeJS.ruleset = Jering.JavascriptUtils.NodeJS.ruleset
+		Jering.Javascript.NodeJS.ruleset = Jering.Javascript.NodeJS.ruleset
 		License.txt = License.txt
 		ReadMe.md = ReadMe.md
-		ThingsToDo.md = ThingsToDo.md
 		ThirdPartyLicenses.txt = ThirdPartyLicenses.txt
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.NodeJS.Tests", "test\NodeJS.Tests\Jering.JavascriptUtils.NodeJS.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS.Tests", "test\NodeJS.Tests\Jering.Javascript.NodeJS.Tests.csproj", "{FB3D3274-0BDE-4C06-8165-9508862D267C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.JavascriptUtils.NodeJS.Performance", "test\NodeJS.Performance\Jering.JavascriptUtils.NodeJS.Performance.csproj", "{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS.Performance", "test\NodeJS.Performance\Jering.Javascript.NodeJS.Performance.csproj", "{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

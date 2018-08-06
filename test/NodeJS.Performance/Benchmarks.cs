@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.NodeJS.Performance
+namespace Jering.Javascript.NodeJS.Performance
 {
     [MemoryDiagnoser]
     public class Benchmarks

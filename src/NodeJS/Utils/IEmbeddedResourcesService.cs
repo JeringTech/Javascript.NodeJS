@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// An abstraction for reading of embedded resources.

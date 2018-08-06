@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// The default implementation of <see cref="IEmbeddedResourcesService"/>.

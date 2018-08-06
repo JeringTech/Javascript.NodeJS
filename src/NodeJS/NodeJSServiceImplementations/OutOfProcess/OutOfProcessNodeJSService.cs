@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An abstract <see cref="INodeJSService"/> implementation that facilitates working with an out of process NodeJS instance.</para>
@@ -23,7 +23,7 @@ namespace Jering.JavascriptUtils.NodeJS
         /// <summary>
         /// Start of the message used to perform a handshake with the NodeJS process.
         /// </summary>
-        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.JavascriptUtils.NodeJS: Listening on ";
+        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: Listening on ";
 
         /// <summary>
         /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.

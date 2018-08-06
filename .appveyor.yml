@@ -12,7 +12,7 @@ build_script:
 test_script:
 - ps: |
     cd .\test\NodeJS.Tests
-    dotnet test -c Release -l trx -r ./ --no-build .\Jering.JavascriptUtils.NodeJS.Tests.csproj
+    dotnet test -c Release -l trx -r ./ --no-build .\Jering.Javascript.NodeJS.Tests.csproj
     if($LastExitCode -ne 0){
         throw "Tests failed."
     }

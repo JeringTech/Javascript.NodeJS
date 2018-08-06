@@ -2,7 +2,7 @@
 using System;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class NodeJSServiceCollectionExtensionsUnitTests
     {

@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Represents an invocation request for NodeJS.

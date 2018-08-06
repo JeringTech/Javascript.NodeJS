@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An abstraction for JSON serialization/deserialization.</para>

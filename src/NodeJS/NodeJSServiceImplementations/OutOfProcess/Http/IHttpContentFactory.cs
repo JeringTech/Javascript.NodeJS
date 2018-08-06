@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An abstraction for <see cref="HttpContent"/> creation.</para>

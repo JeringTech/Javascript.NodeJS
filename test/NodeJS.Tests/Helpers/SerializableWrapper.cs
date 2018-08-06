@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Xunit.Abstractions;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class SerializableWrapper<T> : IXunitSerializable
     {

@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
 
-namespace Jering.JavascriptUtils.NodeJS.Performance
+namespace Jering.Javascript.NodeJS.Performance
 {
     public class Program
     {

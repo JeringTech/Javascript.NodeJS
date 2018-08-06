@@ -2,11 +2,11 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
-        <PackageId>Jering.JavascriptUtils.NodeJS</PackageId>
+        <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
-        <Description>A Tool for Invoking Javascript from C#.</Description>
+        <Description>Invoke Javascript in NodeJS from C#.</Description>
         <Copyright>© JeremyTCD. All rights reserved.</Copyright>
-        <PackageProjectUrl>https://github.com/JeremyTCD/JavascriptUtils.NodeJS</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/JeremyTCD/Javascript.NodeJS</PackageProjectUrl>
         <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/License.txt</PackageLicenseUrl>
         <PackageReleaseNotes>$(PackageProjectUrl)/blob/master/Changelog.md</PackageReleaseNotes>
         <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
@@ -17,7 +17,7 @@
 
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.NodeJS.ruleset</CodeAnalysisRuleSet>
+        <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
         <HttpServerBundleName>HttpServer.js</HttpServerBundleName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>

@@ -1,4 +1,4 @@
-﻿namespace Jering.JavascriptUtils.NodeJS
+﻿namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Options for an <see cref="OutOfProcessNodeJSService"/>.

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// A <see cref="IConfigureOptions{TOptions}"/> implementation for configuring the singleton <see cref="NodeJSProcessOptions"/> for an application.

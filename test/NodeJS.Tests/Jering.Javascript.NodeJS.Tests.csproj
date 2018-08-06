@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <CodeAnalysisRuleSet>../../Jering.JavascriptUtils.NodeJS.ruleset</CodeAnalysisRuleSet>
+        <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,9 +31,9 @@
     <ItemGroup>
         <Content Include=".\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
-
+    
     <ItemGroup>
-      <ProjectReference Include="..\..\src\NodeJS\Jering.JavascriptUtils.NodeJS.csproj" />
+      <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
 </Project>

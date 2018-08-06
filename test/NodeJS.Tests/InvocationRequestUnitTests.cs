@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class InvocationRequestUnitTests
     {

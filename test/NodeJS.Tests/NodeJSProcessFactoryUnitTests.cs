@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class NodeJSProcessFactoryUnitTests
     {

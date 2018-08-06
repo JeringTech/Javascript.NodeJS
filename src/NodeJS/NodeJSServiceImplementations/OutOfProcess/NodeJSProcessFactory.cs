@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// The default <see cref="INodeJSProcessFactory"/> implementation.

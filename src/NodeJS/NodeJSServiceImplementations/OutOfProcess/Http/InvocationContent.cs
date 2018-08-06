@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An implementation of <see cref="HttpContent"/> that serializes an <see cref="InvocationRequest"/> to a <see cref="Stream"/>.</para>

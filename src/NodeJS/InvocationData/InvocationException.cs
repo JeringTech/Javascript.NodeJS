@@ -1,6 +1,6 @@
 using System;
 
-namespace Jering.JavascriptUtils.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Represents an exception caused by an error caught in NodeJS.

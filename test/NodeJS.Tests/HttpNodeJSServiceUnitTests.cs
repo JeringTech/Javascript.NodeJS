@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Jering.JavascriptUtils.NodeJS.Tests
+namespace Jering.Javascript.NodeJS.Tests
 {
     public class HttpNodeJSServiceUnitTests
     {
@@ -167,7 +167,7 @@ namespace Jering.JavascriptUtils.NodeJS.Tests
         public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyIP, string dummyPort, string expectedResult)
         {
             // Arrange
-            string dummyConnectionEstablishedMessage = $"[Jering.JavascriptUtils.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
+            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
