@@ -3,7 +3,12 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeremyTCD/Javascript.NodeJS/compare/2.0.0...HEAD)
+## [Unreleased](https://github.com/JeremyTCD/Javascript.NodeJS/compare/3.0.0...HEAD)
+
+## 3.0.0 - Aug 6, 2018
+### Changes
+- Renamed project to `Jering.Javascript.NodeJS` for consistency with other `Jering` packages. Using statements must be updated to reference types from the
+namespace `Jering.Javascript.NodeJS` instead of `Jering.JavascriptUtils.NodeJS`.
 
 ## 2.0.0 - Aug 4, 2018
 ### Changes
