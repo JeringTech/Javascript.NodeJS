@@ -225,7 +225,7 @@ Such callbacks are commonly used for [error handling](https://nodejs.org/api/err
 if you'd like to learn more about how asynchrony works in NodeJS).
 
 This is a module that exports a valid function:
-```
+```javascript
 module.exports = (callback) => {
     ... // Do something
 
@@ -233,7 +233,7 @@ module.exports = (callback) => {
 }
 ```
 And this is a module that exports an object containing valid functions:
-```
+```javascript
 module.exports = {
     doSomething: (callback) => {
         ... // Do something
