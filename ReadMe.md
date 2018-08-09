@@ -661,8 +661,8 @@ This project can be built using Visual Studio 2017.
 
 ## Related Projects
 #### Projects Using this Library
-[Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeremyTCD/Web.SyntaxHighlighters.HighlightJS) - A C# Wrapper for the Syntax Highlighter, HighlightJS.  
-[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeremyTCD/Web.SyntaxHighlighters.Prism) - A C# Wrapper for the Syntax Highlighter, Prism.
+[Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeremyTCD/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
+[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeremyTCD/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
 
 ## Contributing
 Contributions are welcome!  
