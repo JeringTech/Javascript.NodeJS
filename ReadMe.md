@@ -641,13 +641,18 @@ This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://
 additions to this library are ways to invoke in-memory javascript, this library also provides better performance (note that INodeServices has only 1 benchmark because it 
 only supports invoking javascript from a file):
 <table>
-<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr></thead>
+<thead>
+<tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr>
+</thead>
 <tbody>
-<tr><td>INodeJSService_InvokeFromCache</td><td>0.1118 ms</td><td>0.001162 ms</td><td>0.001030 ms</td><td>2.3193</td><td>3.33 KB</td></tr>
-<tr><td>INodeJSService_InvokeFromFile</td><td>0.1138 ms</td><td>0.001248 ms</td><td>0.001167 ms</td><td>2.1973</td><td>3.4 KB</td></tr>
-<tr><td>INodeServices</td><td>0.1334 ms</td><td>0.001488 ms</td><td>0.001391 ms</td><td>1.9531</td><td>4.14 KB</td></tr>
+<tr><td>INodeJSService_InvokeFromFile</td><td>114.8 us</td><td>1.062 us</td><td>0.9932 us</td><td>2.1973</td><td>3.36 KB</td>
+</tr><tr><td>INodeJSService_InvokeFromCache</td><td>108.4 us</td><td>2.043 us</td><td>2.0064 us</td><td>2.3193</td><td>3.28 KB</td>
+</tr><tr><td>INodeServices</td><td>132.6 us</td><td>1.228 us</td><td>1.1483 us</td><td>1.9531</td><td>4.14 KB</td></tr>
 </tbody>
 </table>
+</body>
+</html>
+
 
 The [benchmarks](https://github.com/JeremyTCD/Javascript.NodeJS/blob/master/test/NodeJS.Performance/Benchmarks.cs).
 
