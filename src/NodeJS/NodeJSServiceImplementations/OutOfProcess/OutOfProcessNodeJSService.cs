@@ -201,8 +201,9 @@ namespace Jering.Javascript.NodeJS
             }
             catch (Exception exception)
             {
-                // TODO do CancellationTokenSources use unmanaged resources?
-                // If exception is not caught by an enclosing try-catch block, finally will never be called.
+                // TODO do CancellationTokenSources use unmanaged resources in this scenario? If not, no need to dispose of them here.
+                // At present, if a propogated exception is not caught by an enclosing try-catch block, finally might never be called.
+                // - https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/try-finally
                 timeoutCTS?.Dispose();
                 combinedCTS?.Dispose();
 
