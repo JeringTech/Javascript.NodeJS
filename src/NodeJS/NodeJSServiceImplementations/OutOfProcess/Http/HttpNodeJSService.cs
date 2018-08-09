@@ -62,59 +62,66 @@ namespace Jering.Javascript.NodeJS
         protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             using (HttpContent httpContent = _httpContentFactory.Create(invocationRequest))
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, Endpoint))
             {
-                // All HttpResponseMessage.Dispose does is call HttpContent.Dispose. Using default options, this is unecessary, for the following reason:
-                // HttpClient loads the response content into a MemoryStream
-                // FinishSendAsyncBuffered - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpClient.cs#L468
-                // LoadIntoBufferAsync - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/System.Net.Http/src/System/Net/Http/HttpContent.cs#L374
-                // Disposing a MemoryStream instance just toggles some flags
-                // Dispose - https://github.com/dotnet/corefx/blob/c42b2cd477976504b1ae0e4b71d48e92f0459d49/src/Common/src/CoreLib/System/IO/MemoryStream.cs#L124
-                // Since memoryStreams don't use unmanaged resources, calling Dispose on HttpResponseMessage is unecessary.
-                HttpResponseMessage httpResponseMessage = await _httpClientService.PostAsync(Endpoint, httpContent, cancellationToken).ConfigureAwait(false);
+                httpRequestMessage.Content = httpContent;
 
-                if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+                // Some notes on disposal:
+                // HttpResponseMessage.Dispose simply calls Dispose on HttpResponseMessage.Content. By default, HttpResponseMessage.Content is a StreamContent instance that has an underlying 
+                // NetworkStream instance that should be disposed. When HttpResponseMessage.Content.ReadAsStreamAsync is called, the NetworkStream is wrapped in a read-only delegating stream
+                // and returned. In most cases below, StreamReader is used to read the read-only stream, upon disposal of the StreamReader, the underlying stream and thus the NetworkStream
+                // are disposed. If HttpStatusCode is NotFound or an exception is thrown, we manually call HttpResponseMessage.Dispose. If we return the stream, we pass on the responsibility 
+                // for disposing it to the caller.
+                HttpResponseMessage httpResponseMessage = null;
+                try
                 {
-                    return (false, default(T));
-                }
+                    httpResponseMessage = await _httpClientService.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
-                if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
-                {
-                    using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                    using (var streamReader = new StreamReader(stream))
-                    using (var jsonTextReader = new JsonTextReader(streamReader))
+                    if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                     {
-                        InvocationError invocationError = _jsonService.Deserialize<InvocationError>(jsonTextReader);
-                        throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
+                        httpResponseMessage.Dispose();
+                        return (false, default(T));
                     }
-                }
 
-                if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
-                {
-                    Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    var value = default(T);
-
-                    if (typeof(T) == typeof(Stream))
+                    if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
                     {
-                        value = (T)(object)stream;
-                    }
-                    else if (typeof(T) == typeof(string))
-                    {
-                        // Stream reader closes the stream when it is disposed
-                        using (var streamReader = new StreamReader(stream))
-                        {
-                            value = (T)(object)await streamReader.ReadToEndAsync().ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
+                        using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
                         using (var streamReader = new StreamReader(stream))
                         using (var jsonTextReader = new JsonTextReader(streamReader))
                         {
-                            value = _jsonService.Deserialize<T>(jsonTextReader);
+                            InvocationError invocationError = _jsonService.Deserialize<InvocationError>(jsonTextReader);
+                            throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
                         }
                     }
 
-                    return (true, value);
+                    if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
+                    {
+                        Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+                        if (typeof(T) == typeof(Stream))
+                        {
+                            return (true, (T)(object)stream);
+                        }
+
+                        using (var streamReader = new StreamReader(stream))
+                        {
+                            if (typeof(T) == typeof(string))
+                            {
+                                return (true, (T)(object)await streamReader.ReadToEndAsync().ConfigureAwait(false));
+                            }
+
+                            using (var jsonTextReader = new JsonTextReader(streamReader))
+                            {
+                                return (true, _jsonService.Deserialize<T>(jsonTextReader));
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    httpResponseMessage?.Dispose();
+
+                    throw;
                 }
 
                 throw new InvocationException($"Http response received with unexpected status code: {httpResponseMessage.StatusCode}.");
