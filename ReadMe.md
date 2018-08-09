@@ -645,9 +645,9 @@ only supports invoking javascript from a file):
 <tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr>
 </thead>
 <tbody>
-<tr><td>INodeJSService_InvokeFromFile</td><td>114.8 us</td><td>1.062 us</td><td>0.9932 us</td><td>2.1973</td><td>3.36 KB</td>
-</tr><tr><td>INodeJSService_InvokeFromCache</td><td>108.4 us</td><td>2.043 us</td><td>2.0064 us</td><td>2.3193</td><td>3.28 KB</td>
-</tr><tr><td>INodeServices</td><td>132.6 us</td><td>1.228 us</td><td>1.1483 us</td><td>1.9531</td><td>4.14 KB</td></tr>
+<tr><td>INodeJSService_InvokeFromFile</td><td>0.1148 ms</td><td>0.001062 ms</td><td>0.0009932 ms</td><td>2.1973</td><td>3.36 KB</td>
+</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1084 ms</td><td>0.002043 ms</td><td>0.0020064 ms</td><td>2.3193</td><td>3.28 KB</td>
+</tr><tr><td>INodeServices</td><td>0.1326 ms</td><td>0.001228 ms</td><td>0.0011483 ms</td><td>1.9531</td><td>4.14 KB</td></tr>
 </tbody>
 </table>
 </body>
