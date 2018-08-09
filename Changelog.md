@@ -5,16 +5,16 @@ for an overview of semantic versioning.
 
 ## [Unreleased](https://github.com/JeremyTCD/Javascript.NodeJS/compare/3.1.0...HEAD)
 
-## 3.1.0 - Aug 9, 2018
+## [3.1.0](https://github.com/JeremyTCD/Javascript.NodeJS/compare/3.0.0...3.1.0) - Aug 9, 2018
 ### Changes
 - Reduced memory consumption.
 
-## 3.0.0 - Aug 6, 2018
+## [3.0.0](https://github.com/JeremyTCD/Javascript.NodeJS/compare/2.0.0...3.0.0) - Aug 6, 2018
 ### Changes
 - Renamed project to `Jering.Javascript.NodeJS` for consistency with other `Jering` packages. Using statements must be updated to reference types from the
 namespace `Jering.Javascript.NodeJS` instead of `Jering.JavascriptUtils.NodeJS`.
 
-## 2.0.0 - Aug 4, 2018
+## [2.0.0](https://github.com/JeremyTCD/Javascript.NodeJS/compare/1.0.1...2.0.0) - Aug 4, 2018
 ### Changes
 - Logging is now optional (previously, console logging was enabled by default). To make logging optional, 
 the default `INodeJSService` implementation, `HttpNodeJSService`, now takes an 
@@ -22,14 +22,14 @@ the default `INodeJSService` implementation, `HttpNodeJSService`, now takes an
 as a constructor argument.
 - Added .NET Standard 1.3 as a target framework.
 
-## 1.0.1 - Aug 1, 2018
+## [1.0.1](https://github.com/JeremyTCD/Javascript.NodeJS/compare/1.0.0...1.0.1) - Aug 1, 2018
 ### Fixes
 - Added some minor null checks in `InvocationContent`.
 
-## 1.0.0 - Jul 28, 2018
+## [1.0.0](https://github.com/JeremyTCD/Javascript.NodeJS/compare/0.1.0...1.0.0) - Jul 28, 2018
 ### Changes
 - Reduced default invocation/NodeJS initialization timeout.
 - Improved comments for intellisense.
 
-## 0.1.0 - Jul 24, 2018
+## [0.1.0](https://github.com/JeremyTCD/Javascript.NodeJS/compare/0.1.0...0.1.0) - Jul 24, 2018
 Initial release.
