@@ -29,7 +29,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
             var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.NotFound);
             Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
-            mockHttpClientService.Setup(h => h.SendAsync(It.Is<HttpRequestMessage>(hr => ReferenceEquals(hr.Content, mockRequestHttpContent.Object)), 
+            mockHttpClientService.Setup(h => h.SendAsync(It.Is<HttpRequestMessage>(hr => ReferenceEquals(hr.Content, mockRequestHttpContent.Object)),
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);

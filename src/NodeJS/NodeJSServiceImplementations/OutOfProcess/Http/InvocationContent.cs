@@ -97,7 +97,6 @@ namespace Jering.Javascript.NodeJS
                 await stream.WriteAsync(BOUNDARY_BYTES, 0, BOUNDARY_BYTES.Length).ConfigureAwait(false);
                 await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
             }
-
         }
 
         /// <summary>

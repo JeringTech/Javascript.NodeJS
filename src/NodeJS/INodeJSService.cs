@@ -23,7 +23,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
-        Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Invokes a function exported by a NodeJS module in string form.
@@ -39,7 +39,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
-        Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Invokes a function exported by a NodeJS module in Stream form.
@@ -55,7 +55,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
-        Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Attempts to invoke a function exported by a NodeJS module cached by NodeJS.
@@ -71,6 +71,6 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
-        Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
     }
 }

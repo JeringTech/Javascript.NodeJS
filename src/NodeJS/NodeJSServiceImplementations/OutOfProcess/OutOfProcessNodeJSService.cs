@@ -84,7 +84,7 @@ namespace Jering.Javascript.NodeJS
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.File,
                     modulePath,
@@ -95,7 +95,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.String,
                     moduleString,
@@ -107,7 +107,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.Stream,
                     newCacheIdentifier: newCacheIdentifier,
@@ -119,7 +119,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.Cache,
                     moduleCacheIdentifier,

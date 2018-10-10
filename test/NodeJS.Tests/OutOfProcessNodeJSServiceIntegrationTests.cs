@@ -68,10 +68,7 @@ namespace Jering.Javascript.NodeJS.Tests
             IServiceCollection services = new ServiceCollection();
             services.AddNodeJS();
 #if NETCOREAPP2_1
-            services.AddLogging(lb =>
-            {
-                lb.AddDebug().SetMinimumLevel(LogLevel.Debug);
-            });
+            services.AddLogging(lb => lb.AddDebug().SetMinimumLevel(LogLevel.Debug));
 #endif
 
             services.AddSingleton<INodeJSService, DummyNodeJSService>(); // Override default service

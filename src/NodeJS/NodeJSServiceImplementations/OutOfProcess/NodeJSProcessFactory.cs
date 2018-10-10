@@ -128,7 +128,6 @@ namespace Jering.Javascript.NodeJS
                     stringBuilder.
                         Append('\\').
                         Append('"');
-
                 }
                 else
                 {
