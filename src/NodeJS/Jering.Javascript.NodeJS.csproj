@@ -12,6 +12,9 @@
         <PackageReleaseNotes>$(PackageProjectUrl)/blob/master/Changelog.md</PackageReleaseNotes>
         <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
         <PackageTags>javascript nodejs</PackageTags>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <RepositoryType>git</RepositoryType>
         <LangVersion>7.3</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
