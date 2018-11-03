@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <PropertyGroup>
