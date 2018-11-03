@@ -6,8 +6,8 @@
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
         <Description>This library provides ways to invoke javascript in NodeJS, from .Net applications. On top of providing a way to invoke javascript from .js files on disk, this library provides ways to invoke in-memory javascript in string or Stream form, as well as logic in the NodeJS cache.</Description>
-        <Copyright>© JeremyTCD. All rights reserved.</Copyright>
-        <PackageProjectUrl>https://github.com/JeremyTCD/Javascript.NodeJS</PackageProjectUrl>
+        <Copyright>© Jering. All rights reserved.</Copyright>
+        <PackageProjectUrl>https://github.com/JeringTech/Javascript.NodeJS</PackageProjectUrl>
         <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/License.txt</PackageLicenseUrl>
         <PackageReleaseNotes>$(PackageProjectUrl)/blob/master/Changelog.md</PackageReleaseNotes>
         <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
