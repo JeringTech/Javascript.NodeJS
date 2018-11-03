@@ -7,12 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B78BFF8F-5D42-4B0E-B32D-EA12717F590D}"
 	ProjectSection(SolutionItems) = preProject
-		.appveyor.yml = .appveyor.yml
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		azure-pipelines.yml = azure-pipelines.yml
 		Changelog.md = Changelog.md
+		codecov.yml = codecov.yml
+		Directory.Build.targets = Directory.Build.targets
 		Jering.Javascript.NodeJS.ruleset = Jering.Javascript.NodeJS.ruleset
 		License.txt = License.txt
+		OverrideTest.targets = OverrideTest.targets
 		ReadMe.md = ReadMe.md
 		ThirdPartyLicenses.txt = ThirdPartyLicenses.txt
 	EndProjectSection

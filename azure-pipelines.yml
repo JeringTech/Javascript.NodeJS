@@ -1,0 +1,12 @@
+trigger:
+- master
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: JeremyTCD/DevOps.AzurePipelines
+    endpoint: JeremyTCD
+
+jobs:
+- template: templates/nuget/main.yml@templates

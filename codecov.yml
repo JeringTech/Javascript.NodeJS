@@ -1,0 +1,6 @@
+# Disable project and patch statuses - https://docs.codecov.io/docs/commit-status.
+# Developers should use their own discretion when accepting/rejecting code coverage statistics.
+coverage:
+  status:
+    project: off
+    patch: off
