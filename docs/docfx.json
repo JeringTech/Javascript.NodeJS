@@ -24,7 +24,7 @@
             }
         ],
         "globalMetadata": {
-            "mimo_websiteName": "Javascript.NodeJS",
+            "mimo_websiteName": "Jering.Javascript.NodeJS",
             "mimo_authors": [
                 {
                     "name": "JeremyTCD",
@@ -52,8 +52,8 @@
             "mimo_licensesRelPath": "/licenses",
             "mimo_privacyPolicyRelPath": "/privacy-policy",
             "mimo_contactRelPath": "/contact",
-            "mimo_logoRelPath": "/resources/logo_web.svg",
-            "mimo_favIconRelPath": "/favicon.ico",
+            "mimo_logoRelPath": "/resources/logo.svg",
+            "mimo_faviconRelPath": "/favicon.ico",
             "mimo_headElements": [
                 "<link rel=\"preload\" href=\"/fonts/open-sans-v15-latin-regular.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
                 "<link rel=\"preload\" href=\"/fonts/open-sans-v15-latin-italic.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
@@ -61,10 +61,10 @@
                 "<link rel=\"preload\" href=\"/fonts/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
             ]
         },
-        "postProcessors": [ "SortedArticleListGenerator", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver", "SitemapCorrector" ],
+        "postProcessors": [ "SortedArticleListGenerator", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
         "markdownEngineName": "mimo-markdown",
         "sitemap": {
-            "baseUrl": "https://jering.tech/utilities/javascript.nodejs",
+            "baseUrl": "https://www.jering.tech/utilities/javascript.nodejs",
             "priority": 0.1,
             "fileOptions": {
                 "**/src/content/index.md": {
