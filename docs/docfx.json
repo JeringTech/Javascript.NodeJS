@@ -32,8 +32,16 @@
                     "imgSrc": "/resources/head_shot.jpg"
                 }
             ],
-            // Used to create social media cards, verify that it works
-            "mimo_baseUrl": "https://jering.tech/utilities/javascript.nodejs",
+
+            "mimo_socialMediaCards": "true",
+            "mimo_baseUrl": "https://www.jering.tech/utilities/javascript.nodejs",
+            "mimo_fbCardImageRelPath": "/resources/logo_wide.png",
+            "mimo_twitterCardImageRelPath": "/resources/logo_wide.png",
+            "mimo_twitterCardType": "summary_large_image",
+            "mimo_twitterCardSite": "@JeringTech",
+            "mimo_twitterCardCreator": "@JeremyTCD",
+            "mimo_twitterCardImageAlt": "Jering Logo",
+
             "mimo_copyrightText": "2017-2018 Jering",
             "mimo_disableComments": true,
             "mimo_googleTrackingID": "UA-111443979-1",
