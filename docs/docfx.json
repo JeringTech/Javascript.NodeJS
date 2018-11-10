@@ -14,13 +14,13 @@
                 "dest": "resources"
             },
             {
-                "src": "src/misc",
+                "src": "src/rootResources",
                 "files": [ "**" ]
             },
             {
                 "src": "src/fonts",
                 "files": [ "**" ],
-                "dest": "fonts"
+                "dest": "resources"
             }
         ],
         "globalMetadata": {
@@ -33,10 +33,11 @@
                 }
             ],
 
+            "mimo_baseUrl": "https://www.jering.tech/utilities/javascript.nodejs/",
+
             "mimo_socialMediaCards": "true",
-            "mimo_baseUrl": "https://www.jering.tech/utilities/javascript.nodejs",
-            "mimo_fbCardImageRelPath": "/resources/logo_wide.png",
-            "mimo_twitterCardImageRelPath": "/resources/logo_wide.png",
+            "mimo_fbCardImageRelPath": "resources/logo_wide.png",
+            "mimo_twitterCardImageRelPath": "resources/logo_wide.png",
             "mimo_twitterCardType": "summary_large_image",
             "mimo_twitterCardSite": "@JeringTech",
             "mimo_twitterCardCreator": "@JeremyTCD",
@@ -55,10 +56,10 @@
             "mimo_logoRelPath": "/resources/logo.svg",
             "mimo_faviconRelPath": "/favicon.ico",
             "mimo_headElements": [
-                "<link rel=\"preload\" href=\"/fonts/open-sans-v15-latin-regular.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/fonts/open-sans-v15-latin-italic.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/fonts/open-sans-v15-latin-600.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/fonts/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
+                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-regular.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
+                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-italic.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
+                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-600.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
+                "<link rel=\"preload\" href=\"/resources/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
             ]
         },
         "postProcessors": [ "SortedArticleListGenerator", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
