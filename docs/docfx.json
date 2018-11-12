@@ -62,7 +62,7 @@
                 "<link rel=\"preload\" href=\"/resources/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
             ]
         },
-        "postProcessors": [ "SortedArticleListGenerator", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
+        "postProcessors": [ "SortedArticleListGenerator", "ExternalAnchorFixer", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
         "markdownEngineName": "mimo-markdown",
         "sitemap": {
             "baseUrl": "https://www.jering.tech/utilities/javascript.nodejs",
