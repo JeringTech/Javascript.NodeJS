@@ -5,9 +5,7 @@
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
-        <Description>Jering.Javascript.NodeJS allows you to invoke javascript in NodeJS, from C#:
-  - Use popular javascript libraries from your C# projects.
-  - Invoke both in-memory and on-disk javascript.</Description>
+        <Description>Jering.Javascript.NodeJS allows you to invoke javascript in NodeJS, from C#. With Jering.Javascript.NodeJS, you can use javascript libraries in your C# projects. Jering.Javascript.NodeJS supports invoking of both in-memory and on-disk javascript.</Description>
         <Copyright>© Jering. All rights reserved.</Copyright>
         <PackageProjectUrl>https://github.com/JeringTech/Javascript.NodeJS</PackageProjectUrl>
         <PackageLicenseUrl>$(PackageProjectUrl)/blob/master/License.txt</PackageLicenseUrl>
