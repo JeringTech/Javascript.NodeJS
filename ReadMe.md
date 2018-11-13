@@ -1,5 +1,6 @@
 # Jering.Javascript.NodeJS
-[![Build Status](https://dev.azure.com/JeringTech/Javascript.NodeJS/_apis/build/status/JeringTech.Javascript.NodeJS)](https://dev.azure.com/JeringTech/Javascript.NodeJS/_build/latest?definitionId=1)
+[![Build Status](https://dev.azure.com/JeringTech/Javascript.NodeJS/_apis/build/status/Jering.Javascript.NodeJS-CI)](https://dev.azure.com/JeringTech/Javascript.NodeJS/_build/latest?definitionId=1)
+[![codecov](https://codecov.io/gh/JeringTech/Javascript.NodeJS/branch/master/graph/badge.svg)](https://codecov.io/gh/JeringTech/Javascript.NodeJS)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/Pkcs11Interop/Pkcs11Interop/blob/master/LICENSE.md)
 [![NuGet](https://img.shields.io/nuget/vpre/Jering.Javascript.NodeJS.svg?label=nuget)](https://www.nuget.org/packages/Jering.Javascript.NodeJS/)
 <!-- TODO tests badge, this service should work - https://github.com/monkey3310/appveyor-shields-badges/blob/master/README.md -->
