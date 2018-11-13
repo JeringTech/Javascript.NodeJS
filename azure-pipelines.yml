@@ -14,3 +14,6 @@ jobs:
   parameters:
     changelogPath: "Changelog.md"
 - template: templates/docs/main.yml@templates
+  parameters:
+    nugetRestoreEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
+    nugetRestorePat: "$(nugetRestorePat)"
