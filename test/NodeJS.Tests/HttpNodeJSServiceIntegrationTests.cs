@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using Xunit;
 
 namespace Jering.Javascript.NodeJS.Tests
@@ -214,9 +215,26 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             await testSubject.
-                InvokeFromStringAsync<string>($"module.exports = (callback) => {{ console.log('{dummySinglelineString}'); console.log(`{dummyMultilineString}`); callback();}}").ConfigureAwait(false);
-            // Disposing of HttpNodeServices causes Process.WaitForExit(500) to be called on the node process, this give it time to flush its output.
-            // This isn't super clean.
+                InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
+    console.log('{dummySinglelineString}'); 
+    console.log(`{dummyMultilineString}`);
+    callback();
+
+    // Does not work
+    // process.stdout.end();
+    // process.on(finish, () => callback());
+
+    // Does not work
+    // process.stdout.write('', 'utf8', () => callback());
+}}").ConfigureAwait(false);
+            // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
+            //
+            // TODO On Linux and macOS, Node.js does not flush stdout completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
+            // Note that console.log just writes to stdout under the hood -https://nodejs.org/docs/latest-v8.x/api/console.html#console_console_log_data_args.
+            // There flakiness causes this test to fail randomly. The whole stdout flushing issue seems like a persistent Node.js problem - https://github.com/nodejs/node/issues/6456. 
+            // Several attempts have been made to flush/write to stdout synchronously in the js above, to no avail.
+            // The following Thread.Sleep(500) works almost all the time, but isn't a clean solution.
+            Thread.Sleep(500);
             ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();
 

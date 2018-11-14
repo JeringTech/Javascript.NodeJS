@@ -1,0 +1,30 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "lib": [ "es6", "dom" ],
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "allowJs": true,
+        "noEmitOnError": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "typeRoots": [
+            "../../node_modules/@types"
+        ],
+        // Does not work if an absolute url is specified
+        "baseUrl": ".",
+        "paths": {
+            "mimo-website/*": [
+                "../../node_modules/mimo-website/dist/scripts/*"
+            ]
+        }
+    },
+    "include": [
+        "./index.ts"
+    ]
+}

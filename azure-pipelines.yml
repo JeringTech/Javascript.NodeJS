@@ -5,8 +5,15 @@ resources:
   repositories:
   - repository: templates
     type: github
-    name: JeremyTCD/DevOps.AzurePipelines
-    endpoint: JeremyTCD
+    name: JeringTech/DevOps.AzurePipelines
+    ref: refs/tags/0.1.0
+    endpoint: JeringTech
 
 jobs:
 - template: templates/nuget/main.yml@templates
+  parameters:
+    changelogPath: "Changelog.md"
+- template: templates/docs/main.yml@templates
+  parameters:
+    nugetRestoreEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
+    nugetRestorePat: "$(nugetRestorePat)"

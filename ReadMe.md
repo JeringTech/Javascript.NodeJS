@@ -1,5 +1,6 @@
 # Jering.Javascript.NodeJS
-[![Build status](https://ci.appveyor.com/api/projects/status/wawhrh1nvy5fae2s?svg=true)](https://ci.appveyor.com/project/JeremyTCD/javascript-nodejs)
+[![Build Status](https://dev.azure.com/JeringTech/Javascript.NodeJS/_apis/build/status/Jering.Javascript.NodeJS-CI)](https://dev.azure.com/JeringTech/Javascript.NodeJS/_build/latest?definitionId=1)
+[![codecov](https://codecov.io/gh/JeringTech/Javascript.NodeJS/branch/master/graph/badge.svg)](https://codecov.io/gh/JeringTech/Javascript.NodeJS)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/Pkcs11Interop/Pkcs11Interop/blob/master/LICENSE.md)
 [![NuGet](https://img.shields.io/nuget/vpre/Jering.Javascript.NodeJS.svg?label=nuget)](https://www.nuget.org/packages/Jering.Javascript.NodeJS/)
 <!-- TODO tests badge, this service should work - https://github.com/monkey3310/appveyor-shields-badges/blob/master/README.md -->
@@ -24,8 +25,8 @@ This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/e
 this library provides ways to invoke in-memory javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
 
 ## Target Frameworks
-- .NET Standard 1.3
 - .NET Standard 2.0
+- .NET Framework 4.6.1
  
 ## Prerequisites
 [NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable.

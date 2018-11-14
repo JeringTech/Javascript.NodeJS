@@ -8,6 +8,8 @@ namespace Jering.Javascript.NodeJS.Tests
         private const string VALUE_KEY = "VALUE_KEY";
         public T Value { get; private set; }
 
+        public SerializableWrapper() { }
+
         public SerializableWrapper(T target)
         {
             Value = target;
