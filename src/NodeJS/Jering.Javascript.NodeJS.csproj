@@ -5,9 +5,9 @@
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
-        <Description>Jering.Javascript.NodeJS allows you to invoke javascript in NodeJS, from C#. With Jering.Javascript.NodeJS, you can use javascript libraries in your C# projects. Jering.Javascript.NodeJS supports invoking of both in-memory and on-disk javascript.</Description>
-        <Copyright>© Jering. All rights reserved.</Copyright>
-        <PackageProjectUrl>https://www.jering.tech/utilities/javascript.nodejs</PackageProjectUrl>       
+        <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can utilize most javascript libraries and scripts from your C# projects. This library provides flexibility by allowing for invoking of both in-memory and on-disk javascript.</Description>
+        <Copyright>© 2018 Jering. All rights reserved.</Copyright>
+        <PackageProjectUrl>https://www.jering.tech/utilities/javascript.nodejs</PackageProjectUrl>
         <RepositoryUrl>https://github.com/JeringTech/Javascript.NodeJS</RepositoryUrl>
         <PackageLicenseUrl>$(RepositoryUrl)/blob/master/License.txt</PackageLicenseUrl>
         <PackageReleaseNotes>$(RepositoryUrl)/blob/master/Changelog.md</PackageReleaseNotes>
@@ -38,10 +38,10 @@
     <ItemGroup>
         <PackageReference Include="Jering.IocServices.System.Net.Http" Version="0.3.0" />
         <PackageReference Include="Roslynator.Analyzers" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Yarn.MSBuild" Version="1.7.0" PrivateAssets="All" ExcludeAssets="Runtime" />
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
