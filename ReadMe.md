@@ -25,8 +25,8 @@ This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/e
 this library provides ways to invoke in-memory javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
 
 ## Target Frameworks
-- .NET Standard 1.3
 - .NET Standard 2.0
+- .NET Framework 4.6.1
  
 ## Prerequisites
 [NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable.
