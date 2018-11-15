@@ -78,12 +78,7 @@ namespace Jering.Javascript.NodeJS
             }
             catch (Exception ex)
             {
-                string message = "Failed to start Node process. To resolve this:.\n\n"
-                            + "[1] Ensure that NodeJS is installed and can be found in one of the PATH directories.\n"
-                            + $"    Current PATH enviroment variable is: { Environment.GetEnvironmentVariable("PATH") }\n"
-                            + "    Make sure the Node executable is in one of those directories, or update your PATH.\n\n"
-                            + "[2] See the InnerException for further details of the cause.";
-                throw new InvalidOperationException(message, ex);
+                throw new InvalidOperationException(string.Format(Strings.InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess, Environment.GetEnvironmentVariable("PATH")), ex);
             }
         }
 

@@ -45,7 +45,7 @@ namespace Jering.Javascript.NodeJS
                 // moduleSourceType is stream but moduleStreamSource is null
                 if (moduleStreamSource == null)
                 {
-                    throw new ArgumentException($"{nameof(moduleSourceType)} is {nameof(ModuleSourceType.Stream)} but {nameof(moduleStreamSource)} is null.");
+                    throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull, nameof(moduleStreamSource));
                 }
             }
             else if (moduleSourceType == ModuleSourceType.Cache)
@@ -53,13 +53,13 @@ namespace Jering.Javascript.NodeJS
                 if (moduleSource == null)
                 {
                     // moduleSourceType is cache but moduleSource is null
-                    throw new ArgumentException($"{nameof(moduleSourceType)} is {moduleSourceType.ToString()} but {nameof(moduleSource)} is null.");
+                    throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNull, nameof(moduleSource));
                 }
             }
             else if (string.IsNullOrWhiteSpace(moduleSource))
             {
                 // moduleSourceType is file or string but moduleSource is null, whitespace or an empty string
-                throw new ArgumentException($"{nameof(moduleSourceType)} is {moduleSourceType.ToString()} but {nameof(moduleSource)} is null, whitespace or an empty string.");
+                throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString, nameof(moduleSource));
             }
 
             ModuleSourceType = moduleSourceType;

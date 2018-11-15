@@ -215,23 +215,17 @@ namespace Jering.Javascript.NodeJS
                 if (!_connected)
                 {
                     // This is very unlikely
-                    throw new InvocationException(
-                        $"Attempt to connect to Node timed out after {_options.TimeoutMS}ms.",
-                        string.Empty);
+                    throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut, _options.TimeoutMS));
                 }
 
                 // Developers encounter this fairly often (if their Node code fails without invoking the callback,
                 // all that the .NET side knows is that the invocation eventually times out). Previously, this surfaced
                 // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
                 // descriptive error.
-                throw new InvocationException(
-                    $"The Node invocation timed out after {_options.TimeoutMS}ms.",
-                    $"You can change the timeout duration by setting the {nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS)} "
-                    + $"property on {nameof(OutOfProcessNodeJSServiceOptions)}.\n\n"
-                    + "The first debugging step is to ensure that your NodeJS function always invokes the supplied "
-                    + "callback (or throws an exception synchronously), even if it encounters an error. Otherwise, "
-                    + "the .NET code has no way to know that it is finished or has failed."
-                );
+                throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
+                    _options.TimeoutMS,
+                    nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
+                    nameof(OutOfProcessNodeJSServiceOptions)));
             }
             finally
             {

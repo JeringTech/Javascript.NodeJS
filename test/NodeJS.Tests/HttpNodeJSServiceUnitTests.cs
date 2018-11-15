@@ -177,7 +177,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             _mockRepository.VerifyAll();
-            Assert.Equal($"Http response received with unexpected status code: {dummyHttpStatusCode}.", result.Message);
+            Assert.Equal(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, dummyHttpStatusCode), result.Message);
         }
 
         [Theory]
