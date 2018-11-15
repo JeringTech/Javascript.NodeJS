@@ -41,6 +41,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
         <PackageReference Include="Roslynator.Analyzers" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
