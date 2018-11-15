@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>
-    /// A class that provides static access to the default <see cref="INodeJSService"/> implementation's public methods.
+    /// A class that provides static access to an instance of the default <see cref="INodeJSService"/> implementation's public methods.
     /// </summary>
     public static class StaticNodeJSService
     {
@@ -39,7 +39,6 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <typeparam name="T">The type of options to configure.</typeparam>
         /// <param name="configureOptions">The action that configures the options.</param>
-        /// <exception cref="InvalidOperationException">Thrown if this method is called after the first javascript invocation.</exception>
         public static void Configure<T>(Action<T> configureOptions) where T : class
         {
             (_services ?? (_services = new ServiceCollection())).Configure(configureOptions);
