@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Act and assert
             ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(ModuleSourceType.Stream));
-            Assert.Equal("moduleSourceType is Stream but moduleStreamSource is null.", result.Message);
+            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull + "\nParameter name: moduleStreamSource", result.Message, ignoreLineEndingDifferences: true);
         }
 
         [Theory]
@@ -21,7 +21,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Act and assert
             ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(dummyModuleSourceType, dummyModuleSource));
-            Assert.Equal($"moduleSourceType is {dummyModuleSourceType.ToString()} but moduleSource is null, whitespace or an empty string.", result.Message);
+            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString + "\nParameter name: moduleSource", result.Message, ignoreLineEndingDifferences: true);
         }
 
         public static IEnumerable<object[]> Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsFileOrStringButModuleSourceIsNullWhitespaceOrAnEmptyString_Data()
@@ -42,7 +42,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Act and assert
             ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(ModuleSourceType.Cache));
-            Assert.Equal("moduleSourceType is Cache but moduleSource is null.", result.Message);
+            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNull + "\nParameter name: moduleSource", result.Message, ignoreLineEndingDifferences: true);
         }
 
         [Fact]

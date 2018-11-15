@@ -124,7 +124,7 @@ namespace Jering.Javascript.NodeJS
                     throw;
                 }
 
-                throw new InvocationException($"Http response received with unexpected status code: {httpResponseMessage.StatusCode}.");
+                throw new InvocationException(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, httpResponseMessage.StatusCode));
             }
         }
 

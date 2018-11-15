@@ -56,6 +56,21 @@
         <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Strings.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Strings.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Strings.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
     <!-- TODO one target per bundle or one target for all bundles? will have to generalize webpack.config if one target per bundle. -->
     <Target Name="JavascriptBuild" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
         <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
