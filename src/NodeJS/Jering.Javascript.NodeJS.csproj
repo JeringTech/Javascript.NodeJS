@@ -37,6 +37,10 @@
 
     <ItemGroup>
         <PackageReference Include="Jering.IocServices.System.Net.Http" Version="0.3.0" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Roslynator.Analyzers" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
