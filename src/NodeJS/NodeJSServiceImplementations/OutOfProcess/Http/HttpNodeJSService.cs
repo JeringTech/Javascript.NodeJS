@@ -151,7 +151,6 @@ namespace Jering.Javascript.NodeJS
 
                     // Skip over "Port - "
                     i += 7;
-                    continue;
                 }
                 else if (currentChar == ']')
                 {
