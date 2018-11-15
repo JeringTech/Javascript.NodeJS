@@ -32,6 +32,6 @@ namespace Jering.Javascript.NodeJS
         /// <para>The environment variables for the NodeJS process.</para>
         /// <para>The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
         /// </summary>
-        public IDictionary<string, string> EnvironmentVariables { get; set; }
+        public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
     }
 }

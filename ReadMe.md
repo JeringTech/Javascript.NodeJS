@@ -3,7 +3,6 @@
 [![codecov](https://codecov.io/gh/JeringTech/Javascript.NodeJS/branch/master/graph/badge.svg)](https://codecov.io/gh/JeringTech/Javascript.NodeJS)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/Pkcs11Interop/Pkcs11Interop/blob/master/LICENSE.md)
 [![NuGet](https://img.shields.io/nuget/vpre/Jering.Javascript.NodeJS.svg?label=nuget)](https://www.nuget.org/packages/Jering.Javascript.NodeJS/)
-<!-- TODO tests badge, this service should work - https://github.com/monkey3310/appveyor-shields-badges/blob/master/README.md -->
 
 ## Table of Contents
 [Overview](#overview)  
@@ -21,8 +20,50 @@
 [About](#about)  
 
 ## Overview
-This library provides ways to invoke javascript in [NodeJS](https://nodejs.org/en/), from .Net applications. On top of providing a way to invoke javascript from `.js` files on disk,
-this library provides ways to invoke in-memory javascript in `string` or `Stream` form, as well as logic in the NodeJS cache.
+Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://nodejs.org/en/), from C#. With this ability, you can utilize a wide array of javascript libraries and scripts from your C# projects.  
+
+This library is built to be flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
+
+Here is an example of invoking javascript using the static API:
+
+```csharp
+string javascriptModule = @"
+module.exports = (callback, x, y) => {  // Module must export a function that takes a callback as its first parameter
+    var result = x + y; // Your javascript logic
+    callback(null /* If an error occurred, provide an error object or message */, result); // Call the callback when you're done.
+}";
+
+// Invoke javascript
+int result = await StaticNodeJSService.InvokeFromStringAsync<int>(javascriptModule, args: new object[] { 3, 5 });
+
+// result == 8
+Assert.Equal(8, result);
+```
+
+And here is an example of invoking javascript using the DI based API:
+
+```csharp
+string javascriptModule = @"
+module.exports = (callback, x, y) => {  // Module must export a function that takes a callback as its first parameter
+    var result = x + y; // Your javascript logic
+    callback(null /* If an error occurred, provide an error object or message */, result); // Call the callback when you're done.
+}";
+
+// Create INodeJSService instance
+var services = new ServiceCollection();
+services.AddNodeJS();
+ServiceProvider serviceProvider = services.BuildServiceProvider();
+INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
+
+// Invoke javascript
+int result = await nodeJSService.InvokeFromStringAsync<int>(javascriptModule, args: new object[] { 3, 5 });
+
+// result == 8
+Assert.Equal(8, result);
+```
+
+Read on for details.
+
 
 ## Target Frameworks
 - .NET Standard 2.0
@@ -183,7 +224,7 @@ can be kept private.
 
 ## Usage
 ### Creating INodeJSService
-This library uses depedency injection (DI) to facilitate [extensibility](#extensibility) and testability.
+This library provides a DI based API to facilitate [extensibility](#extensibility) and testability.
 You can use any DI framework that has adapters for [Microsoft.Extensions.DependencyInjection](https://github.com/aspnet/DependencyInjection).
 Here, we'll use the vanilla Microsoft.Extensions.DependencyInjection framework:
 ```csharp
@@ -212,6 +253,19 @@ Note that even if `Dispose` isn't called manually, `INodeJSService` will kill th
 NodeJS process when the application shuts down - if the application shuts down gracefully. If the application doesn't shutdown gracefully, the NodeJS process will kill 
 itself when it detects that its parent has been killed. 
 Essentially, manually disposing of `INodeJSService` instances is not mandatory.
+
+#### Static API
+This library also provides a static API as an alternative. The `StaticNodeJSService` type wraps an `INodeJSService` instance, exposing its [public members](#api) statically.
+Whether you use the static API or the DI based API depends on your development needs. If you are already using DI, if you want to mock 
+out javascript invocations in your tests or if you want to [overwrite](#extensibility) `INodeJSService`'s dependencies, use the DI based API. Otherwise,
+use the static API.
+
+```csharp
+string result = await StaticNodeJSService
+    .InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, message);", args: new[] { "success" });
+
+Assert.Equal("success", result);
+```
 
 ### Using INodeJSService
 #### Basics
@@ -350,6 +404,18 @@ services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutM
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
 ```
+
+#### Configuring Using the Static API
+The static API exposes a method for configuring options:
+```csharp
+StaticNodeJSService.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
+```
+Configurations made using `StaticNodeJSService.Configure<T>` only apply to javascript invocations made using the static API. 
+Ideally, such configurations should be done before the first javascript invocation.
+Any existing NodeJS process is killed and a new one is created in the first javascript invocation after every `StaticNodeJSService.Configure<T>` call. 
+Re-creating the NodeJS process is resource intensive. Also, if you are using the static API from multiple threads and 
+the NodeJS process is performing invocations for other threads, you might get unexpected results.
+
 The next two sections list all available options.
 
 #### NodeJSProcessOptions
