@@ -6,7 +6,6 @@ resources:
   - repository: templates
     type: github
     name: JeringTech/DevOps.AzurePipelines
-    ref: refs/tags/0.1.0
     endpoint: JeringTech
 
 jobs:
