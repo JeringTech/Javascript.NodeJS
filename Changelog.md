@@ -3,7 +3,17 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/3.2.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/3.3.0...HEAD)
+
+## [3.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.2.1...3.3.0) - Nov 16, 2018
+### Changes
+- `InvocationException` is now serializable.
+
+### Additions
+- Added `StaticNodeJSService` which exposes a static API alternative to the existing dependency injection based API.
+
+### Fixes
+- Added the SourceLink Github package required for source-linked symbols.
 
 ## [3.2.1](https://github.com/JeringTech/Javascript.NodeJS/compare/3.2.0...3.2.1) - Nov 14, 2018
 ### Changes
