@@ -174,7 +174,7 @@ namespace Jering.Javascript.NodeJS
                 {
                     if (Logger?.IsEnabled(LogLevel.Debug) == true)
                     {
-                        Logger.LogDebug($"Before first semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                        Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
                     }
 
                     await _processSemaphore.WaitAsync().ConfigureAwait(false);
@@ -190,7 +190,7 @@ namespace Jering.Javascript.NodeJS
 
                         if (Logger?.IsEnabled(LogLevel.Debug) == true)
                         {
-                            Logger.LogDebug($"Before second semaphore wait, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
                         }
 
                         await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);

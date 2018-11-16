@@ -127,5 +127,23 @@ namespace Jering.Javascript.NodeJS {
                 return ResourceManager.GetString("InvocationException_OutOfProcessNodeJSService_InvocationTimedOut", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Before first semaphore wait, count: {0}. Thread ID: {1}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Before second semaphore wait, count: {0}. Thread ID: {1}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore", resourceCulture);
+            }
+        }
     }
 }
