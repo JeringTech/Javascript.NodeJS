@@ -9,16 +9,24 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void Configure_ConfiguresOptions()
         {
             // Arrange
+            const int dummyInitialInvocationResult = 1;
             const string dummyTestVariableName1 = "TEST_VARIABLE_1";
             const string dummyTestVariableValue1 = "testVariableValue1";
             const string dummyTestVariableName2 = "TEST_VARIABLE_2";
             const string dummyTestVariableValue2 = "testVariableValue2";
+
+            // Act
+            // Invoke javascript once to ensure that an initial NodeJSService is created. The invocation after configuration should properly dispose of this initial instance and create a new one with the
+            // specified options.
+            int initialInvocationResult = await StaticNodeJSService.
+                InvokeFromStringAsync<int>($"module.exports = (callback) => callback(null, {dummyInitialInvocationResult});").ConfigureAwait(false);
             StaticNodeJSService.
                     Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName1, dummyTestVariableValue1));
             StaticNodeJSService.
                     Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName2, dummyTestVariableValue2));
 
             // Assert
+            Assert.Equal(dummyInitialInvocationResult, initialInvocationResult);
             DummyResult result = await StaticNodeJSService.
                 InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName1} + process.env.{dummyTestVariableName2}}});").
                 ConfigureAwait(false);

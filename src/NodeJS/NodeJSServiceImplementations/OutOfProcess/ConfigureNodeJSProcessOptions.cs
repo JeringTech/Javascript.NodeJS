@@ -34,15 +34,17 @@ namespace Jering.Javascript.NodeJS
                 IServiceProvider serviceProvider = scope.ServiceProvider;
 
                 IHostingEnvironment hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
-                if (hostingEnvironment != null)
+                if (hostingEnvironment == null)
                 {
-                    options.ProjectPath = hostingEnvironment.ContentRootPath;
-                    if (options.EnvironmentVariables == null)
-                    {
-                        options.EnvironmentVariables = new Dictionary<string, string>();
-                    }
-                    options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
+                    return;
                 }
+
+                options.ProjectPath = hostingEnvironment.ContentRootPath;
+                if (options.EnvironmentVariables == null)
+                {
+                    options.EnvironmentVariables = new Dictionary<string, string>();
+                }
+                options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
             }
         }
     }

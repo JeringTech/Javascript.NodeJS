@@ -16,12 +16,24 @@ namespace Jering.Javascript.NodeJS.Tests
         private const int _numThreads = 5; // Arbitrary
         private static readonly CountdownEvent _countdownEvent = new CountdownEvent(_numThreads); // Only used by 1 test
 
+        [Fact]
+        public async void TryInvokeCoreAsync_ThrowsObjectDisposedExceptionIfObjectHasBeenDisposedOf()
+        {
+            // Arrange
+            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>();
+            testSubject.Dispose();
+
+            // Act and assert
+            ObjectDisposedException result = await Assert.ThrowsAsync<ObjectDisposedException>(async () => await testSubject.TryInvokeCoreAsync<string>(null, CancellationToken.None).ConfigureAwait(false)).ConfigureAwait(false);
+            Assert.Equal($"Cannot access a disposed object.\nObject name: '{nameof(OutOfProcessNodeJSService)}'.", result.Message, ignoreLineEndingDifferences: true);
+        }
+
         // TODO are there better techniques for testing multi-threaded code? 
         [Fact]
         public void TryInvokeCoreAsync_HandlesSimultaneousRequestsFromDifferentThreads()
         {
             // Arrange
-            DummyNodeJSService testSubject = CreateDummyNodeService();
+            DummyThreadCounterNodeJSService testSubject = CreateDummyNodeService<DummyThreadCounterNodeJSService>();
             var threads = new List<Thread>();
 
             // Act
@@ -41,13 +53,72 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(0, _countdownEvent.CurrentCount);
         }
 
-        private class DummyNodeJSService : OutOfProcessNodeJSService
+        [Fact]
+        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfAnInvocationTimesOut()
         {
-            public DummyNodeJSService(INodeJSProcessFactory nodeProcessFactory,
-                ILogger<DummyNodeJSService> nodeServiceLogger,
+            // Arrange
+            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>();
+            var threads = new List<Thread>();
+
+            // Act and assert
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await testSubject.TryInvokeCoreAsync<string>(null, CancellationToken.None).ConfigureAwait(false)).ConfigureAwait(false);
+            Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
+                    new OutOfProcessNodeJSServiceOptions().TimeoutMS, // Get the default
+                    nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
+                    nameof(OutOfProcessNodeJSServiceOptions)),
+                    result.Message);
+        }
+
+        // On the first javascript invocation, an attempt is made to connect to node. If this attempt timesout, an InvocationException should be thrown. To ensure that the InvocationException
+        // is thrown, we simulate a timeout by setting the duration till timeout to 0.
+        //
+        // Note: OutOfProcessNodeJSService combines the cancellation token that we pass with a cancellation token that has the timeout specified in OutOfProcessNodeJSServiceOptions.
+        // The combined cancellation token cancels when any of its underlying tokens cancel, so we can get the connection to cancel immediately.
+        [Fact]
+        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfANodeConnectionAttemptTimesout()
+        {
+            // Arrange
+            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>();
+            var threads = new List<Thread>();
+            var timeoutCTS = new CancellationTokenSource(0);
+
+            // Act and assert
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await testSubject.TryInvokeCoreAsync<string>(null, timeoutCTS.Token).ConfigureAwait(false)).ConfigureAwait(false);
+            Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut,
+                new OutOfProcessNodeJSServiceOptions().TimeoutMS), // Get the default
+                result.Message);
+        }
+
+        private class DummyExceptionThrowingNodeJSService : OutOfProcessNodeJSService
+        {
+            public DummyExceptionThrowingNodeJSService(INodeJSProcessFactory nodeProcessFactory,
+                ILogger<DummyExceptionThrowingNodeJSService> nodeServiceLogger,
                 IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
                 IEmbeddedResourcesService embeddedResourcesService) :
-                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).GetTypeInfo().Assembly, "HttpServer.js") // TODO somehow get HttpServer into test assembly?
+                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).GetTypeInfo().Assembly, "HttpServer.js")
+            {
+            }
+
+            protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+            {
+                // Do nothing
+            }
+
+            protected override Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+            {
+                throw new OperationCanceledException();
+            }
+        }
+
+        private class DummyThreadCounterNodeJSService : OutOfProcessNodeJSService
+        {
+            public DummyThreadCounterNodeJSService(INodeJSProcessFactory nodeProcessFactory,
+                ILogger<DummyThreadCounterNodeJSService> nodeServiceLogger,
+                IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
+                IEmbeddedResourcesService embeddedResourcesService) :
+                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).GetTypeInfo().Assembly, "HttpServer.js")
             {
             }
 
@@ -63,15 +134,14 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        private DummyNodeJSService CreateDummyNodeService()
+        private T CreateDummyNodeService<T>(IServiceCollection services = null) where T : class, INodeJSService
         {
-            IServiceCollection services = new ServiceCollection();
-            services.AddNodeJS();
+            (services ?? (services = new ServiceCollection())).AddNodeJS();
 #if NETCOREAPP2_1
             services.AddLogging(lb => lb.AddDebug().SetMinimumLevel(LogLevel.Debug));
 #endif
 
-            services.AddSingleton<INodeJSService, DummyNodeJSService>(); // Override default service
+            services.AddSingleton<INodeJSService, T>(); // Override default service
             _serviceProvider = services.BuildServiceProvider();
 
 #if NETCOREAPP1_0
@@ -79,7 +149,8 @@ namespace Jering.Javascript.NodeJS.Tests
             // Setting min level like this doesn't work for netcoreapp2.1
             loggerFactory.AddDebug(LogLevel.Debug);
 #endif
-            return _serviceProvider.GetRequiredService<INodeJSService>() as DummyNodeJSService;
+
+            return _serviceProvider.GetRequiredService<INodeJSService>() as T;
         }
 
         public void Dispose()
