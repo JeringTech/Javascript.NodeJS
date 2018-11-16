@@ -82,8 +82,6 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        // TODO verify that this escaping works for non-windows platforms
-        // https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/
         internal string EscapeCommandLineArg(string arg)
         {
             var stringBuilder = new StringBuilder();

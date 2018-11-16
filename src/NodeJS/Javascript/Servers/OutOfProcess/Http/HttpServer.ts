@@ -245,7 +245,7 @@ function patchLStat() {
                 throw ex;
             }
         }
-    };
+    }
 
     // It's only necessary to apply this workaround on Windows
     let appRootDirLong: string = null;

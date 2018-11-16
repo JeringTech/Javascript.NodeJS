@@ -21,7 +21,7 @@ namespace Jering.Javascript.NodeJS
         //private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         // Arbitrary boundary
-        internal static byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
+        internal static readonly byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
 
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;

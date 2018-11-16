@@ -142,4 +142,10 @@
   <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
     <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>
   </data>
+  <data name="LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore" xml:space="preserve">
+    <value>Before first semaphore wait, count: {0}. Thread ID: {1}.</value>
+  </data>
+  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore" xml:space="preserve">
+    <value>Before second semaphore wait, count: {0}. Thread ID: {1}.</value>
+  </data>
 </root>
