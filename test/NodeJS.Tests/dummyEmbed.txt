@@ -1,0 +1,1 @@
+﻿This file is embedded in the assembly and used to test the EmbeddedResourcesService.
