@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
@@ -14,7 +15,13 @@ namespace Jering.Javascript.NodeJS.Tests
     /// </summary>
     public class HttpNodeJSServiceIntegrationTests : IDisposable
     {
+        private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
+
+        public HttpNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
 
         [Fact]
         public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
@@ -250,6 +257,19 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
+            services.AddLogging(lb =>
+            {
+                lb.
+                    AddProvider(new TestOutputProvider(_testOutputHelper)).
+                    AddFilter<TestOutputProvider>((LogLevel loglevel) => loglevel >= LogLevel.Debug);
+
+                if (stringLoggerStringBuilder != null)
+                {
+                    lb.
+                        AddProvider(new StringLoggerProvider(stringLoggerStringBuilder)).
+                        AddFilter<StringLoggerProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Information);
+                }
+            });
 
             if (Debugger.IsAttached)
             {
@@ -258,13 +278,6 @@ namespace Jering.Javascript.NodeJS.Tests
             }
 
             _serviceProvider = services.BuildServiceProvider();
-
-            ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddDebug();
-            if (stringLoggerStringBuilder != null)
-            {
-                loggerFactory.AddProvider(new StringLoggerProvider(stringLoggerStringBuilder));
-            }
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
         }
@@ -286,7 +299,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             public bool IsEnabled(LogLevel logLevel)
             {
-                return logLevel >= LogLevel.Information;
+                return true;
             }
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
