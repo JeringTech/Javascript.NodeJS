@@ -429,8 +429,8 @@ The next two sections list all available options.
 #### OutOfProcessNodeJSServiceOptions
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
-| TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to initialize and to wait for responses to invocations. If set to -1, the maximum duration will be infinite. | 10000 |
-
+| TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to initialize and to wait for responses to invocations. If set to a negative value, the maximum duration will be infinite. | 10000 |
+| NumRetries | `int` | The number of times an invocation will be retried. If set to a negative value, the invocation will be retried indefinitely. | 1 |
 
 ### Debugging Javascript
 These are the steps for debugging javascript invoked using INodeJSService:

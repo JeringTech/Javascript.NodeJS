@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,11 +63,13 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfAnInvocationTimesOut()
+        public async void TryInvokeCoreAsync_RetriesThenThrowsInvocationExceptionIfAnInvocationTimesOutRepeatedly()
         {
             // Arrange
-            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>();
-            var threads = new List<Thread>();
+            var resultStringBuilder = new StringBuilder();
+            IServiceCollection dummyServices = new ServiceCollection();
+            dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options => options.NumRetries = 1);
+            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>(dummyServices, resultStringBuilder);
 
             // Act and assert
             InvocationException result = await Assert.
@@ -75,27 +79,57 @@ namespace Jering.Javascript.NodeJS.Tests
                     nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
                     nameof(OutOfProcessNodeJSServiceOptions)),
                     result.Message);
+            string logResult = resultStringBuilder.ToString();
+            Assert.StartsWith(string.Format(Strings.LogError_InvocationAttemptFailed, 1, new OperationCanceledException().ToString()), logResult);
         }
 
-        // On the first javascript invocation, an attempt is made to connect to node. If this attempt timesout, an InvocationException should be thrown. To ensure that the InvocationException
-        // is thrown, we simulate a timeout by setting the duration till timeout to 0.
-        //
+        // On the first javascript invocation, an attempt is made to connect to node. If this attempt timesout, an InvocationException should be thrown.
         // Note: OutOfProcessNodeJSService combines the cancellation token that we pass with a cancellation token that has the timeout specified in OutOfProcessNodeJSServiceOptions.
         // The combined cancellation token cancels when any of its underlying tokens cancel, so we can get the connection to cancel immediately.
         [Fact]
         public async void TryInvokeCoreAsync_ThrowsInvocationExceptionIfANodeConnectionAttemptTimesout()
         {
             // Arrange
-            DummyExceptionThrowingNodeJSService testSubject = CreateDummyNodeService<DummyExceptionThrowingNodeJSService>();
-            var threads = new List<Thread>();
-            var timeoutCTS = new CancellationTokenSource(0);
+            IServiceCollection dummyServices = new ServiceCollection();
+            dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options => options.NumRetries = 0);
+            DummyNeverConnectingNodeJSService testSubject = CreateDummyNodeService<DummyNeverConnectingNodeJSService>(dummyServices);
+            var dummyTimeoutCTS = new CancellationTokenSource(200); // Arbitrary delay
 
             // Act and assert
             InvocationException result = await Assert.
-                ThrowsAsync<InvocationException>(async () => await testSubject.TryInvokeCoreAsync<string>(null, timeoutCTS.Token).ConfigureAwait(false)).ConfigureAwait(false);
+                ThrowsAsync<InvocationException>(async () => await testSubject.TryInvokeCoreAsync<string>(null, dummyTimeoutCTS.Token).ConfigureAwait(false)).ConfigureAwait(false);
             Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut,
-                new OutOfProcessNodeJSServiceOptions().TimeoutMS), // Get the default
+                new OutOfProcessNodeJSServiceOptions().TimeoutMS, // Get the default
+                "False",
+                "n/a"),
                 result.Message);
+        }
+
+        private class DummyNeverConnectingNodeJSService : OutOfProcessNodeJSService
+        {
+            public DummyNeverConnectingNodeJSService(INodeJSProcessFactory nodeProcessFactory,
+                ILogger<DummyExceptionThrowingNodeJSService> nodeServiceLogger,
+                IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
+                IEmbeddedResourcesService embeddedResourcesService) :
+                base(nodeProcessFactory, nodeServiceLogger, optionsAccessor, embeddedResourcesService, typeof(HttpNodeJSService).GetTypeInfo().Assembly, "HttpServer.js")
+            {
+            }
+
+            protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+            {
+                // Do nothing
+            }
+
+            protected override Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+            {
+                // Do nothing
+                return Task.FromResult(default((bool, T)));
+            }
+
+            internal override void ConnectToInputOutputStreams(Process nodeProcess)
+            {
+                // Do nothing so that we never connect
+            }
         }
 
         private class DummyExceptionThrowingNodeJSService : OutOfProcessNodeJSService
@@ -141,7 +175,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        private T CreateDummyNodeService<T>(IServiceCollection services = null) where T : class, INodeJSService
+        private T CreateDummyNodeService<T>(IServiceCollection services = null, StringBuilder loggerStringBuilder = null) where T : class, INodeJSService
         {
             (services ?? (services = new ServiceCollection())).AddNodeJS();
             services.AddLogging(lb =>
@@ -149,6 +183,13 @@ namespace Jering.Javascript.NodeJS.Tests
                 lb.
                     AddProvider(new TestOutputProvider(_testOutputHelper)).
                     AddFilter<TestOutputProvider>((LogLevel loglevel) => loglevel >= LogLevel.Debug);
+
+                if (loggerStringBuilder != null)
+                {
+                    lb.
+                        AddProvider(new StringBuilderProvider(loggerStringBuilder)).
+                        AddFilter<StringBuilderProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Warning);
+                }
             });
             services.AddSingleton<INodeJSService, T>(); // Override default service
 

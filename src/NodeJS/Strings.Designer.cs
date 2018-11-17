@@ -111,7 +111,7 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms..
+        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}..
         /// </summary>
         internal static string InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut {
             get {
@@ -143,6 +143,17 @@ namespace Jering.Javascript.NodeJS {
         internal static string LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore {
             get {
                 return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An invocation attempt failed. Retries remaining: {0}.
+        ///Exception:
+        ///  {1}.
+        /// </summary>
+        internal static string LogError_InvocationAttemptFailed {
+            get {
+                return ResourceManager.GetString("LogError_InvocationAttemptFailed", resourceCulture);
             }
         }
     }
