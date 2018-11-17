@@ -3,7 +3,15 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/3.3.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/3.4.0...HEAD)
+
+## [3.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.3.0...3.4.0) - Nov 17, 2018
+### Additions
+- Added automatic retries. Retries are configurable using the property `NumRetries` of `OutOfProcessNodeJSServiceOptions`. Its default
+value is 1, so by default, every javascript invocation that fails is retried once.
+
+### Fixes
+- Fixed some thread safety issues in `OutOfProcessNodeJSServiceOptions`.
 
 ## [3.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.2.1...3.3.0) - Nov 16, 2018
 ### Changes
