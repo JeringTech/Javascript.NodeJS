@@ -137,7 +137,7 @@
     <value>Received a HTTP response with an unexpected status code: {0}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut" xml:space="preserve">
-    <value>Attempt to connect to Node timed out after {0}ms.</value>
+    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
     <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>
@@ -147,5 +147,10 @@
   </data>
   <data name="LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore" xml:space="preserve">
     <value>Before second semaphore wait, count: {0}. Thread ID: {1}.</value>
+  </data>
+  <data name="LogError_InvocationAttemptFailed" xml:space="preserve">
+    <value>An invocation attempt failed. Retries remaining: {0}.
+Exception:
+  {1}</value>
   </data>
 </root>

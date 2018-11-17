@@ -250,10 +250,9 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         /// <summary>
-        /// Specify <paramref name="stringLoggerStringBuilder"/> to retrieve all log output.
+        /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        /// <param name="stringLoggerStringBuilder"></param>
-        private HttpNodeJSService CreateHttpNodeService(StringBuilder stringLoggerStringBuilder = null)
+        private HttpNodeJSService CreateHttpNodeService(StringBuilder loggerStringBuilder = null)
         {
             var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
@@ -263,11 +262,11 @@ namespace Jering.Javascript.NodeJS.Tests
                     AddProvider(new TestOutputProvider(_testOutputHelper)).
                     AddFilter<TestOutputProvider>((LogLevel loglevel) => loglevel >= LogLevel.Debug);
 
-                if (stringLoggerStringBuilder != null)
+                if (loggerStringBuilder != null)
                 {
                     lb.
-                        AddProvider(new StringLoggerProvider(stringLoggerStringBuilder)).
-                        AddFilter<StringLoggerProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Information);
+                        AddProvider(new StringBuilderProvider(loggerStringBuilder)).
+                        AddFilter<StringBuilderProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Information);
                 }
             });
 
@@ -280,52 +279,6 @@ namespace Jering.Javascript.NodeJS.Tests
             _serviceProvider = services.BuildServiceProvider();
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
-        }
-
-        // Used by AllInvokeMethods_ReceiveAndLogMessages to validate output from the NodeJS process
-        public class StringLogger : ILogger
-        {
-            private readonly StringBuilder _stringBuilder;
-
-            public StringLogger(StringBuilder stringBuilder)
-            {
-                _stringBuilder = stringBuilder;
-            }
-
-            public IDisposable BeginScope<TState>(TState state)
-            {
-                return null;
-            }
-
-            public bool IsEnabled(LogLevel logLevel)
-            {
-                return true;
-            }
-
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-            {
-                _stringBuilder.AppendLine(formatter(state, exception));
-            }
-        }
-
-        // Used by AllInvokeMethods_ReceiveAndLogMessages to validate output from the NodeJS process
-        public class StringLoggerProvider : ILoggerProvider
-        {
-            private readonly StringBuilder _stringBuilder;
-
-            public StringLoggerProvider(StringBuilder stringBuilder)
-            {
-                _stringBuilder = stringBuilder;
-            }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                return new StringLogger(_stringBuilder);
-            }
-
-            public void Dispose()
-            {
-            }
         }
 
         private class DummyResult
