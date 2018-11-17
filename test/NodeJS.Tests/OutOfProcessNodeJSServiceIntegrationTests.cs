@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
@@ -15,6 +16,12 @@ namespace Jering.Javascript.NodeJS.Tests
         private IServiceProvider _serviceProvider;
         private const int _numThreads = 5; // Arbitrary
         private static readonly CountdownEvent _countdownEvent = new CountdownEvent(_numThreads); // Only used by 1 test
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public OutOfProcessNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
 
         [Fact]
         public async void TryInvokeCoreAsync_ThrowsObjectDisposedExceptionIfObjectHasBeenDisposedOf()
@@ -137,18 +144,15 @@ namespace Jering.Javascript.NodeJS.Tests
         private T CreateDummyNodeService<T>(IServiceCollection services = null) where T : class, INodeJSService
         {
             (services ?? (services = new ServiceCollection())).AddNodeJS();
-#if NETCOREAPP2_1
-            services.AddLogging(lb => lb.AddDebug().SetMinimumLevel(LogLevel.Debug));
-#endif
-
+            services.AddLogging(lb =>
+            {
+                lb.
+                    AddProvider(new TestOutputProvider(_testOutputHelper)).
+                    AddFilter<TestOutputProvider>((LogLevel loglevel) => loglevel >= LogLevel.Debug);
+            });
             services.AddSingleton<INodeJSService, T>(); // Override default service
-            _serviceProvider = services.BuildServiceProvider();
 
-#if NETCOREAPP1_0
-            ILoggerFactory loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
-            // Setting min level like this doesn't work for netcoreapp2.1
-            loggerFactory.AddDebug(LogLevel.Debug);
-#endif
+            _serviceProvider = services.BuildServiceProvider();
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as T;
         }
