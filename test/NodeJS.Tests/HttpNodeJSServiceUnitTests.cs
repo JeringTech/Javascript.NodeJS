@@ -216,6 +216,14 @@ namespace Jering.Javascript.NodeJS.Tests
             INodeJSProcessFactory nodeProcessFactory = null,
             ILoggerFactory loggerFactory = null)
         {
+            if(loggerFactory == null)
+            {
+                Mock<ILogger> mockLogger = _mockRepository.Create<ILogger>();
+                Mock<ILoggerFactory> mockLoggerFactory = _mockRepository.Create<ILoggerFactory>();
+                mockLoggerFactory.Setup(l => l.CreateLogger(typeof(HttpNodeJSService).FullName)).Returns(mockLogger.Object);
+                loggerFactory = mockLoggerFactory.Object;
+            }
+
             return new ExposedHttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
                 httpContentFactory,
                 embeddedResourcesService,

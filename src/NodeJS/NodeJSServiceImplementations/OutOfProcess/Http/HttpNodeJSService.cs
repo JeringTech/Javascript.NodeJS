@@ -47,7 +47,7 @@ namespace Jering.Javascript.NodeJS
             INodeJSProcessFactory nodeJSProcessFactory,
             ILoggerFactory loggerFactory) :
             base(nodeJSProcessFactory,
-                loggerFactory?.CreateLogger<HttpNodeJSService>(),
+                loggerFactory.CreateLogger(typeof(HttpNodeJSService)),
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,
