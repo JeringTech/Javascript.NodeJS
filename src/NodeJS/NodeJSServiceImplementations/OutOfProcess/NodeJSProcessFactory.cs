@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -22,11 +23,11 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public Process Create(string serverScript)
+        public INodeJSProcess Create(string serverScript)
         {
             ProcessStartInfo startInfo = CreateStartInfo(serverScript);
 
-            return CreateProcess(startInfo);
+            return new NodeJSProcess(CreateProcess(startInfo));
         }
 
         internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
