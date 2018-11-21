@@ -17,6 +17,11 @@ namespace Jering.Javascript.NodeJS
     public interface INodeJSProcess : IDisposable
     {
         /// <summary>
+        /// Gets the lock used to synchronize operations in this NodeJS process.
+        /// </summary>
+        object Lock { get; }
+
+        /// <summary>
         /// Gets a boolean value indicating whether or not this NodeJS process is connected.
         /// </summary>
         bool Connected { get; }
@@ -32,11 +37,6 @@ namespace Jering.Javascript.NodeJS
         /// <para>If the process has been disposed, returns "Process has been disposed".</para>
         /// </summary>
         string ExitCode { get; }
-
-        /// <summary>
-        /// Disposes of this NodeJS process if it is not connected.
-        /// </summary>
-        void DisposeIfNotConnected();
 
         /// <summary>
         /// Adds a <see cref="Process.OutputDataReceived"/> handler to this NodeJS process.

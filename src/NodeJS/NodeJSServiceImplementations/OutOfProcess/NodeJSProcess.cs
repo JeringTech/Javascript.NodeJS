@@ -9,7 +9,6 @@ namespace Jering.Javascript.NodeJS
     public class NodeJSProcess : INodeJSProcess
     {
         private readonly Process _process;
-        private readonly object _lock = new object();
         private bool _connected;
         private bool _disposed;
 
@@ -49,7 +48,7 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public void SetConnected()
         {
-            lock (_lock)
+            lock (Lock)
             {
                 _connected = true;
             }
@@ -60,7 +59,7 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                lock (Lock)
                 {
                     if (HasExited)
                     {
@@ -77,7 +76,7 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                lock (Lock)
                 {
                     return _disposed || _process.HasExited;
                 }
@@ -89,7 +88,7 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                lock (Lock)
                 {
                     return !HasExited && _connected;
                 }
@@ -97,24 +96,30 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public void DisposeIfNotConnected()
-        {
-            lock (_lock)
-            {
-                if (!Connected)
-                {
-                    Dispose();
-                }
-            }
-        }
+        public object Lock { get; } = new object();
 
         /// <summary>
         /// Kills and disposes of this instance's underlying NodeJS <see cref="Process"/>.
         /// </summary>
         public void Dispose()
         {
-            lock (_lock)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Kills and disposes of this instance's underlying NodeJS <see cref="Process"/>.
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            lock (Lock)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                // Unmanaged resource, so always call, even if finalizer is parent method.
                 _process.Kill();
                 // Give async output some time to push its messages
                 _process.WaitForExit(500);
@@ -124,6 +129,14 @@ namespace Jering.Javascript.NodeJS
                 _disposed = true;
                 _connected = false;
             }
+        }
+
+        /// <summary>
+        /// Implements the finalization part of the IDisposable pattern by calling Dispose(false).
+        /// </summary>
+        ~NodeJSProcess()
+        {
+            Dispose(false);
         }
     }
 }
