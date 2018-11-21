@@ -182,7 +182,7 @@ namespace Jering.Javascript.NodeJS
                                 throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
                                     _options.TimeoutMS,
                                     _nodeJSProcess.HasExited,
-                                    _nodeJSProcess.ExitCode));
+                                    _nodeJSProcess.ExitStatus));
                             }
                         }
                     }

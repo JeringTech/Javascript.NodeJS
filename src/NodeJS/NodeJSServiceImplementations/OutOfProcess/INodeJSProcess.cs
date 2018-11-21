@@ -32,11 +32,12 @@ namespace Jering.Javascript.NodeJS
         bool HasExited { get; }
 
         /// <summary>
-        /// <para>Gets a string describing this NodeJS process's exit code.</para>
+        /// <para>Gets a string describing this NodeJS process's exit status.</para>
         /// <para>If the process has not exited, returns "Process has not exited".</para>
         /// <para>If the process has been disposed, returns "Process has been disposed".</para>
+        /// <para>If the process has exit but has not been disposed, returns its exit code.</para>
         /// </summary>
-        string ExitCode { get; }
+        string ExitStatus { get; }
 
         /// <summary>
         /// Adds a <see cref="Process.OutputDataReceived"/> handler to this NodeJS process.
@@ -64,5 +65,10 @@ namespace Jering.Javascript.NodeJS
         /// Begins asynchronous read operations on the redirected <see cref="Process.StandardOutput"/> stream of the application.
         /// </summary>
         void BeginOutputReadLine();
+
+        /// <summary>
+        /// Kills the underlying NodeJS process.
+        /// </summary>
+        void Kill();
     }
 }

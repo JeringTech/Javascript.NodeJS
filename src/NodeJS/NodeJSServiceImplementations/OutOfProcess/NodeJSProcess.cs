@@ -8,6 +8,8 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class NodeJSProcess : INodeJSProcess
     {
+        internal const string EXIT_STATUS_NOT_EXITED = "Process has not exited";
+        internal const string EXIT_STATUS_DISPOSED = "Process has been disposed";
         private readonly Process _process;
         private bool _connected;
         private bool _disposed;
@@ -16,9 +18,29 @@ namespace Jering.Javascript.NodeJS
         /// Creates a <see cref="NodeJSProcess"/> instance.
         /// </summary>
         /// <param name="process">The NodeJS process.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="process"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="process"/> has exited.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="process"/> has not started or has been disposed of.</exception>
         public NodeJSProcess(Process process)
         {
-            _process = process ?? throw new ArgumentNullException(nameof(process));
+            if(process == null)
+            {
+                throw new ArgumentNullException(nameof(process));
+            }
+
+            try
+            {
+                if (process.HasExited)
+                {
+                    throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ProcessHasExited, nameof(process));
+                }
+            }
+            catch (InvalidOperationException exception)
+            {
+                throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed, nameof(process), exception);
+            }
+
+            _process = process;
         }
 
         /// <inheritdoc />
@@ -46,7 +68,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public void SetConnected()
+        public virtual void SetConnected()
         {
             lock (Lock)
             {
@@ -55,7 +77,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public string ExitCode
+        public virtual string ExitStatus
         {
             get
             {
@@ -63,16 +85,16 @@ namespace Jering.Javascript.NodeJS
                 {
                     if (HasExited)
                     {
-                        return _disposed ? "Process has been disposed" : _process.ExitCode.ToString();
+                        return _disposed ? EXIT_STATUS_DISPOSED : _process.ExitCode.ToString();
                     }
 
-                    return "Process has not exited";
+                    return EXIT_STATUS_NOT_EXITED;
                 }
             }
         }
 
         /// <inheritdoc />
-        public bool HasExited
+        public virtual bool HasExited
         {
             get
             {
@@ -84,7 +106,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public bool Connected
+        public virtual bool Connected
         {
             get
             {
@@ -97,6 +119,12 @@ namespace Jering.Javascript.NodeJS
 
         /// <inheritdoc />
         public object Lock { get; } = new object();
+
+        /// <inheritdoc />
+        public void Kill()
+        {
+            _process?.Kill();
+        }
 
         /// <summary>
         /// Kills and disposes of this instance's underlying NodeJS <see cref="Process"/>.
@@ -119,12 +147,20 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
-                // Unmanaged resource, so always call, even if finalizer is parent method.
-                _process.Kill();
-                // Give async output some time to push its messages
-                _process.WaitForExit(500);
+                // Unmanaged resource, so always call, even if called by finalizer
+                try
+                {
+                    Kill();
+                    // Give async output some time to push its messages
+                    _process?.WaitForExit(500);
+                }
+                catch
+                {
+                    // Do nothing, since if kill fails, we can assume that the process is already dead
+                }
+
                 // After process has exited, dispose of instance to release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
-                _process.Dispose();
+                _process?.Dispose();
 
                 _disposed = true;
                 _connected = false;

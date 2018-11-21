@@ -126,6 +126,12 @@
   <data name="ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull" xml:space="preserve">
     <value>If moduleSourceType is stream, moduleStreamSource cannot be null.</value>
   </data>
+  <data name="ArgumentException_NodeJSProcess_ProcessHasExited" xml:space="preserve">
+    <value>The process has exited.</value>
+  </data>
+  <data name="ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed" xml:space="preserve">
+    <value>The process has not been started or has been disposed of.</value>
+  </data>
   <data name="InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess" xml:space="preserve">
     <value>Failed to start Node process. To resolve this:
 
@@ -137,7 +143,7 @@
     <value>Received a HTTP response with an unexpected status code: {0}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut" xml:space="preserve">
-    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}.</value>
+    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
     <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>

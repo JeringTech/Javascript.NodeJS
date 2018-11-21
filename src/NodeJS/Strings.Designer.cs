@@ -89,6 +89,24 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The process has exited..
+        /// </summary>
+        internal static string ArgumentException_NodeJSProcess_ProcessHasExited {
+            get {
+                return ResourceManager.GetString("ArgumentException_NodeJSProcess_ProcessHasExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The process has not been started or has been disposed of..
+        /// </summary>
+        internal static string ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed {
+            get {
+                return ResourceManager.GetString("ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to start Node process. To resolve this:
         ///
         ///[1] Ensure that NodeJS is installed and can be found in one of the PATH directories. The current PATH enviroment variable is: {0}. Make sure that the Node executable is in one of those directories, or update your PATH.
@@ -111,7 +129,7 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}..
+        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}..
         /// </summary>
         internal static string InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut {
             get {

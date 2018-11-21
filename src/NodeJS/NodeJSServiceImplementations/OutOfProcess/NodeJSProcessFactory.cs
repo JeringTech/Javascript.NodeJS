@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using System.Threading;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -61,7 +60,7 @@ namespace Jering.Javascript.NodeJS
             return startInfo;
         }
 
-        private Process CreateProcess(ProcessStartInfo startInfo)
+        internal Process CreateProcess(ProcessStartInfo startInfo)
         {
             try
             {

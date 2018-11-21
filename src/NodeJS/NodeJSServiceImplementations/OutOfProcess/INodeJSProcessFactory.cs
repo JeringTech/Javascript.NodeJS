@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jering.Javascript.NodeJS
+﻿namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An abstraction for NodeJS process creation.</para>

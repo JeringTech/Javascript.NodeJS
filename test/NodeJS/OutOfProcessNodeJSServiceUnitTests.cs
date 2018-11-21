@@ -312,7 +312,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
             mockNodeJSProcess.Setup(n => n.HasExited).Returns(dummyHasExited);
-            mockNodeJSProcess.Setup(n => n.ExitCode).Returns(dummyExitCode);
+            mockNodeJSProcess.Setup(n => n.ExitStatus).Returns(dummyExitCode);
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
             mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS };
