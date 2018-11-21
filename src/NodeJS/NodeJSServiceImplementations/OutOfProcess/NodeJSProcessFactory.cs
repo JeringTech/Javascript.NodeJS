@@ -22,11 +22,11 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public Process Create(string serverScript)
+        public INodeJSProcess Create(string serverScript)
         {
             ProcessStartInfo startInfo = CreateStartInfo(serverScript);
 
-            return CreateProcess(startInfo);
+            return new NodeJSProcess(CreateProcess(startInfo));
         }
 
         internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
@@ -60,7 +60,7 @@ namespace Jering.Javascript.NodeJS
             return startInfo;
         }
 
-        private Process CreateProcess(ProcessStartInfo startInfo)
+        internal Process CreateProcess(ProcessStartInfo startInfo)
         {
             try
             {

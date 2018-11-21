@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Jering.Javascript.NodeJS
+﻿namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An abstraction for NodeJS process creation.</para>
@@ -9,9 +7,9 @@ namespace Jering.Javascript.NodeJS
     public interface INodeJSProcessFactory
     {
         /// <summary>
-        /// Creates a NodeJS process running <paramref name="serverScript"/>.
+        /// Creates an <see cref="INodeJSProcess"/> running <paramref name="serverScript"/>.
         /// </summary>
         /// <param name="serverScript">The server script to run on NodeJS.</param>
-        Process Create(string serverScript);
+        INodeJSProcess Create(string serverScript);
     }
 }

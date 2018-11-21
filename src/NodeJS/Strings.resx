@@ -126,6 +126,12 @@
   <data name="ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull" xml:space="preserve">
     <value>If moduleSourceType is stream, moduleStreamSource cannot be null.</value>
   </data>
+  <data name="ArgumentException_NodeJSProcess_ProcessHasExited" xml:space="preserve">
+    <value>The process has exited.</value>
+  </data>
+  <data name="ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed" xml:space="preserve">
+    <value>The process has not been started or has been disposed of.</value>
+  </data>
   <data name="InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess" xml:space="preserve">
     <value>Failed to start Node process. To resolve this:
 
@@ -136,19 +142,22 @@
   <data name="InvocationException_HttpNodeJSService_UnexpectedStatusCode" xml:space="preserve">
     <value>Received a HTTP response with an unexpected status code: {0}.</value>
   </data>
-  <data name="InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut" xml:space="preserve">
-    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}.</value>
+  <data name="InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut" xml:space="preserve">
+    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
     <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore" xml:space="preserve">
-    <value>Before first semaphore wait, count: {0}. Thread ID: {1}.</value>
+  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait" xml:space="preserve">
+    <value>Before semaphore wait, count: {0}. Thread ID: {1}.</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore" xml:space="preserve">
-    <value>Before second semaphore wait, count: {0}. Thread ID: {1}.</value>
+  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait" xml:space="preserve">
+    <value>Before semaphore available wait handle wait, count: {0}. Thread ID: {1}.</value>
   </data>
-  <data name="LogError_InvocationAttemptFailed" xml:space="preserve">
+  <data name="LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore" xml:space="preserve">
+    <value>Releasing semaphore, count: {0}. Thread ID: {1}.</value>
+  </data>
+  <data name="LogWarning_InvocationAttemptFailed" xml:space="preserve">
     <value>An invocation attempt failed. Retries remaining: {0}.
 Exception:
   {1}</value>

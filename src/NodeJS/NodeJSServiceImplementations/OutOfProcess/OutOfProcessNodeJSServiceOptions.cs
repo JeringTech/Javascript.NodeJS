@@ -9,7 +9,7 @@
         /// The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations.
         /// If set to a negative value, the maximum duration will be infinite.
         /// </summary>
-        public int TimeoutMS { get; set; } = 10000;
+        public int TimeoutMS { get; set; } = 60000;
 
         /// <summary>
         /// The number of times an invocation will be retried. 

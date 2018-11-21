@@ -20,9 +20,10 @@ namespace Jering.Javascript.NodeJS
         /// <param name="args">The sequence of JSON-serializable and/or string arguments to be passed to the function to invoke.</param>
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
-        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
+        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -36,9 +37,10 @@ namespace Jering.Javascript.NodeJS
         /// <param name="args">The sequence of JSON-serializable and/or string arguments to be passed to the function to invoke.</param>
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
-        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
+        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -52,9 +54,10 @@ namespace Jering.Javascript.NodeJS
         /// <param name="args">The sequence of JSON-serializable and/or string arguments to be passed to the function to invoke.</param>
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
-        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
+        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -68,9 +71,10 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The task object representing the asynchronous operation. On completion, the task returns a (bool, T) with the bool set to true on 
         /// success and false otherwise.</returns>
-        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
-        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
+        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
     }
 }

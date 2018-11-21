@@ -20,7 +20,7 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
-        private const string SERVER_SCRIPT_NAME = "HttpServer.js";
+        internal const string SERVER_SCRIPT_NAME = "HttpServer.js";
 
         private readonly IHttpContentFactory _httpContentFactory;
         private readonly IJsonService _jsonService;
@@ -47,7 +47,7 @@ namespace Jering.Javascript.NodeJS
             INodeJSProcessFactory nodeJSProcessFactory,
             ILoggerFactory loggerFactory) :
             base(nodeJSProcessFactory,
-                loggerFactory?.CreateLogger<HttpNodeJSService>(),
+                loggerFactory.CreateLogger(typeof(HttpNodeJSService)),
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,

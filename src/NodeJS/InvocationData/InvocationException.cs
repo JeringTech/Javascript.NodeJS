@@ -12,6 +12,13 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates an <see cref="InvocationException"/> instance.
         /// </summary>
+        public InvocationException() : base()
+        {
+        }
+
+        /// <summary>
+        /// Creates an <see cref="InvocationException"/> instance.
+        /// </summary>
         /// <param name="message">A description of the NodeJS error.</param>
         public InvocationException(string message) : base(message)
         {

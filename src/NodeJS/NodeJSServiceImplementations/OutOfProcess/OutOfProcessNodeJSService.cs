@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nito.AsyncEx.Interop;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -23,34 +24,25 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Start of the message used to perform a handshake with the NodeJS process.
         /// </summary>
-        protected const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: Listening on ";
+        protected internal const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: Listening on ";
 
         /// <summary>
         /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.
-        /// Can be null, in which case, no logging will occur.
         /// </summary>
         protected readonly ILogger Logger;
 
+        private readonly bool _debugLoggingEnabled;
+        private readonly bool _warningLoggingEnabled;
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _serverScriptName;
         private readonly Assembly _serverScriptAssembly;
         private readonly OutOfProcessNodeJSServiceOptions _options;
-        private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1);
-
-        // After _nodeProcess.Dispose() has been called, properties like _nodeProcess.HasExited and _nodeProcess.ExitCode throw when accessed.
-        // To avoid such exceptions, we set _nodeProcess to null after calling _nodeProcess.Dispose().
-        // We can still encounter the situation whereby a thread has called _nodeProcess.Dispose(),
-        // but not yet set _nodeProcess to null, and another thread tries to call a property like _nodeProcess.HasExited. To avoid this situation,
-        // we place all _nodeProcess manipulations within lock blocks.
-        // Every time we reach a lock block, _nodeProcess can be in 1 of 3 states:
-        // - null (either disposed and set to null or never instantiated)
-        // - Not null but exited, not disposed yet. This occurs if the process dies on its own.
-        // - Not null and not exited.
-        private readonly object _nodeProcessLock = new object();
-        private Process _nodeProcess;
-        private bool _connected;
+        private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1); // Use a semaphore since it doesn't have thread affinity
         private bool _disposed;
+        private INodeJSProcess _nodeJSProcess;
+        private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
+        private readonly StringBuilder _errorDataStringBuilder = new StringBuilder();
 
         /// <summary>
         /// Creates an<see cref="OutOfProcessNodeJSService"/> instance.
@@ -69,11 +61,14 @@ namespace Jering.Javascript.NodeJS
             string serverScriptName)
         {
             _nodeProcessFactory = nodeProcessFactory;
-            Logger = logger;
             _options = optionsAccessor?.Value ?? new OutOfProcessNodeJSServiceOptions();
             _embeddedResourcesService = embeddedResourcesService;
             _serverScriptName = serverScriptName;
             _serverScriptAssembly = serverScriptAssembly;
+            Logger = logger;
+
+            _debugLoggingEnabled = Logger.IsEnabled(LogLevel.Debug);
+            _warningLoggingEnabled = Logger.IsEnabled(LogLevel.Warning);
         }
 
         /// <summary>
@@ -139,229 +134,196 @@ namespace Jering.Javascript.NodeJS
             return TryInvokeCoreAsync<T>(invocationRequest, cancellationToken);
         }
 
-        internal async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+        internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+        {
+            CancellationTokenSource cancellationTokenSource = null;
+            int numRetries = _options.NumRetries;
+
+            while (true)
+            {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
+                }
+
+                try
+                {
+                    // If the the NodeJS process has not been instantiated or has been disconnected for some reason, attempt to create a 
+                    // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
+                    // is created successfully, all threads will be released by OutputDataReceivedHandler.
+                    if (_nodeJSProcess?.Connected != true)
+                    {
+                        if (_debugLoggingEnabled)
+                        {
+                            Logger.LogDebug(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString());
+                        }
+
+                        await _processSemaphore.WaitAsync().ConfigureAwait(false);
+
+                        // Double checked lock
+                        if (_nodeJSProcess?.Connected != true)
+                        {
+                            CreateAndConnectToNodeJSProcess();
+
+                            if (_debugLoggingEnabled)
+                            {
+                                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
+                            }
+
+                            // Use AvailableWaitHandle since in the event that the process connects before this line, AvailableWaitHandle doesn't decrement _processSemaphore.CurrentCount.
+                            // Also, don't pass cancellationToken as an argument - by this point, we've already started a NodeJS process, even if this invocation is canceled, allow the NodeJS process to 
+                            // connect for future invocations.
+                            if (!await WaitHandleAsyncFactory.FromWaitHandle(_processSemaphore.AvailableWaitHandle, TimeSpan.FromMilliseconds(_options.TimeoutMS)).ConfigureAwait(false))
+                            {
+                                // Allow another thread to have a go at connecting
+                                _processSemaphore.Release();
+
+                                // We're unlikely to get to this point. If we do we want the issue to be logged.
+                                throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
+                                    _options.TimeoutMS,
+                                    _nodeJSProcess.HasExited,
+                                    _nodeJSProcess.ExitStatus));
+                            }
+                        }
+                    }
+
+                    // Create cancellation token
+                    CancellationToken invokeCancellationToken;
+                    (invokeCancellationToken, cancellationTokenSource) = CreateCts(cancellationToken);
+
+                    return await TryInvokeAsync<T>(invocationRequest, invokeCancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Invocation canceled, don't retry
+                    throw;
+                }
+                catch (OperationCanceledException) when (numRetries == 0)
+                {
+                    // Invocation timed out and no more retries
+                    throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
+                        _options.TimeoutMS,
+                        nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
+                        nameof(OutOfProcessNodeJSServiceOptions)));
+                }
+                catch (Exception exception) when (numRetries != 0)
+                {
+                    if (_warningLoggingEnabled)
+                    {
+                        Logger.LogWarning(string.Format(Strings.LogWarning_InvocationAttemptFailed, numRetries < 0 ? "infinity" : numRetries.ToString(), exception.ToString()));
+                    }
+                }
+                finally
+                {
+                    cancellationTokenSource?.Dispose();
+                }
+
+                numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+            }
+        }
+
+        internal virtual (CancellationToken, CancellationTokenSource) CreateCts(CancellationToken cancellationToken)
+        {
+            if (_options.TimeoutMS >= 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource(_options.TimeoutMS);
+
+                if (cancellationToken != CancellationToken.None)
+                {
+                    cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
+                }
+
+                return (cancellationTokenSource.Token, cancellationTokenSource);
+            }
+            else
+            {
+                return (cancellationToken, null);
+            }
+        }
+
+        internal virtual void CreateAndConnectToNodeJSProcess()
         {
             if (_disposed)
             {
                 throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
             }
 
-            // Disposables
-            CancellationTokenSource timeoutCTS = null;
-            CancellationTokenSource combinedCTS = null;
+            // Avoid orphan processes
+            _nodeJSProcess?.Dispose();
 
-            try
-            {
-                // Create combined CancellationToken only as required.
-                if (_options.TimeoutMS > 0)
-                {
-                    timeoutCTS = new CancellationTokenSource(_options.TimeoutMS);
+            // Create new process
+            string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
+            _nodeJSProcess = _nodeProcessFactory.Create(serverScript);
 
-                    if (cancellationToken != CancellationToken.None)
-                    {
-                        combinedCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCTS.Token);
-                        cancellationToken = combinedCTS.Token;
-                    }
-                    else
-                    {
-                        cancellationToken = timeoutCTS.Token;
-                    }
-                }
-
-                int numRetries = _options.NumRetries;
-                while (true)
-                {
-                    try
-                    {
-                        // Once ConnectToInputOutStreams is called, _nodeProcess will not be null and _nodeProcess.HasExited will be false.
-                        // Therefore, there is no risk of _connected being set to false while waiting for or after receiving the connection established
-                        // message.
-                        lock (_nodeProcessLock)
-                        {
-                            if (_nodeProcess?.HasExited != false)
-                            {
-                                _connected = false;
-                                if (_nodeProcess != null)
-                                {
-                                    DisposeNodeProcess();
-                                }
-                            }
-                        }
-
-                        // If the the NodeJS process has not been started has has been terminated for some reason, attempt to create a 
-                        // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
-                        // is created successfully, all threads will be released by the OutputDataReceived delegate in 
-                        // ConnectToInputOutputStreams.
-                        if (!_connected)
-                        {
-                            if (Logger?.IsEnabled(LogLevel.Debug) == true)
-                            {
-                                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
-                            }
-
-                            await _processSemaphore.WaitAsync().ConfigureAwait(false);
-
-                            // Double checked lock
-                            if (!_connected)
-                            {
-                                string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
-
-                                lock (_nodeProcessLock)
-                                {
-                                    // Another thread might have disposed of this instance since this method was called. We want to avoid orphan processes.
-                                    if (_disposed)
-                                    {
-                                        throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
-                                    }
-
-                                    _nodeProcess = _nodeProcessFactory.Create(serverScript);
-                                    ConnectToInputOutputStreams(_nodeProcess);
-                                }
-
-                                if (Logger?.IsEnabled(LogLevel.Debug) == true)
-                                {
-                                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
-                                }
-
-                                await _processSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                            }
-                        }
-
-                        return await TryInvokeAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception exception)
-                    {
-                        if (_disposed || numRetries == 0) // If object has been disposed off, we shouldn't retry
-                        {
-                            throw;
-                        }
-                        else
-                        {
-                            Logger?.LogWarning(string.Format(Strings.LogError_InvocationAttemptFailed, numRetries < 0 ? "infinity" : numRetries.ToString(), exception.ToString()));
-                            numRetries--;
-                        }
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                // TODO do CancellationTokenSources use unmanaged resources in this scenario? If not, no need to dispose of them here.
-                // At present, if a propogated exception is not caught by an enclosing try-catch block, finally might never be called.
-                // - https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/try-finally
-                timeoutCTS?.Dispose();
-                combinedCTS?.Dispose();
-
-                if (!(exception is OperationCanceledException))
-                {
-                    throw;
-                }
-
-                if (!_connected)
-                {
-                    bool hasExited;
-                    string exitCode;
-
-                    lock (_nodeProcessLock)
-                    {
-                        hasExited = _nodeProcess?.HasExited != false;
-                        exitCode = hasExited ? _nodeProcess?.ExitCode.ToString() ?? "unknown" : "n/a";
-
-                        if (!hasExited)
-                        {
-                            // If the connection attempt timed out, yet the process has not exited, it is most likely unreponsive, so kill it.
-                            KillNodeProcess();
-                        }
-                    }
-
-                    throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut,
-                        _options.TimeoutMS,
-                        hasExited.ToString(),
-                        exitCode));
-                }
-
-                // Developers encounter this fairly often (if their Node code fails without invoking the callback,
-                // all that the .NET side knows is that the invocation eventually times out). Previously, this surfaced
-                // as a TaskCanceledException, but this led to a lot of issue reports. Now we throw the following
-                // descriptive error.
-                throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
-                    _options.TimeoutMS,
-                    nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
-                    nameof(OutOfProcessNodeJSServiceOptions)));
-            }
-            finally
-            {
-                timeoutCTS?.Dispose();
-                combinedCTS?.Dispose();
-            }
+            // Connect through stdout
+            _nodeJSProcess.AddOutputDataReceivedHandler(OutputDataReceivedHandler);
+            _nodeJSProcess.AddErrorDataReceivedHandler(ErrorDataReceivedHandler);
+            _nodeJSProcess.BeginOutputReadLine();
+            _nodeJSProcess.BeginErrorReadLine();
         }
 
-        internal virtual void ConnectToInputOutputStreams(Process nodeProcess)
+        internal void OutputDataReceivedHandler(object sender, DataReceivedEventArgs evt)
         {
-            var outputStringBuilder = new StringBuilder();
-            var errorStringBuilder = new StringBuilder();
-
-            nodeProcess.OutputDataReceived += (sender, evt) =>
+            if (evt.Data == null)
             {
-                if (evt.Data == null)
-                {
-                    return;
-                }
+                return;
+            }
 
-                if (!_connected && evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
+            if (!_nodeJSProcess.Connected && evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
+            {
+                OnConnectionEstablishedMessageReceived(evt.Data);
+
+                lock (_nodeJSProcess.Lock) // Prevent any threads from getting to _processSemaphore.WaitAsync in TryInvokeCoreAsync<T> until all threads have been released here.
                 {
-                    OnConnectionEstablishedMessageReceived(evt.Data);
-                    _connected = true;
+                    _nodeJSProcess.SetConnected();
 
                     // Release all threads by resetting CurrentCount to 1
                     while (_processSemaphore.CurrentCount < 1)
                     {
-                        if (Logger?.IsEnabled(LogLevel.Debug) == true)
+                        if (_debugLoggingEnabled)
                         {
-                            Logger.LogDebug($"Releasing semaphore, count: {_processSemaphore.CurrentCount}. Thread ID: {Thread.CurrentThread.ManagedThreadId.ToString()}");
+                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
                         }
 
                         _processSemaphore.Release();
                     }
                 }
-                else if (Logger != null && TryCreateMessage(outputStringBuilder, evt.Data, out string message))
-                {
-                    // Process output is received line by line. The last line of a message ends with a \0 (null character),
-                    // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
-                    Logger.LogInformation(message);
-                }
-            };
-
-            nodeProcess.ErrorDataReceived += (sender, evt) =>
+            }
+            else if (TryCreateMessage(_outputDataStringBuilder, evt.Data, out string message))
             {
-                if (evt.Data == null)
-                {
-                    return;
-                }
-
-                if (Logger != null && TryCreateMessage(errorStringBuilder, evt.Data, out string message))
-                {
-                    Logger.LogError(message);
-                }
-            };
-
-            nodeProcess.BeginOutputReadLine();
-            nodeProcess.BeginErrorReadLine();
+                // Process output is received line by line. The last line of a message ends with a \0 (null character),
+                // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
+                Logger.LogInformation(message);
+            }
         }
 
-        private bool TryCreateMessage(StringBuilder stringBuilder, string newLine, out string message)
+        internal void ErrorDataReceivedHandler(object sender, DataReceivedEventArgs evt)
+        {
+            if (evt.Data == null)
+            {
+                return;
+            }
+
+            if (TryCreateMessage(_errorDataStringBuilder, evt.Data, out string message))
+            {
+                Logger.LogError(message);
+            }
+        }
+
+        internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
         {
             // OutputDataReceived is called everytime a newline character is read. The event data supplied to the callback
             // is a string containing all the characters between the previous newline character and the most recent one.
             // In other words, the stream is read line by line. The last line in each message ends with a null terminating 
             // character (see HttpServer).
-            if (newLine[newLine.Length - 1] != '\0')
+            if (data[data.Length - 1] != '\0')
             {
-                stringBuilder.AppendLine(newLine);
+                stringBuilder.AppendLine(data);
                 message = null;
                 return false;
             }
 
-            stringBuilder.Append(newLine);
+            stringBuilder.Append(data);
             stringBuilder.Length--; // Remove null terminating character
             message = stringBuilder.ToString();
             stringBuilder.Length = 0;
@@ -370,7 +332,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Disposes this instance.
+        /// Disposes this instance. This method is not thread-safe. It should only be called after all other calls to this instance's methods have returned.
         /// </summary>
         public void Dispose()
         {
@@ -379,7 +341,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Disposes the instance.
+        /// Disposes the instance. This method is not thread-safe. It should only be called after all other calls to this instance's methods have returned.
         /// </summary>
         /// <param name="disposing">True if the object is disposing or false if it is finalizing.</param>
         protected virtual void Dispose(bool disposing)
@@ -389,45 +351,13 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            if (disposing)
-            {
-                _processSemaphore.Dispose();
-            }
+            // This call isn't thread-safe - https://docs.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.dispose?view=netstandard-2.0.
+            // It is the reason why this method and this class's Dispose() method are not thread-safe.
+            // Since this class uses AvailableWaitHandle, dispose of the sempahore to release unmanaged resources
+            _processSemaphore.Dispose();
 
-            // Ensure that node process gets killed
-            lock (_nodeProcessLock)
-            {
-                if (_nodeProcess?.HasExited == false)
-                {
-                    KillNodeProcess();
-                }
-
-                _disposed = true;
-            }
-
-        }
-
-        // Must be called within a lock block
-        private void KillNodeProcess()
-        {
-            lock (_nodeProcessLock)
-            {
-                _nodeProcess.Kill();
-                // Give async output some time to push its messages
-                _nodeProcess.WaitForExit(500);
-                DisposeNodeProcess();
-            }
-        }
-
-        // Always set to null after disposing to avoid exceptions from trying to access certain properties after disposal
-        private void DisposeNodeProcess()
-        {
-            lock (_nodeProcessLock)
-            {
-                // After process has exited, dispose instance to release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
-                _nodeProcess.Dispose();
-                _nodeProcess = null;
-            }
+            _nodeJSProcess?.Dispose();
+            _disposed = true;
         }
 
         /// <summary>

@@ -89,6 +89,24 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The process has exited..
+        /// </summary>
+        internal static string ArgumentException_NodeJSProcess_ProcessHasExited {
+            get {
+                return ResourceManager.GetString("ArgumentException_NodeJSProcess_ProcessHasExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The process has not been started or has been disposed of..
+        /// </summary>
+        internal static string ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed {
+            get {
+                return ResourceManager.GetString("ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to start Node process. To resolve this:
         ///
         ///[1] Ensure that NodeJS is installed and can be found in one of the PATH directories. The current PATH enviroment variable is: {0}. Make sure that the Node executable is in one of those directories, or update your PATH.
@@ -111,11 +129,11 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit code: {2}..
+        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}..
         /// </summary>
-        internal static string InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut {
+        internal static string InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut {
             get {
-                return ResourceManager.GetString("InvocationException_OutOfProcessNodeJSService_ConnectionTimedOut", resourceCulture);
+                return ResourceManager.GetString("InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut", resourceCulture);
             }
         }
         
@@ -129,20 +147,29 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before first semaphore wait, count: {0}. Thread ID: {1}..
+        ///   Looks up a localized string similar to Before semaphore wait, count: {0}. Thread ID: {1}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore {
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeFirstSemaphore", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before second semaphore wait, count: {0}. Thread ID: {1}..
+        ///   Looks up a localized string similar to Before semaphore available wait handle wait, count: {0}. Thread ID: {1}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore {
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSecondSemaphore", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Releasing semaphore, count: {0}. Thread ID: {1}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore", resourceCulture);
             }
         }
         
@@ -151,9 +178,9 @@ namespace Jering.Javascript.NodeJS {
         ///Exception:
         ///  {1}.
         /// </summary>
-        internal static string LogError_InvocationAttemptFailed {
+        internal static string LogWarning_InvocationAttemptFailed {
             get {
-                return ResourceManager.GetString("LogError_InvocationAttemptFailed", resourceCulture);
+                return ResourceManager.GetString("LogWarning_InvocationAttemptFailed", resourceCulture);
             }
         }
     }
