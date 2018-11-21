@@ -1,4 +1,0 @@
-<Project>
-  <!--Override VSTest target when the project is no test project.-->
-  <Import Project="OverrideTest.targets" Condition="'$(IsTestProject)' != 'true'"/>
-</Project>
