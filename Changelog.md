@@ -3,7 +3,16 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased (4.0.0)](https://github.com/JeringTech/Javascript.NodeJS/compare/3.4.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.0...HEAD)
+
+## [4.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.4.0...4.0.0) - Nov 22, 2018
+### Additions
+- Added `INodeJSProcess` interface. A wrapper for NodeJS `Process` instances.
+
+### Changes
+- **Breaking**: `INodeJSProcessFactory.Create` now returns an `INodeJSProcess` instead of a `Process`.
+- Increased default `OutOfProcessNodeJSServiceOptions.TimeoutMS` from 10000ms to 60000ms.
+- Overhauled logic for multi-threadeding. Added in depth tests for most multi-threaded use cases.
 
 ## [3.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.3.0...3.4.0) - Nov 17, 2018
 ### Additions
