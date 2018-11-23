@@ -12,7 +12,7 @@ jobs:
 - template: templates/nuget/main.yml@templates
   parameters:
     changelogPath: "Changelog.md"
-    nugetCiPushEndpoint: "https://www.myget.org/F/jering/api/v3/index.json"
+    nugetUnreleasedPrereleasePushEndpoint: "https://www.myget.org/F/jering/api/v3/index.json"
 - template: templates/docs/main.yml@templates
   parameters:
     nugetRestoreEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
