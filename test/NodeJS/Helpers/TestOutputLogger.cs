@@ -1,5 +1,5 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using Xunit.Abstractions;
 
 namespace Jering.Javascript.NodeJS.Tests
@@ -25,7 +25,8 @@ namespace Jering.Javascript.NodeJS.Tests
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _testOutputHelper.WriteLine(formatter(state, exception));
+            // Thread safe - https://github.com/xunit/xunit/blob/c54cc52ffb275c81afed022521870193bbca6c39/src/xunit.execution/Sdk/Frameworks/TestOutputHelper.cs
+            _testOutputHelper.WriteLine($"{logLevel.ToString()}: {formatter(state, exception)}");
         }
     }
 }
