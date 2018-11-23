@@ -17,11 +17,6 @@ namespace Jering.Javascript.NodeJS
     public interface INodeJSProcess : IDisposable
     {
         /// <summary>
-        /// Gets the lock used to synchronize operations in this NodeJS process.
-        /// </summary>
-        object Lock { get; }
-
-        /// <summary>
         /// Gets a boolean value indicating whether or not this NodeJS process is connected.
         /// </summary>
         bool Connected { get; }

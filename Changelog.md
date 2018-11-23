@@ -12,7 +12,7 @@ for an overview of semantic versioning.
 ### Changes
 - **Breaking**: `INodeJSProcessFactory.Create` now returns an `INodeJSProcess` instead of a `Process`.
 - Increased default `OutOfProcessNodeJSServiceOptions.TimeoutMS` from 10000ms to 60000ms.
-- Overhauled logic for multi-threadeding. Added in depth tests for most multi-threaded use cases.
+- Overhauled logic for multi-threading. Added in depth tests for most multi-threaded use cases.
 
 ## [3.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/3.3.0...3.4.0) - Nov 17, 2018
 ### Additions

@@ -17,13 +17,14 @@ namespace Jering.Javascript.NodeJS.Tests
     {
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
+        private const int _timeoutMS = 60000;
 
         public HttpNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
         {
             // Arrange
@@ -46,7 +47,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, value.Result);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void TryInvokeFromCacheAsync_ReturnsFalseIfModuleIsNotCached()
         {
             // Arrange
@@ -62,7 +63,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Null(value);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void InvokeFromStreamAsync_InvokesJavascript()
         {
             // Arrange
@@ -85,7 +86,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void InvokeFromStringAsync_InvokesJavascript()
         {
             // Arrange
@@ -100,7 +101,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void InvokeFromFileAsync_InvokesJavascript()
         {
             const string dummyResultString = "success";
@@ -114,7 +115,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleHasNoExports()
         {
             // Arrange
@@ -130,7 +131,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The module \"{dummyModule}...\" has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.", result.Message);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfThereIsNoModuleExportWithSpecifiedExportName()
         {
             // Arrange
@@ -147,7 +148,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The module {dummyCacheIdentifier} has no export named {dummyExportName}.", result.Message);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleExportWithSpecifiedExportNameIsNotAFunction()
         {
             // Arrange
@@ -163,7 +164,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The export named {dummyExportName} from module \"module.exports = {{dummyEx...\" is not a function.", result.Message);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
@@ -178,7 +179,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith("The module \"module.exports = {result:...\" does not export a function.", result.Message);
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedMethodCallsCallbackWithError()
         {
             // Arrange
@@ -194,7 +195,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
         }
 
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsProvided()
         {
             // Arrange
@@ -211,7 +212,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
-        [Fact]
+        [Fact(Timeout=_timeoutMS)]
         public async void AllInvokeMethods_ReceiveAndLogMessages()
         {
             // Arrange
@@ -246,7 +247,7 @@ namespace Jering.Javascript.NodeJS.Tests
             string result = resultStringBuilder.ToString();
 
             // Assert
-            Assert.Equal($"{dummySinglelineString}\n{dummyMultilineString}", result, ignoreLineEndingDifferences: true);
+            Assert.Equal($"{nameof(LogLevel.Information)}: {dummySinglelineString}\n{nameof(LogLevel.Information)}: {dummyMultilineString}", result, ignoreLineEndingDifferences: true);
         }
 
         /// <summary>

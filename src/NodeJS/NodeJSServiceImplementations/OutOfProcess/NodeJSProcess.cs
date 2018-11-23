@@ -11,6 +11,7 @@ namespace Jering.Javascript.NodeJS
         internal const string EXIT_STATUS_NOT_EXITED = "Process has not exited";
         internal const string EXIT_STATUS_DISPOSED = "Process has been disposed";
         private readonly Process _process;
+        private readonly object _lock = new object();
         private bool _connected;
         private bool _disposed;
 
@@ -70,7 +71,7 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public virtual void SetConnected()
         {
-            lock (Lock)
+            lock (_lock)
             {
                 _connected = true;
             }
@@ -81,7 +82,7 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (Lock)
+                lock (_lock)
                 {
                     if (HasExited)
                     {
@@ -98,7 +99,7 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (Lock)
+                lock (_lock)
                 {
                     return _disposed || _process.HasExited;
                 }
@@ -110,15 +111,12 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (Lock)
+                lock (_lock)
                 {
                     return !HasExited && _connected;
                 }
             }
         }
-
-        /// <inheritdoc />
-        public object Lock { get; } = new object();
 
         /// <inheritdoc />
         public void Kill()
@@ -140,7 +138,7 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            lock (Lock)
+            lock (_lock)
             {
                 if (_disposed)
                 {

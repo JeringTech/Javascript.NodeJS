@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Nito.AsyncEx.Interop;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -38,7 +37,7 @@ namespace Jering.Javascript.NodeJS
         private readonly string _serverScriptName;
         private readonly Assembly _serverScriptAssembly;
         private readonly OutOfProcessNodeJSServiceOptions _options;
-        private readonly SemaphoreSlim _processSemaphore = new SemaphoreSlim(1, 1); // Use a semaphore since it doesn't have thread affinity
+        private readonly object _connectingLock = new object();
         private bool _disposed;
         private INodeJSProcess _nodeJSProcess;
         private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
@@ -136,7 +135,6 @@ namespace Jering.Javascript.NodeJS
 
         internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
-            CancellationTokenSource cancellationTokenSource = null;
             int numRetries = _options.NumRetries;
 
             while (true)
@@ -146,37 +144,38 @@ namespace Jering.Javascript.NodeJS
                     throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
                 }
 
+                CancellationTokenSource cancellationTokenSource = null;
+                EventWaitHandle waitHandle = null;
                 try
                 {
                     // If the the NodeJS process has not been instantiated or has been disconnected for some reason, attempt to create a 
                     // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
                     // is created successfully, all threads will be released by OutputDataReceivedHandler.
-                    if (_nodeJSProcess?.Connected != true)
+                    lock (_connectingLock)
                     {
-                        if (_debugLoggingEnabled)
-                        {
-                            Logger.LogDebug(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString());
-                        }
-
-                        await _processSemaphore.WaitAsync().ConfigureAwait(false);
-
-                        // Double checked lock
                         if (_nodeJSProcess?.Connected != true)
                         {
-                            CreateAndConnectToNodeJSProcess();
+                            waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+                            CreateAndConnectToNodeJSProcess(waitHandle);
 
                             if (_debugLoggingEnabled)
                             {
-                                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
+                                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
                             }
 
-                            // Use AvailableWaitHandle since in the event that the process connects before this line, AvailableWaitHandle doesn't decrement _processSemaphore.CurrentCount.
-                            // Also, don't pass cancellationToken as an argument - by this point, we've already started a NodeJS process, even if this invocation is canceled, allow the NodeJS process to 
-                            // connect for future invocations.
-                            if (!await WaitHandleAsyncFactory.FromWaitHandle(_processSemaphore.AvailableWaitHandle, TimeSpan.FromMilliseconds(_options.TimeoutMS)).ConfigureAwait(false))
+                            if (waitHandle.WaitOne(_options.TimeoutMS < 0 ? -1 : _options.TimeoutMS))
                             {
-                                // Allow another thread to have a go at connecting
-                                _processSemaphore.Release();
+                                _nodeJSProcess.SetConnected();
+                            }
+                            else
+                            {
+                                // Kills and disposes
+                                _nodeJSProcess.Dispose();
+
+                                // Reset
+                                _outputDataStringBuilder.Length = 0;
+                                _errorDataStringBuilder.Length = 0;
 
                                 // We're unlikely to get to this point. If we do we want the issue to be logged.
                                 throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
@@ -216,6 +215,7 @@ namespace Jering.Javascript.NodeJS
                 finally
                 {
                     cancellationTokenSource?.Dispose();
+                    waitHandle?.Dispose();
                 }
 
                 numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
@@ -241,7 +241,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void CreateAndConnectToNodeJSProcess()
+        internal virtual void CreateAndConnectToNodeJSProcess(EventWaitHandle waitHandle)
         {
             if (_disposed)
             {
@@ -256,13 +256,13 @@ namespace Jering.Javascript.NodeJS
             _nodeJSProcess = _nodeProcessFactory.Create(serverScript);
 
             // Connect through stdout
-            _nodeJSProcess.AddOutputDataReceivedHandler(OutputDataReceivedHandler);
+            _nodeJSProcess.AddOutputDataReceivedHandler((object sender, DataReceivedEventArgs evt) => OutputDataReceivedHandler(sender, evt, waitHandle));
             _nodeJSProcess.AddErrorDataReceivedHandler(ErrorDataReceivedHandler);
             _nodeJSProcess.BeginOutputReadLine();
             _nodeJSProcess.BeginErrorReadLine();
         }
 
-        internal void OutputDataReceivedHandler(object sender, DataReceivedEventArgs evt)
+        internal void OutputDataReceivedHandler(object _, DataReceivedEventArgs evt, EventWaitHandle waitHandle)
         {
             if (evt.Data == null)
             {
@@ -273,21 +273,12 @@ namespace Jering.Javascript.NodeJS
             {
                 OnConnectionEstablishedMessageReceived(evt.Data);
 
-                lock (_nodeJSProcess.Lock) // Prevent any threads from getting to _processSemaphore.WaitAsync in TryInvokeCoreAsync<T> until all threads have been released here.
+                if (_debugLoggingEnabled)
                 {
-                    _nodeJSProcess.SetConnected();
-
-                    // Release all threads by resetting CurrentCount to 1
-                    while (_processSemaphore.CurrentCount < 1)
-                    {
-                        if (_debugLoggingEnabled)
-                        {
-                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore, _processSemaphore.CurrentCount, Thread.CurrentThread.ManagedThreadId.ToString()));
-                        }
-
-                        _processSemaphore.Release();
-                    }
+                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeSet, Thread.CurrentThread.ManagedThreadId.ToString()));
                 }
+
+                waitHandle.Set();
             }
             else if (TryCreateMessage(_outputDataStringBuilder, evt.Data, out string message))
             {
@@ -350,11 +341,6 @@ namespace Jering.Javascript.NodeJS
             {
                 return;
             }
-
-            // This call isn't thread-safe - https://docs.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.dispose?view=netstandard-2.0.
-            // It is the reason why this method and this class's Dispose() method are not thread-safe.
-            // Since this class uses AvailableWaitHandle, dispose of the sempahore to release unmanaged resources
-            _processSemaphore.Dispose();
 
             _nodeJSProcess?.Dispose();
             _disposed = true;
