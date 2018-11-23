@@ -147,29 +147,20 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before semaphore wait, count: {0}. Thread ID: {1}..
+        ///   Looks up a localized string similar to Before set, thread ID: {0}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait {
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSet {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSemaphoreWait", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSet", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before semaphore available wait handle wait, count: {0}. Thread ID: {1}..
+        ///   Looks up a localized string similar to Before wait, thread ID: {0}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait {
+        internal static string LogDebug_OutOfProcessNodeJSService_BeforeWait {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSempahoreAvailableWaitHandleWait", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Releasing semaphore, count: {0}. Thread ID: {1}..
-        /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore {
-            get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_ReleasingSemaphore", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeWait", resourceCulture);
             }
         }
         
