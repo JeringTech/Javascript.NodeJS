@@ -60,7 +60,9 @@
                 "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-italic.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
                 "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-600.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
                 "<link rel=\"preload\" href=\"/resources/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
-            ]
+            ],
+
+            "mimo_addressBarColor": "#1565C0"
         },
         "postProcessors": [ "SortedArticleListGenerator", "ExternalAnchorFixer", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
         "markdownEngineName": "mimo-markdown",
