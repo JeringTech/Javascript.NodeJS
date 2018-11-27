@@ -207,6 +207,19 @@ namespace Jering.Javascript.NodeJS
                 }
                 catch (Exception exception) when (numRetries != 0)
                 {
+                    if(invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
+                    {
+                        if (!invocationRequest.ModuleStreamSource.CanSeek)
+                        {
+                            // Don't retry if stream source is unseekable. Callers can "cache" stream contents in a memory stream if they want retries.
+                            throw;
+                        }
+                        else if(!invocationRequest.CheckStreamAtInitialPosition())
+                        {
+                            invocationRequest.ResetStreamPosition();
+                        }
+                    }
+
                     if (_warningLoggingEnabled)
                     {
                         Logger.LogWarning(string.Format(Strings.LogWarning_InvocationAttemptFailed, numRetries < 0 ? "infinity" : numRetries.ToString(), exception.ToString()));
