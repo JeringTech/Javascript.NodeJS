@@ -23,6 +23,7 @@ namespace Jering.Javascript.NodeJS
         // Arbitrary boundary
         internal static readonly byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
 
+        private static readonly MediaTypeHeaderValue _multipartContentType = new MediaTypeHeaderValue("multipart/mixed");
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;
 
@@ -38,7 +39,7 @@ namespace Jering.Javascript.NodeJS
 
             if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
-                Headers.ContentType = new MediaTypeHeaderValue("multipart/mixed");
+                Headers.ContentType = _multipartContentType;
             }
         }
 
@@ -85,7 +86,7 @@ namespace Jering.Javascript.NodeJS
 
             // TODO Stream writer allocates both a char[] and a byte[] for buffering, it is slower than just serializing to string and writing the string to the stream
             // (at least for small-average size payloads). Support for ArrayPool buffers is coming - https://github.com/dotnet/corefx/issues/23874, might need to target
-            // netcoreapp1.1
+            // netcoreapp2.1
             // using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
             // using (var jsonWriter = new JsonTextWriter(streamWriter))
             // {
