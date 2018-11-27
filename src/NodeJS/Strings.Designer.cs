@@ -107,6 +107,24 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Stream is null..
+        /// </summary>
+        internal static string InvalidOperationException_InvocationRequest_StreamIsNull {
+            get {
+                return ResourceManager.GetString("InvalidOperationException_InvocationRequest_StreamIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stream is unseekable..
+        /// </summary>
+        internal static string InvalidOperationException_InvocationRequest_StreamIsUnseekable {
+            get {
+                return ResourceManager.GetString("InvalidOperationException_InvocationRequest_StreamIsUnseekable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to start Node process. To resolve this:
         ///
         ///[1] Ensure that NodeJS is installed and can be found in one of the PATH directories. The current PATH enviroment variable is: {0}. Make sure that the Node executable is in one of those directories, or update your PATH.
