@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
+    <!-- 
     Microsoft ResX Schema 
     
     Version 2.0
@@ -59,77 +59,77 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+        <xsd:element name="root" msdata:IsDataSet="true">
             <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
+                <xsd:choice maxOccurs="unbounded">
+                    <xsd:element name="metadata">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+                            </xsd:sequence>
+                            <xsd:attribute name="name" use="required" type="xsd:string" />
+                            <xsd:attribute name="type" type="xsd:string" />
+                            <xsd:attribute name="mimetype" type="xsd:string" />
+                            <xsd:attribute ref="xml:space" />
+                        </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="assembly">
+                        <xsd:complexType>
+                            <xsd:attribute name="alias" type="xsd:string" />
+                            <xsd:attribute name="name" type="xsd:string" />
+                        </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="data">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+                            </xsd:sequence>
+                            <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+                            <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+                            <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+                            <xsd:attribute ref="xml:space" />
+                        </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="resheader">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                            </xsd:sequence>
+                            <xsd:attribute name="name" type="xsd:string" use="required" />
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:choice>
             </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
-  <resheader name="resmimetype">
-    <value>text/microsoft-resx</value>
-  </resheader>
-  <resheader name="version">
-    <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
-  <data name="ArgumentException_InvocationRequest_ModuleSourceCannotBeNull" xml:space="preserve">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>2.0</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ArgumentException_InvocationRequest_ModuleSourceCannotBeNull" xml:space="preserve">
     <value>If moduleSourceType is cache, moduleSource cannot be null.</value>
   </data>
-  <data name="ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString" xml:space="preserve">
+    <data name="ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString" xml:space="preserve">
     <value>If moduleSourceType is file or string, moduleSource cannot be null, whitespace or an empty string.</value>
   </data>
-  <data name="ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull" xml:space="preserve">
+    <data name="ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull" xml:space="preserve">
     <value>If moduleSourceType is stream, moduleStreamSource cannot be null.</value>
   </data>
-  <data name="ArgumentException_NodeJSProcess_ProcessHasExited" xml:space="preserve">
+    <data name="ArgumentException_NodeJSProcess_ProcessHasExited" xml:space="preserve">
     <value>The process has exited.</value>
   </data>
-  <data name="ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed" xml:space="preserve">
+    <data name="ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed" xml:space="preserve">
     <value>The process has not been started or has been disposed of.</value>
   </data>
   <data name="InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess" xml:space="preserve">
@@ -139,22 +139,28 @@
 
 [2] Refer to the InnerException for further details.</value>
   </data>
-  <data name="InvocationException_HttpNodeJSService_UnexpectedStatusCode" xml:space="preserve">
+    <data name="InvalidOperationException_InvocationRequest_StreamIsNull" xml:space="preserve">
+    <value>Stream is null.</value>
+  </data>
+    <data name="InvalidOperationException_InvocationRequest_StreamIsUnseekable" xml:space="preserve">
+    <value>Stream is unseekable.</value>
+  </data>
+    <data name="InvocationException_HttpNodeJSService_UnexpectedStatusCode" xml:space="preserve">
     <value>Received a HTTP response with an unexpected status code: {0}.</value>
   </data>
-  <data name="InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut" xml:space="preserve">
+    <data name="InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut" xml:space="preserve">
     <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}.</value>
   </data>
-  <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
+    <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
     <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSet" xml:space="preserve">
+    <data name="LogDebug_OutOfProcessNodeJSService_BeforeSet" xml:space="preserve">
     <value>Before set, thread ID: {0}.</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeWait" xml:space="preserve">
+    <data name="LogDebug_OutOfProcessNodeJSService_BeforeWait" xml:space="preserve">
     <value>Before wait, thread ID: {0}.</value>
   </data>
-  <data name="LogWarning_InvocationAttemptFailed" xml:space="preserve">
+    <data name="LogWarning_InvocationAttemptFailed" xml:space="preserve">
     <value>An invocation attempt failed. Retries remaining: {0}.
 Exception:
   {1}</value>

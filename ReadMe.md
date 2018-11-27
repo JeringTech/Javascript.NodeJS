@@ -430,7 +430,7 @@ The next two sections list all available options.
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
 | TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to initialize and to wait for responses to invocations. If set to a negative value, the maximum duration will be infinite. | 10000 |
-| NumRetries | `int` | The number of times an invocation will be retried. If set to a negative value, the invocation will be retried indefinitely. | 1 |
+| NumRetries | `int` | The number of times an invocation will be retried. If set to a negative value, invocations will be retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation will not be retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| 1 |
 
 ### Debugging Javascript
 These are the steps for debugging javascript invoked using INodeJSService:

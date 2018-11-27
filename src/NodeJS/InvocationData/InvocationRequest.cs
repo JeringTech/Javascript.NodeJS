@@ -9,6 +9,8 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class InvocationRequest
     {
+        private readonly long _streamInitialPosition;
+
         /// <summary>
         /// Creates an <see cref="InvocationRequest"/> instance.
         /// </summary>
@@ -47,6 +49,12 @@ namespace Jering.Javascript.NodeJS
                 {
                     throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull, nameof(moduleStreamSource));
                 }
+
+                if (moduleStreamSource.CanSeek)
+                {
+                    _streamInitialPosition = moduleStreamSource.Position; // Can only get or set Position if CanSeek is true - https://docs.microsoft.com/en-us/dotnet/api/system.io.stream.position?view=netstandard-2.0
+                }
+                ModuleStreamSource = moduleStreamSource;
             }
             else if (moduleSourceType == ModuleSourceType.Cache)
             {
@@ -67,36 +75,74 @@ namespace Jering.Javascript.NodeJS
             NewCacheIdentifier = newCacheIdentifier;
             ExportName = exportName;
             Args = args;
-            ModuleStreamSource = moduleStreamSource;
         }
 
         /// <summary>
-        /// The source type of the module to be invoked.
+        /// Resets <see cref="ModuleStreamSource"/> to its initial position.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is an unseekable <see cref="Stream"/>.</exception>
+        public void ResetStreamPosition()
+        {
+            if (ModuleStreamSource == null)
+            {
+                throw new InvalidOperationException(Strings.InvalidOperationException_InvocationRequest_StreamIsNull);
+            }
+
+            if (!ModuleStreamSource.CanSeek)
+            {
+                throw new InvalidOperationException(Strings.InvalidOperationException_InvocationRequest_StreamIsUnseekable);
+            }
+
+            ModuleStreamSource.Position = _streamInitialPosition;
+        }
+
+        /// <summary>
+        /// Returns a boolean value indicating whether or not <see cref="ModuleStreamSource"/> is at its initial position.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is an unseekable <see cref="Stream"/>.</exception>
+        public bool CheckStreamAtInitialPosition() {
+            if (ModuleStreamSource == null)
+            {
+                throw new InvalidOperationException(Strings.InvalidOperationException_InvocationRequest_StreamIsNull);
+            }
+
+            if (!ModuleStreamSource.CanSeek)
+            {
+                throw new InvalidOperationException(Strings.InvalidOperationException_InvocationRequest_StreamIsUnseekable);
+            }
+
+            return ModuleStreamSource.Position == _streamInitialPosition;
+        }
+
+        /// <summary>
+        /// Gets the source type of the module to be invoked.
         /// </summary>
         public ModuleSourceType ModuleSourceType { get; }
 
         /// <summary>
-        /// The source of the module to be invoked.
+        /// Gets the source of the module to be invoked.
         /// </summary>
         public string ModuleSource { get; }
 
         /// <summary>
-        /// The new cache identifier for the module to be invoked.
+        /// Gets the new cache identifier for the module to be invoked.
         /// </summary>
         public string NewCacheIdentifier { get; }
 
         /// <summary>
-        /// The name of the function in the module's exports to invoke.
+        /// Gets the name of the function in the module's exports to invoke.
         /// </summary>
         public string ExportName { get; }
 
         /// <summary>
-        /// The arguments for the function to invoke.
+        /// Gets the arguments for the function to invoke.
         /// </summary>
         public object[] Args { get; }
 
         /// <summary>
-        /// The module as a <see cref="Stream"/>.
+        /// Gets the module as a <see cref="Stream"/>.
         /// </summary>
         [JsonIgnore]
         public Stream ModuleStreamSource { get; }
