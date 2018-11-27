@@ -56,11 +56,10 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
             var dummyArgs = new object[0];
-            Stream dummyModuleStreamSource = new MemoryStream();
             const ModuleSourceType dummyModuleSourceType = ModuleSourceType.String;
 
             // Act
-            var invocationRequest = new InvocationRequest(dummyModuleSourceType, dummyModuleSource, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyModuleStreamSource);
+            var invocationRequest = new InvocationRequest(dummyModuleSourceType, dummyModuleSource, dummyNewCacheIdentifier, dummyExportName, dummyArgs);
 
             // Assert
             Assert.Equal(dummyModuleSourceType, invocationRequest.ModuleSourceType);
@@ -68,7 +67,6 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyNewCacheIdentifier, invocationRequest.NewCacheIdentifier);
             Assert.Equal(dummyExportName, invocationRequest.ExportName);
             Assert.Same(dummyArgs, invocationRequest.Args);
-            Assert.Equal(dummyModuleStreamSource, invocationRequest.ModuleStreamSource);
         }
 
         [Fact]
