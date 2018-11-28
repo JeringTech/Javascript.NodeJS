@@ -3,7 +3,11 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.2...HEAD)
+
+## [4.0.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.1...4.0.2) - Nov 28, 2018
+### Fixes
+- Fixed missing exception XML comments in `INodeJSService`.
 
 ## [4.0.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.0...4.0.1) - Nov 27, 2018
 ### Fixes
