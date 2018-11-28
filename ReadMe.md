@@ -476,6 +476,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 If we have a file named `exampleModule.js` (located in `NodeJSProcessOptions.ProjectPath`), with contents:
 ```javascript
@@ -532,6 +536,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
@@ -584,6 +592,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
@@ -641,6 +653,10 @@ success and false otherwise.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
