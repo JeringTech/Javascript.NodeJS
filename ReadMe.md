@@ -255,10 +255,10 @@ itself when it detects that its parent has been killed.
 Essentially, manually disposing of `INodeJSService` instances is not mandatory.
 
 #### Static API
-This library also provides a static API as an alternative. The `StaticNodeJSService` type wraps an `INodeJSService` instance, exposing its [public members](#api) statically.
+This library also provides a static API as an alternative. The `StaticNodeJSService` type wraps an `INodeJSService` instance, exposing most of its [public members](#api) statically.
 Whether you use the static API or the DI based API depends on your development needs. If you are already using DI, if you want to mock 
-out javascript invocations in your tests or if you want to [overwrite](#extensibility) `INodeJSService`'s dependencies, use the DI based API. Otherwise,
-use the static API.
+out javascript invocations in your tests or if you want to [overwrite](#extensibility) services, use the DI based API. Otherwise,
+use the static API. An example usage:
 
 ```csharp
 string result = await StaticNodeJSService
@@ -266,6 +266,7 @@ string result = await StaticNodeJSService
 
 Assert.Equal("success", result);
 ```
+The following section on using `INodeJSService` applies to usage of `StaticNodeJSService`.
 
 ### Using INodeJSService
 #### Basics
@@ -475,6 +476,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 If we have a file named `exampleModule.js` (located in `NodeJSProcessOptions.ProjectPath`), with contents:
 ```javascript
@@ -531,6 +536,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
@@ -583,6 +592,10 @@ The task object representing the asynchronous operation.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
@@ -640,6 +653,10 @@ success and false otherwise.
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
+- `ObjectDisposedException`
+  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+- `OperationCanceledException`
+  - Thrown if `cancellationToken` is cancelled.
 #### Example
 Using the class `Result`:
 ```csharp
@@ -721,18 +738,18 @@ only supports invoking javascript from a file):
 </html>
 
 
-The [benchmarks](https://github.com/JeremyTCD/Javascript.NodeJS/blob/master/test/NodeJS.Performance/Benchmarks.cs).
+The [benchmarks](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/Benchmarks.cs).
 
 ## Building
 This project can be built using Visual Studio 2017.
 
-## Related Projects
+## Related Jering Projects
 #### Projects Using this Library
-[Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeremyTCD/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
-[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeremyTCD/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
+[Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeringTech/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
+[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeringTech/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
 
 ## Contributing
 Contributions are welcome!  
 
 ## About
-Follow [@JeremyTCD](https://twitter.com/JeremyTCD) for updates and more.
+Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.

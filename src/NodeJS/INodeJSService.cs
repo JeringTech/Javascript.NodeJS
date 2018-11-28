@@ -23,6 +23,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
@@ -40,6 +41,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
@@ -57,6 +59,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
 
@@ -74,6 +77,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
     }
