@@ -151,6 +151,8 @@ namespace Jering.Javascript.NodeJS
                     // If the the NodeJS process has not been instantiated or has been disconnected for some reason, attempt to create a 
                     // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
                     // is created successfully, all threads will be released by OutputDataReceivedHandler.
+                    // TODO Not using a double checked lock because _nodeJSProcess.Connected uses Process properties that might not be
+                    // volatile. Investigate further, what is the overhead of lock like? Is there a more efficient way to do this?
                     lock (_connectingLock)
                     {
                         if (_nodeJSProcess?.Connected != true)
