@@ -44,23 +44,21 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                int result = await testSubject.InvokeFromFileAsync<int>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
 
-                // Assert
-                Assert.Equal(dummyResult, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                    It.Is<InvocationRequest>(
-                        invocationRequest =>
-                        invocationRequest.ModuleSourceType == ModuleSourceType.File &&
-                        invocationRequest.ModuleSource == dummyModulePath &&
-                        invocationRequest.ExportName == dummyExportName &&
-                        invocationRequest.Args == dummyArgs),
-                    dummyCancellationToken));
-            }
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromFileAsync<int>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResult, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
+                It.Is<InvocationRequest>(
+                    invocationRequest =>
+                    invocationRequest.ModuleSourceType == ModuleSourceType.File &&
+                    invocationRequest.ModuleSource == dummyModulePath &&
+                    invocationRequest.ExportName == dummyExportName &&
+                    invocationRequest.Args == dummyArgs),
+                dummyCancellationToken));
         }
 
         [Fact]
@@ -76,24 +74,22 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                int result = await testSubject.InvokeFromStringAsync<int>(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
 
-                // Assert
-                Assert.Equal(dummyResult, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                    It.Is<InvocationRequest>(
-                        invocationRequest =>
-                        invocationRequest.ModuleSourceType == ModuleSourceType.String &&
-                        invocationRequest.ModuleSource == dummyModuleString &&
-                        invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
-                        invocationRequest.ExportName == dummyExportName &&
-                        invocationRequest.Args == dummyArgs),
-                    dummyCancellationToken));
-            }
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStringAsync<int>(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResult, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
+                It.Is<InvocationRequest>(
+                    invocationRequest =>
+                    invocationRequest.ModuleSourceType == ModuleSourceType.String &&
+                    invocationRequest.ModuleSource == dummyModuleString &&
+                    invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
+                    invocationRequest.ExportName == dummyExportName &&
+                    invocationRequest.Args == dummyArgs),
+                dummyCancellationToken));
         }
 
         [Fact]
@@ -109,24 +105,22 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                int result = await testSubject.InvokeFromStreamAsync<int>(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
 
-                // Assert
-                Assert.Equal(dummyResult, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                    It.Is<InvocationRequest>(
-                        invocationRequest =>
-                        invocationRequest.ModuleSourceType == ModuleSourceType.Stream &&
-                        invocationRequest.ModuleStreamSource == dummyModuleStream &&
-                        invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
-                        invocationRequest.ExportName == dummyExportName &&
-                        invocationRequest.Args == dummyArgs),
-                    dummyCancellationToken));
-            }
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStreamAsync<int>(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResult, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
+                It.Is<InvocationRequest>(
+                    invocationRequest =>
+                    invocationRequest.ModuleSourceType == ModuleSourceType.Stream &&
+                    invocationRequest.ModuleStreamSource == dummyModuleStream &&
+                    invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
+                    invocationRequest.ExportName == dummyExportName &&
+                    invocationRequest.Args == dummyArgs),
+                dummyCancellationToken));
         }
 
         [Fact]
@@ -141,27 +135,25 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
 
-                // Assert
-                Assert.True(success);
-                Assert.Equal(dummyResult, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                    It.Is<InvocationRequest>(
-                        invocationRequest =>
-                        invocationRequest.ModuleSourceType == ModuleSourceType.Cache &&
-                        invocationRequest.ModuleSource == dummyModuleCacheIdentifier &&
-                        invocationRequest.ExportName == dummyExportName &&
-                        invocationRequest.Args == dummyArgs),
-                    dummyCancellationToken));
-            }
+            // Act
+            (bool success, int result) = await mockTestSubject.Object.TryInvokeFromCacheAsync<int>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            Assert.True(success);
+            Assert.Equal(dummyResult, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
+                It.Is<InvocationRequest>(
+                    invocationRequest =>
+                    invocationRequest.ModuleSourceType == ModuleSourceType.Cache &&
+                    invocationRequest.ModuleSource == dummyModuleCacheIdentifier &&
+                    invocationRequest.ExportName == dummyExportName &&
+                    invocationRequest.Args == dummyArgs),
+                dummyCancellationToken));
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact]
         public async void TryInvokeCoreAsync_ThrowsObjectDisposedExceptionIfObjectHasBeenDisposedOf()
         {
             // Arrange
@@ -206,34 +198,32 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>()
                 .Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).
                 ReturnsAsync(dummyReturnValue);
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
+            // Act
+            var results = new ConcurrentQueue<(bool, int)>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
             {
-                // Act
-                var results = new ConcurrentQueue<(bool, int)>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
 
-                // Assert
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only creates and connects once
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads)); // Invokes javascript for each invocation request
-                foreach ((bool success, int value) in results)
-                {
-                    Assert.Equal(success, dummyReturnValue.Item1);
-                    Assert.Equal(value, dummyReturnValue.Item2);
-                }
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only creates and connects once
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads)); // Invokes javascript for each invocation request
+            foreach ((bool success, int value) in results)
+            {
+                Assert.Equal(success, dummyReturnValue.Item1);
+                Assert.Equal(value, dummyReturnValue.Item2);
             }
         }
 
@@ -269,35 +259,34 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).ReturnsAsync(dummyReturnValue);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                await testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).ConfigureAwait(false); // Set _nodeJSProcess
-                dummyIsConnected = false; // Set _nodeJSProcess.Connected to false
-                var results = new ConcurrentQueue<(bool, int)>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-                // Assert
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(2)); // Creates NodeJS process twice
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads + 1)); // Invokes javascript for each invocation request
-                foreach ((bool success, int value) in results)
-                {
-                    Assert.Equal(success, dummyReturnValue.Item1);
-                    Assert.Equal(value, dummyReturnValue.Item2);
-                }
+            // Act
+            await testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).ConfigureAwait(false); // Set _nodeJSProcess
+            dummyIsConnected = false; // Set _nodeJSProcess.Connected to false
+            var results = new ConcurrentQueue<(bool, int)>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(2)); // Creates NodeJS process twice
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads + 1)); // Invokes javascript for each invocation request
+            foreach ((bool success, int value) in results)
+            {
+                Assert.Equal(success, dummyReturnValue.Item1);
+                Assert.Equal(value, dummyReturnValue.Item2);
             }
         }
 
@@ -336,45 +325,44 @@ namespace Jering.Javascript.NodeJS.Tests
                 dummyServerScriptName,
                 loggerStringBuilder);
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                var results = new ConcurrentQueue<Exception>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() =>
-                    {
-                        try
-                        {
-                            testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).GetAwaiter().GetResult();
-                        }
-                        catch (Exception exception)
-                        {
-                            results.Enqueue(exception);
-                        }
-                    });
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-                // Assert
-                _mockRepository.VerifyAll();
-                string logResult = loggerStringBuilder.ToString();
-                Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-                mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(numThreads * 2)); // Each thread tries to create and connect to NodeJS process twice
-                Assert.Equal(numThreads, results.Count);
-                foreach (Exception exception in results)
+            // Act
+            var results = new ConcurrentQueue<Exception>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
                 {
-                    // Each thread must throw a connection attempt timed out invocation exception
-                    Assert.IsType<InvocationException>(exception);
-                    Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut, dummyTimeoutMS, dummyHasExited, dummyExitCode), exception.Message);
-                }
+                    try
+                    {
+                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).GetAwaiter().GetResult();
+                    }
+                    catch (Exception exception)
+                    {
+                        results.Enqueue(exception);
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
+            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(numThreads * 2)); // Each thread tries to create and connect to NodeJS process twice
+            Assert.Equal(numThreads, results.Count);
+            foreach (Exception exception in results)
+            {
+                // Each thread must throw a connection attempt timed out invocation exception
+                Assert.IsType<InvocationException>(exception);
+                Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut, dummyTimeoutMS, dummyHasExited, dummyExitCode), exception.Message);
             }
         }
 
@@ -410,45 +398,44 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).ThrowsAsync(dummyException);
             mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                dummyCancellationTokenSource.Cancel(); // Cancel token
-                var results = new ConcurrentQueue<Exception>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() =>
-                    {
-                        try
-                        {
-                            testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult();
-                        }
-                        catch (Exception exception)
-                        {
-                            results.Enqueue(exception);
-                        }
-                    });
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-                // Assert
-                _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only connects once
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(null, It.IsAny<CancellationToken>()), Times.Exactly(numThreads)); // No retries
-                Assert.Equal(numThreads, results.Count);
-                foreach (Exception exception in results)
+            // Act
+            dummyCancellationTokenSource.Cancel(); // Cancel token
+            var results = new ConcurrentQueue<Exception>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
                 {
-                    // Each thread must throw an OperationCanceledException
-                    Assert.Same(dummyException, exception);
-                }
+                    try
+                    {
+                        testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult();
+                    }
+                    catch (Exception exception)
+                    {
+                        results.Enqueue(exception);
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only connects once
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(null, It.IsAny<CancellationToken>()), Times.Exactly(numThreads)); // No retries
+            Assert.Equal(numThreads, results.Count);
+            foreach (Exception exception in results)
+            {
+                // Each thread must throw an OperationCanceledException
+                Assert.Same(dummyException, exception);
             }
         }
 
@@ -489,49 +476,48 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                var results = new ConcurrentQueue<Exception>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() =>
-                    {
-                        try
-                        {
-                            testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
-                        }
-                        catch (Exception exception)
-                        {
-                            results.Enqueue(exception);
-                        }
-                    });
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-                // Assert
-                _mockRepository.VerifyAll();
-                string logResult = loggerStringBuilder.ToString();
-                Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
-                Assert.Equal(numThreads, results.Count);
-                foreach (Exception exception in results)
+            // Act
+            var results = new ConcurrentQueue<Exception>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
                 {
-                    Assert.IsType<InvocationException>(exception);
-                    Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
-                            dummyTimeoutMS,
-                            nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
-                            nameof(OutOfProcessNodeJSServiceOptions)),
-                        exception.Message);
-                }
+                    try
+                    {
+                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                    catch (Exception exception)
+                    {
+                        results.Enqueue(exception);
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
+            Assert.Equal(numThreads, results.Count);
+            foreach (Exception exception in results)
+            {
+                Assert.IsType<InvocationException>(exception);
+                Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
+                        dummyTimeoutMS,
+                        nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
+                        nameof(OutOfProcessNodeJSServiceOptions)),
+                    exception.Message);
             }
         }
 
@@ -567,44 +553,43 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                var results = new ConcurrentQueue<Exception>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() =>
-                    {
-                        try
-                        {
-                            testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
-                        }
-                        catch (Exception exception)
-                        {
-                            results.Enqueue(exception);
-                        }
-                    });
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-                // Assert
-                _mockRepository.VerifyAll();
-                string logResult = loggerStringBuilder.ToString();
-                Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
-                Assert.Equal(numThreads, results.Count);
-                foreach (Exception exception in results)
+            // Act
+            var results = new ConcurrentQueue<Exception>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
                 {
-                    Assert.Same(dummyException, exception);
-                }
+                    try
+                    {
+                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                    catch (Exception exception)
+                    {
+                        results.Enqueue(exception);
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
+            Assert.Equal(numThreads, results.Count);
+            foreach (Exception exception in results)
+            {
+                Assert.Same(dummyException, exception);
             }
         }
 
@@ -638,17 +623,15 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act and assert
-                InvocationException result = Assert.Throws<InvocationException>(() => testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-                Assert.Equal(dummyException, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.
-                    Protected().
-                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Once()); // No retries
-            }
+
+            // Act and assert
+            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
+            Assert.Equal(dummyException, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Once()); // No retries
         }
 
         [Fact(Timeout = _timeoutMS)]
@@ -683,18 +666,16 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act and assert
-                InvocationException result = Assert.Throws<InvocationException>(() => testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-                Assert.Equal(dummyException, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.
-                    Protected().
-                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
-                mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition);
-            }
+
+            // Act and assert
+            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
+            Assert.Equal(dummyException, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
+            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition);
         }
 
         [Fact(Timeout = _timeoutMS)]
@@ -728,18 +709,16 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act and assert
-                InvocationException result = Assert.Throws<InvocationException>(() => testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-                Assert.Equal(dummyException, result);
-                _mockRepository.VerifyAll();
-                mockTestSubject.
-                    Protected().
-                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
-                mockStream.VerifySet(s => s.Position = It.IsAny<int>(), Times.Never);
-            }
+
+            // Act and assert
+            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
+            Assert.Equal(dummyException, result);
+            _mockRepository.VerifyAll();
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
+            mockStream.VerifySet(s => s.Position = It.IsAny<int>(), Times.Never);
         }
 
         // Note for the following (CreateCts) tests: CancellationToken1.Equal(CancellationToken2) returns CancellationToken1._source == CancellationToken2._source where source is 
@@ -751,15 +730,13 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = testSubject.CreateCts(dummyCancellationToken);
 
-                // Assert
-                Assert.NotNull(resultCancellationTokenSource);
-                Assert.Equal(resultCancellationToken, resultCancellationTokenSource.Token);
-            }
+            // Act
+            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationToken);
+
+            // Assert
+            Assert.NotNull(resultCancellationTokenSource);
+            Assert.Equal(resultCancellationToken, resultCancellationTokenSource.Token);
         }
 
         public static IEnumerable<object[]> CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data()
@@ -782,15 +759,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
             var dummyCancellationTokenSource = new CancellationTokenSource();
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = testSubject.CreateCts(dummyCancellationTokenSource.Token);
 
-                // Assert
-                Assert.Null(resultCancellationTokenSource);
-                Assert.Equal(dummyCancellationTokenSource.Token, resultCancellationToken);
-            }
+            // Act
+            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationTokenSource.Token);
+
+            // Assert
+            Assert.Null(resultCancellationTokenSource);
+            Assert.Equal(dummyCancellationTokenSource.Token, resultCancellationToken);
         }
 
         [Fact]
@@ -826,16 +801,14 @@ namespace Jering.Javascript.NodeJS.Tests
                 serverScriptAssembly: dummyServerScriptAssembly,
                 serverScriptName: dummyServerScriptName);
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                testSubject.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Create NodeJSProcess
-                testSubject.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // This should dispose of original NodeJSProcess
 
-                // Assert
-                _mockRepository.VerifyAll();
-                mockNodeJSProcess.Verify(n => n.Dispose(), Times.Once());
-            }
+            // Act
+            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Create NodeJSProcess
+            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // This should dispose of original NodeJSProcess
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockNodeJSProcess.Verify(n => n.Dispose(), Times.Once());
         }
 
         [Fact]
@@ -850,15 +823,13 @@ namespace Jering.Javascript.NodeJS.Tests
                 embeddedResourcesService: mockEmbeddedResourcesService.Object);
             mockTestSubject.CallBase = true;
             mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                testSubject.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(null), null);
 
-                // Assert
-                _mockRepository.VerifyAll();
-                mockNodeJSProcess.Verify(n => n.Connected, Times.Never());
-            }
+            // Act
+            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(null), null);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockNodeJSProcess.Verify(n => n.Connected, Times.Never());
         }
 
         [Fact]
@@ -875,12 +846,11 @@ namespace Jering.Javascript.NodeJS.Tests
                 embeddedResourcesService: mockEmbeddedResourcesService.Object);
             mockTestSubject.CallBase = true;
             using (var dummyWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset))
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
             {
-                testSubject.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
+                mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
 
                 // Act
-                testSubject.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), dummyWaitHandle);
+                mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), dummyWaitHandle);
 
                 // Assert
                 _mockRepository.VerifyAll();
@@ -907,18 +877,15 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             string dummyOutMessage = "dummyOutMessage";
             mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                testSubject.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
+            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
 
-                // Act
-                testSubject.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), null);
+            // Act
+            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), null);
 
-                // Assert
-                _mockRepository.VerifyAll();
-                string logResult = loggerStringBuilder.ToString();
-                Assert.Contains(dummyOutMessage, logResult);
-            }
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Contains(dummyOutMessage, logResult);
         }
 
         public static IEnumerable<object[]> OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages_Data()
@@ -936,15 +903,13 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                testSubject.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(null));
 
-                // Assert
-                string dummyOutMessage = null;
-                mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), null, out dummyOutMessage), Times.Never());
-            }
+            // Act
+            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(null));
+
+            // Assert
+            string dummyOutMessage = null;
+            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), null, out dummyOutMessage), Times.Never());
         }
 
         [Fact]
@@ -957,16 +922,14 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             string dummyOutMessage = null;
             mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                testSubject.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData));
 
-                // Assert
-                _mockRepository.VerifyAll();
-                string logResult = loggerStringBuilder.ToString();
-                Assert.Single(Regex.Matches(logResult, $"{nameof(LogLevel.Error)}: "));
-            }
+            // Act
+            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData));
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Single(Regex.Matches(logResult, $"{nameof(LogLevel.Error)}: "));
         }
 
         [Fact]
@@ -977,16 +940,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyData = "dummyData";
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyData, out string resultMessage);
 
-                // Assert
-                Assert.False(result);
-                Assert.Null(resultMessage);
-                Assert.Equal(dummyData + "\n", dummyStringBuilder.ToString(), ignoreLineEndingDifferences: true);
-            }
+            // Act
+            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyData, out string resultMessage);
+
+            // Assert
+            Assert.False(result);
+            Assert.Null(resultMessage);
+            Assert.Equal(dummyData + "\n", dummyStringBuilder.ToString(), ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -998,16 +959,14 @@ namespace Jering.Javascript.NodeJS.Tests
             string dummyDataWithNullTerminatingCharacter = $"{dummyData}\0";
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            using (OutOfProcessNodeJSService testSubject = mockTestSubject.Object)
-            {
-                // Act
-                bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string resultMessage);
 
-                // Assert
-                Assert.True(result);
-                Assert.Equal(dummyData, resultMessage);
-                Assert.Equal(0, dummyStringBuilder.Length);
-            }
+            // Act
+            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string resultMessage);
+
+            // Assert
+            Assert.True(result);
+            Assert.Equal(dummyData, resultMessage);
+            Assert.Equal(0, dummyStringBuilder.Length);
         }
 
         // Mocking protected members: https://github.com/Moq/moq4/wiki/Quickstart#miscellaneous
