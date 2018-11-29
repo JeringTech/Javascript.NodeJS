@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -24,7 +26,7 @@ namespace Jering.Javascript.NodeJS.Tests
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
         {
             // Arrange
@@ -47,7 +49,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, value.Result);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void TryInvokeFromCacheAsync_ReturnsFalseIfModuleIsNotCached()
         {
             // Arrange
@@ -63,7 +65,46 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Null(value);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
+        public async void TryInvokeFromCacheAsync_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyResultString = "success";
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            HttpNodeJSService testSubject = CreateHttpNodeService();
+
+            // Cache
+            await testSubject.
+                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
+                    dummyCacheIdentifier,
+                    args: new[] { dummyResultString }).
+                ConfigureAwait(false);
+
+            // Act
+            var results = new ConcurrentQueue<(bool, DummyResult)>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach ((bool success, DummyResult value) in results)
+            {
+                Assert.True(success);
+                Assert.Equal(dummyResultString, value.Result);
+            }
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public async void InvokeFromStreamAsync_InvokesJavascript()
         {
             // Arrange
@@ -86,7 +127,48 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
+        public void InvokeFromStreamAsync_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
+            const string dummyResultString = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeService();
+
+            // Act
+            var results = new ConcurrentQueue<DummyResult>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
+                {
+                    using (var memoryStream = new MemoryStream())
+                    using (var streamWriter = new StreamWriter(memoryStream))
+                    {
+                        streamWriter.Write(dummyModule);
+                        streamWriter.Flush();
+                        memoryStream.Position = 0;
+                        results.Enqueue(testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).GetAwaiter().GetResult());
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach (DummyResult result in results)
+            {
+                Assert.Equal(dummyResultString, result.Result);
+            }
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public async void InvokeFromStringAsync_InvokesJavascript()
         {
             // Arrange
@@ -101,7 +183,38 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
+        public void InvokeFromStringAsync_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
+            const string dummyResultString = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeService();
+
+            // Act
+            var results = new ConcurrentQueue<DummyResult>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.InvokeFromStringAsync<DummyResult>(dummyModule, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach (DummyResult result in results)
+            {
+                Assert.Equal(dummyResultString, result.Result);
+            }
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public async void InvokeFromFileAsync_InvokesJavascript()
         {
             const string dummyResultString = "success";
@@ -115,7 +228,38 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
+        public void InvokeFromFileAsync_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyModule = "dummyModule.js";
+            const string dummyResultString = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeService();
+
+            // Act
+            var results = new ConcurrentQueue<DummyResult>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.InvokeFromFileAsync<DummyResult>(dummyModule, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach (DummyResult result in results)
+            {
+                Assert.Equal(dummyResultString, result.Result);
+            }
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleHasNoExports()
         {
             // Arrange
@@ -131,7 +275,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The module \"{dummyModule}...\" has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.", result.Message);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfThereIsNoModuleExportWithSpecifiedExportName()
         {
             // Arrange
@@ -148,7 +292,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The module {dummyCacheIdentifier} has no export named {dummyExportName}.", result.Message);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleExportWithSpecifiedExportNameIsNotAFunction()
         {
             // Arrange
@@ -164,7 +308,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith($"The export named {dummyExportName} from module \"module.exports = {{dummyEx...\" is not a function.", result.Message);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
@@ -179,7 +323,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith("The module \"module.exports = {result:...\" does not export a function.", result.Message);
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedMethodCallsCallbackWithError()
         {
             // Arrange
@@ -195,7 +339,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
         }
 
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsProvided()
         {
             // Arrange
@@ -212,7 +356,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
-        [Fact(Timeout=_timeoutMS)]
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_ReceiveAndLogMessages()
         {
             // Arrange
