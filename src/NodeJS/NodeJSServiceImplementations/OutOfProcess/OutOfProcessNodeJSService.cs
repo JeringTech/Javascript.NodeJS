@@ -39,7 +39,7 @@ namespace Jering.Javascript.NodeJS
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly object _connectingLock = new object();
         private bool _disposed;
-        private volatile INodeJSProcess _nodeJSProcess; // Volatile since its used in a double checked lock
+        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock
         private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
         private readonly StringBuilder _errorDataStringBuilder = new StringBuilder();
 
