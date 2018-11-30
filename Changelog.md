@@ -3,7 +3,11 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.3...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.4...HEAD)
+
+## [4.0.4](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.3...4.0.4) - Nov 30, 2018
+### Changes
+- Changed project URL from `jering.tech/utilities/javascript.nodejs` to `jering.tech/utilities/jering.javascript.nodejs` for consistency with other Jering projects.
 
 ## [4.0.3](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.2...4.0.3) - Nov 29, 2018
 ### Fixes
