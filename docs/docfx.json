@@ -33,7 +33,7 @@
                 }
             ],
 
-            "mimo_baseUrl": "https://www.jering.tech/utilities/javascript.nodejs/",
+            "mimo_baseUrl": "https://www.jering.tech/utilities/jering.javascript.nodejs/",
 
             "mimo_socialMediaCards": "true",
             "mimo_fbCardImageRelPath": "resources/logo_wide.png",
@@ -67,7 +67,7 @@
         "postProcessors": [ "SortedArticleListGenerator", "ExternalAnchorFixer", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
         "markdownEngineName": "mimo-markdown",
         "sitemap": {
-            "baseUrl": "https://www.jering.tech/utilities/javascript.nodejs",
+            "baseUrl": "https://www.jering.tech/utilities/jering.javascript.nodejs",
             "priority": 0.1,
             "fileOptions": {
                 "**/src/content/index.md": {
