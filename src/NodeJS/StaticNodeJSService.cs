@@ -11,31 +11,50 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public static class StaticNodeJSService
     {
-        private static IServiceCollection _services;
-        private static ServiceProvider _serviceProvider;
-        private static INodeJSService _nodeJSService;
+        private static volatile ServiceProvider _serviceProvider;
+        private static volatile IServiceCollection _services;
+        private static volatile INodeJSService _nodeJSService;
+        private static readonly object _createLock = new object();
 
         private static INodeJSService GetOrCreateNodeJSService()
         {
-            if (_nodeJSService != null && _services == null)
+            if (_nodeJSService == null || _services != null)
             {
-                // NodeJSService already exists and no configuration pending
-                return _nodeJSService;
+                lock (_createLock)
+                {
+                    if (_nodeJSService == null || _services != null)
+                    {
+                        // Dispose of service provider
+                        _serviceProvider?.Dispose();
+
+                        // Create new service provider
+                        (_services ?? (_services = new ServiceCollection())).AddNodeJS();
+                        _serviceProvider = _services.BuildServiceProvider();
+                        _services = null;
+
+                        _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
+                    }
+                }
             }
 
-            // Dispose of service provider
-            _serviceProvider?.Dispose();
-
-            // Create new service provider
-            (_services ?? (_services = new ServiceCollection())).AddNodeJS();
-            _serviceProvider = _services.BuildServiceProvider();
-            _services = null;
-
-            return _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
+            // NodeJSService already exists and no configuration pending
+            return _nodeJSService;
         }
 
         /// <summary>
-        /// Configures options.
+        /// <para>Disposes the underlying <see cref="IServiceProvider"/> used to resolve <see cref="INodeJSService"/>.</para>
+        /// <para>This method is not thread safe.</para>
+        /// </summary>
+        public static void DisposeServiceProvider()
+        {
+            _serviceProvider?.Dispose();
+            _serviceProvider = null;
+            _nodeJSService = null;
+        }
+
+        /// <summary>
+        /// <para>Configures options.</para>
+        /// <para>This method is not thread safe.</para>
         /// </summary>
         /// <typeparam name="T">The type of options to configure.</typeparam>
         /// <param name="configureOptions">The action that configures the options.</param>

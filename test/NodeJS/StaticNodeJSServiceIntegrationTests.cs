@@ -1,10 +1,15 @@
-﻿using System.IO;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using Xunit;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
     public class StaticNodeJSServiceIntegrationTests
     {
+        private const int _timeoutMS = 60000;
+
         [Fact]
         public async void Configure_ConfiguresOptions()
         {
@@ -31,6 +36,29 @@ namespace Jering.Javascript.NodeJS.Tests
                 InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName1} + process.env.{dummyTestVariableName2}}});").
                 ConfigureAwait(false);
             Assert.Equal(dummyTestVariableValue1 + dummyTestVariableValue2, result.Result);
+        }
+
+        [Fact]
+        public async void DisposeServiceProvider_DisposesServiceProvider()
+        {
+            // Arrange
+            const string dummyTestVariableName = "TEST_VARIABLE";
+            const string dummyTestVariableValue = "testVariableValue";
+            StaticNodeJSService.
+                Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue));
+            DummyResult initialInvocationResult = await StaticNodeJSService.
+                InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName}}});").
+                ConfigureAwait(false);
+
+            // Act
+            StaticNodeJSService.DisposeServiceProvider(); // Dispose, environment variable should not be set in the next call
+            DummyResult result = await StaticNodeJSService.
+                InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName}}});").
+                ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyTestVariableValue, initialInvocationResult.Result);
+            Assert.Null(result.Result);
         }
 
         [Fact]
@@ -118,6 +146,35 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(dummyResultString, result.Result);
+        }
+
+        [Fact(Timeout = _timeoutMS)]
+        public void AllInvokeMethods_AreThreadSafe()
+        {
+            // Arrange
+            const string dummyResultString = "success";
+
+            // Act
+            var results = new ConcurrentQueue<DummyResult>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(StaticNodeJSService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach (DummyResult result in results)
+            {
+                Assert.Equal(dummyResultString, result.Result);
+            }
         }
 
         private class DummyResult
