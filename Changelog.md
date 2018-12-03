@@ -3,7 +3,13 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 [The Semantic Versioning Lifecycle](https://www.jeremytcd.com/articles/the-semantic-versioning-lifecycle)
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.4...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...HEAD)
+
+## [4.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.4...4.1.0) - Dec 3, 2018
+### Additions
+- Added `StaticNodeJSService.DisposeServiceProvider`.
+### Fixes
+- `StaticNodeJSService.Invoke*` methods are now thread-safe.
 
 ## [4.0.4](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.3...4.0.4) - Nov 30, 2018
 ### Changes
