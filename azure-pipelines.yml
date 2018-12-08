@@ -15,5 +15,5 @@ jobs:
     nugetUnreleasedPrereleasePushEndpoint: "https://www.myget.org/F/jering/api/v3/index.json"
 - template: templates/docs/main.yml@templates
   parameters:
-    nugetRestoreEndpoint: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
-    nugetRestorePat: "$(nugetRestorePat)"
+    nugetRestoreEndpoints: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
+    nugetRestorePats: "$(nugetRestorePat)"
