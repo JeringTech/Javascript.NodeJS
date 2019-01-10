@@ -28,12 +28,12 @@
             "mimo_authors": [
                 {
                     "name": "JeremyTCD",
-                    "link": "https://github.com/JeremyTCD",
+                    "link": "https://www.jeremytcd.com",
                     "imgSrc": "/resources/head_shot.jpg"
                 }
             ],
 
-            "mimo_baseUrl": "https://www.jering.tech/utilities/jering.javascript.nodejs/",
+            "mimo_baseUrl": "https://www.jering.tech/utilities/Jering.Javascript.NodeJS/",
 
             "mimo_socialMediaCards": "true",
             "mimo_fbCardImageRelPath": "resources/logo_wide.png",
@@ -43,28 +43,29 @@
             "mimo_twitterCardCreator": "@JeremyTCD",
             "mimo_twitterCardImageAlt": "Jering Logo",
 
-            "mimo_copyrightText": "2017-2018 Jering",
+            "mimo_copyrightText": "2018-2019 Jering",
             "mimo_disableComments": true,
-            "mimo_googleTrackingID": "UA-111443979-2",
+            "mimo_googleTrackingID": "UA-131742212-1",
 
             "mimo_githubLink": "https://github.com/JeringTech/Javascript.NodeJS",
             "mimo_twitterLink": "https://twitter.com/JeringTech",
+            "mimo_linkedinLink": "https://www.linkedin.com/company/jering/about/",
 
             "mimo_licensesRelPath": "/licenses",
             "mimo_privacyPolicyRelPath": "/privacy-policy",
             "mimo_contactRelPath": "/contact",
             "mimo_logoRelPath": "/resources/logo.svg",
             "mimo_faviconRelPath": "/favicon.ico",
-            "mimo_headElements": [
-                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-regular.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-italic.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/resources/open-sans-v15-latin-600.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-                "<link rel=\"preload\" href=\"/resources/droid-sans-mono-latin-400.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
+            "mimo_defaultFontPreloads": [
+                "/resources/open-sans-v15-latin-regular.woff2",
+                "/resources/open-sans-v15-latin-600.woff2",
+                "/resources/ibm-plex-mono-v3-latin-regular.woff2"
             ],
 
-            "mimo_addressBarColor": "#1565C0"
+            "mimo_addressBarColor": "#1565C0",
+            "mimo_safariPinnedTabColor": "#fe3d00"
         },
-        "postProcessors": [ "SortedArticleListGenerator", "ExternalAnchorFixer", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver" ],
+        "postProcessors": [ "SortedArticleListGenerator", "SearchIndexGenerator", "OutlineGenerator", "TocEmbedder", "AbsolutePathResolver", "ExternalAnchorFixer" ],
         "markdownEngineName": "mimo-markdown",
         "sitemap": {
             "baseUrl": "https://www.jering.tech/utilities/jering.javascript.nodejs",

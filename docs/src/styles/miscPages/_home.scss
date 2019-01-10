@@ -1,0 +1,19 @@
+@import '../../../node_modules/mimo-website/dist/styles/shared/constants';
+
+#home {
+    @include display-page;
+
+    .content {
+        .card-set {
+            #card-jering {
+                svg {
+                    path {
+                        &:last-child {
+                            fill: $color-secondary; // jering logo is designed like a stencil, whereby the stencil itself is red
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

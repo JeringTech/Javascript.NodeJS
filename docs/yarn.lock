@@ -3434,10 +3434,10 @@ mimic-fn@^1.0.0:
   resolved "https://registry.npmjs.org/mimic-fn/-/mimic-fn-1.2.0.tgz#820c86a39334640e99516928bd03fca88057d022"
   integrity sha512-jf84uxzwiuiIVKiOLpfYk7N46TSy8ubTonmneY9vrpHNAnp0QBt2BxWV9dO3/j+BoVAb+a5G6YDPW3M5HOdMWQ==
 
-mimo-website@1.0.0-alpha.29:
-  version "1.0.0-alpha.29"
-  resolved "https://registry.npmjs.org/mimo-website/-/mimo-website-1.0.0-alpha.29.tgz#b113eca5ae8b3bcc46c045b4e841c821246c6829"
-  integrity sha512-7kfrvGu4psJSEJGJWbLLcWOnGx9a912XNcOafs9FBhSK/3IsuGA7YOH0dHvqEqtKW9s1xPgAh4aQi/sn3ZTEkA==
+mimo-website@1.0.0-alpha.36:
+  version "1.0.0-alpha.36"
+  resolved "https://registry.npmjs.org/mimo-website/-/mimo-website-1.0.0-alpha.36.tgz#1195ddcf0ef023ec839b3540e4d90ee9ac96d085"
+  integrity sha512-wJuQUtzGceKzmJSY/NtCCk8uq3Xdz5tc4X8TTgLsiFC1cxXT2ydalDU+mNkzYKyQNfpFkhF7OL6x04g+Uno44g==
   dependencies:
     "@types/clipboard" "^2.0.1"
     "@types/lunr" "^2.1.6"

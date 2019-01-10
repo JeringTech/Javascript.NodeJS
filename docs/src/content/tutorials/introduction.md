@@ -8,3 +8,5 @@ mimo_shareOnTwitter:
     hashtags: CSharp,DotNet,Javascript,NodeJS
     via: JeringTech
 ---
+
+Work in progress. For now, the documentation for this project can be found [here](https://github.com/JeringTech/Javascript.NodeJS).
