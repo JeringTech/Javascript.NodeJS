@@ -1,3 +1,7 @@
+# Third Party Licenses
+
+## [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices)
+
 Copyright (c) .NET Foundation and Contributors
 
 All rights reserved.
