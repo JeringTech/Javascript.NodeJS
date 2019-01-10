@@ -1,16 +1,16 @@
 {
-    "name": "jering-javascript-nodejs-documentation",
-    "version": "0.0.0",
-    "private": true,
-    "scripts": {
-        "serve-dev": "set NODE_ENV=development && yarn run serve -p ../../../../",
-        "serve-production": "set NODE_ENV=production && yarn run serve -p ../../../../",
-        "serve": "node node_modules/mimo-website/dist/tools/serve.js",
-        "build-dev": "set NODE_ENV=development && yarn run build -p ../../../../",
-        "build-production": "set NODE_ENV=production && yarn run build -p ../../../../",
-        "build": "node node_modules/mimo-website/dist/tools/build.js"
-    },
-    "dependencies": {
-        "mimo-website": "1.0.0-alpha.36"
-    }
+    "name":  "jering-javascript-nodejs-documentation",
+    "version":  "0.0.0",
+    "private":  true,
+    "scripts":  {
+                    "serve-dev":  "set NODE_ENV=development \u0026\u0026 yarn run serve -p ../../../../",
+                    "serve-production":  "set NODE_ENV=production \u0026\u0026 yarn run serve -p ../../../../",
+                    "serve":  "node node_modules/mimo-website/dist/tools/serve.js",
+                    "build-dev":  "set NODE_ENV=development \u0026\u0026 yarn run build -p ../../../../",
+                    "build-production":  "set NODE_ENV=production \u0026\u0026 yarn run build -p ../../../../",
+                    "build":  "node node_modules/mimo-website/dist/tools/build.js"
+                },
+    "dependencies":  {
+                         "mimo-website":  "1.0.0-alpha.37"
+                     }
 }
