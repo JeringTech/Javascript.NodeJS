@@ -11,9 +11,8 @@ resources:
 jobs:
 - template: templates/nuget/main.yml@templates
   parameters:
-    changelogPath: "Changelog.md"
     nugetUnreleasedPrereleasePushEndpoint: "https://www.myget.org/F/jering/api/v3/index.json"
 - template: templates/docs/main.yml@templates
   parameters:
     nugetRestoreEndpoints: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"
-    nugetRestorePats: "$(nugetRestorePat)"
+    nugetRestorePats: "$(nugetRestorePats)"
