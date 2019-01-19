@@ -1,6 +1,6 @@
 # Changelog
-This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html). Refer to 
-[The Semantic Versioning Lifecycle](https://www.jering.tech/articles/the-semantic-versioning-lifecycle)
+This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Refer to 
+*[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
 ## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...HEAD)
