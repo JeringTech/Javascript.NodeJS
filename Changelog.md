@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.1...HEAD)
+
+## [4.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...4.1.1) - Jan 19, 2018
+### Changes
+- Bumped `Newtonsoft.Json` to `12.0.1`.
+### Fixes
+- Fixed NuGet package's `PackageLicenseUrl` metadata.
 
 ## [4.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.0.4...4.1.0) - Dec 3, 2018
 ### Additions
