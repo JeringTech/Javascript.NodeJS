@@ -11,6 +11,6 @@
                     "build":  "node node_modules/mimo-website/dist/tools/build.js"
                 },
     "dependencies":  {
-                         "mimo-website":  "1.0.0-alpha.37"
+                         "mimo-website":  "1.0.0-alpha.38"
                      }
 }
