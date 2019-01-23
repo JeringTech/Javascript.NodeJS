@@ -1,11 +1,12 @@
 ---
-mimo_pageDescription: Jering.Javascript.NodeJS is a Nuget package that allows you to invoke javascript in NodeJS, from C#.
+mimo_pageDescription: Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can utilize a wide array of javascript libraries and scripts from your C# projects.
 mimo_pageTitle: Home
 mimo_pageID: home
 mimo_isDisplay: true
-mimo_fbCardType: website
+mimo_ogType: website
 mimo_cardTitle: Jering.Javascript.NodeJS
-mimo_cardDescription: Documentation for Jering.Javascript.NodeJS.
+mimo_twitterCardType: summary_large_image
+mimo_twitterCardImageRelPath: /resources/logo_wide.png
 mimo_unneededFontPreloads:
   - /resources/ibm-plex-mono-v3-latin-regular.woff2
 ---
