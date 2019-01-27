@@ -20,7 +20,7 @@
 [About](#about)  
 
 ## Overview
-Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://nodejs.org/en/), from C#. With this ability, you can utilize a wide array of javascript libraries and scripts from your C# projects.  
+Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://nodejs.org/en/), from C#. With this ability, you can use javascript libraries and scripts from your C# projects.  
 
 This library is built to be flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
 

@@ -30,9 +30,9 @@ namespace Jering.Javascript.NodeJS
                         // Create new service provider
                         (_services ?? (_services = new ServiceCollection())).AddNodeJS();
                         _serviceProvider = _services.BuildServiceProvider();
-                        _services = null;
-
                         _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
+
+                        _services = null;
                     }
                 }
             }
