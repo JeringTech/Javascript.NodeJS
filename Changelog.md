@@ -7,9 +7,9 @@ for an overview of semantic versioning.
 
 ## [4.1.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.1...4.1.2) - Jan 27, 2018
 ### Changes
-- Simplified NuGet package description. ([219a45c](https://github.com/JeringTech/Markdig.Extensions.FlexiBlocks/commit/219a45cf04943696afd2094e5866452dd4da7fe7))
+- Simplified NuGet package description. ([219a45c](https://github.com/JeringTech/Javascript.NodeJS/commit/219a45cf04943696afd2094e5866452dd4da7fe7))
 ### Fixes
-- Fixed a `StaticNodeJSService` multi-threading bug. ([028173c](https://github.com/JeringTech/Markdig.Extensions.FlexiBlocks/commit/028173c26735471fa2158f513f4afbe2c19089d4))
+- Fixed a `StaticNodeJSService` multi-threading bug. ([028173c](https://github.com/JeringTech/Javascript.NodeJS/commit/028173c26735471fa2158f513f4afbe2c19089d4))
 
 ## [4.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...4.1.1) - Jan 19, 2018
 ### Changes
