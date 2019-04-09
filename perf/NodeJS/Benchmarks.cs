@@ -20,7 +20,7 @@ namespace Jering.Javascript.NodeJS.Performance
         [GlobalSetup(Target = nameof(INodeJSService_InvokeFromFile))]
         public void INodeJSService_InvokeFromFile_Setup()
         {
-            ServiceCollection services = new ServiceCollection();
+            var services = new ServiceCollection();
             services.AddNodeJS();
             services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.."));
             _serviceProvider = services.BuildServiceProvider();
@@ -38,27 +38,27 @@ namespace Jering.Javascript.NodeJS.Performance
         [GlobalSetup(Target = nameof(INodeJSService_InvokeFromCache))]
         public void INodeJSService_InvokeFromCache_Setup()
         {
-            ServiceCollection services = new ServiceCollection();
+            var services = new ServiceCollection();
             services.AddNodeJS();
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>(); // Default INodeJSService is HttpNodeJSService
             _counter = 0;
 
             // Cache module
-            DummyResult result = _nodeJSService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, { result: resultString });", DUMMY_MODULE_IDENTIFIER, args: new object[] { $"success {_counter++}" }).Result;
+            DummyResult _ = _nodeJSService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, { result: resultString });", DUMMY_MODULE_IDENTIFIER, args: new object[] { $"success {_counter++}" }).Result;
         }
 
         [Benchmark]
         public async Task<DummyResult> INodeJSService_InvokeFromCache()
         {
-            (bool success, DummyResult result) = await _nodeJSService.TryInvokeFromCacheAsync<DummyResult>(DUMMY_MODULE_IDENTIFIER, args: new object[] { $"success {_counter++}" });
+            (bool _, DummyResult result) = await _nodeJSService.TryInvokeFromCacheAsync<DummyResult>(DUMMY_MODULE_IDENTIFIER, args: new object[] { $"success {_counter++}" });
             return result;
         }
 
         [GlobalSetup(Target = nameof(INodeServices))]
         public void INodeServices_Setup()
         {
-            ServiceCollection services = new ServiceCollection();
+            var services = new ServiceCollection();
             services.AddNodeServices(options =>
             {
                 options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../..");
