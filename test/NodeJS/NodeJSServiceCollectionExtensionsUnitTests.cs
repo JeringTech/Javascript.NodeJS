@@ -17,7 +17,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             IServiceProvider serviceProvider = services.BuildServiceProvider();
-            INodeJSService result = serviceProvider.GetRequiredService<INodeJSService>(); // As long as this doesn't throw, the dependency graph is valid
+            INodeJSService _ = serviceProvider.GetRequiredService<INodeJSService>(); // As long as this doesn't throw, the dependency graph is valid
         }
     }
 }
