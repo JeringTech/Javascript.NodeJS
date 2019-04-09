@@ -20,6 +20,8 @@ namespace Jering.Javascript.NodeJS.Tests
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
         private const int _timeoutMS = 60000;
+        // Set to true to break in NodeJS (see CreateHttpNodeJSService)
+        private const bool _debugNodeJS = false;
 
         public HttpNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
         {
@@ -32,7 +34,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Cache
             await testSubject.
@@ -55,7 +57,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
@@ -71,7 +73,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Cache
             await testSubject.
@@ -109,7 +111,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             DummyResult result;
             using (var memoryStream = new MemoryStream())
@@ -133,7 +135,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             var results = new ConcurrentQueue<DummyResult>();
@@ -173,7 +175,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             DummyResult result = await testSubject.
@@ -189,7 +191,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             var results = new ConcurrentQueue<DummyResult>();
@@ -218,7 +220,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromFileAsync_InvokesJavascript()
         {
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             DummyResult result = await testSubject.
@@ -234,7 +236,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModule = "dummyModule.js";
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             var results = new ConcurrentQueue<DummyResult>();
@@ -264,7 +266,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyModule = "return null;";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
@@ -281,7 +283,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyExportName = "dummyExportName";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
@@ -297,7 +299,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyExportName = "dummyExportName";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
@@ -312,7 +314,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
@@ -328,7 +330,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyErrorString = "error";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
@@ -345,7 +347,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyResultString = "success";
             const string dummyExportName = "dummyExportName";
-            HttpNodeJSService testSubject = CreateHttpNodeService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             DummyResult result = await testSubject.
@@ -363,7 +365,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummySinglelineString = "dummySingleLineString";
             const string dummyMultilineString = "dummy\nMultiline\nString\n";
             var resultStringBuilder = new StringBuilder();
-            HttpNodeJSService testSubject = CreateHttpNodeService(resultStringBuilder);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
 
             // Act
             await testSubject.
@@ -397,7 +399,7 @@ namespace Jering.Javascript.NodeJS.Tests
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        private HttpNodeJSService CreateHttpNodeService(StringBuilder loggerStringBuilder = null)
+        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = null)
         {
             var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
@@ -415,9 +417,9 @@ namespace Jering.Javascript.NodeJS.Tests
                 }
             });
 
-            if (Debugger.IsAttached)
+            if (Debugger.IsAttached && _debugNodeJS)
             {
-                services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk");
+                services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk"); // An easy way to step through NodeJS code is to use Chrome. Consider option 1 from this list https://nodejs.org/en/docs/guides/debugging-getting-started/#chrome-devtools-55.
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
             }
 
