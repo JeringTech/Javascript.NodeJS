@@ -3,15 +3,19 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.2...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...HEAD)
 
-## [4.1.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.1...4.1.2) - Jan 27, 2018
+## [4.2.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.2...4.2.2) - Apr 10, 2019
+### Changes
+- Bumped several dependencies. ([3a97203](https://github.com/JeringTech/Javascript.NodeJS/commit/3a97203fd25dc232202ff13d19a268df0f5e1a3f))
+
+## [4.1.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.1...4.1.2) - Jan 27, 2019
 ### Changes
 - Simplified NuGet package description. ([219a45c](https://github.com/JeringTech/Javascript.NodeJS/commit/219a45cf04943696afd2094e5866452dd4da7fe7))
 ### Fixes
 - Fixed a `StaticNodeJSService` multi-threading bug. ([028173c](https://github.com/JeringTech/Javascript.NodeJS/commit/028173c26735471fa2158f513f4afbe2c19089d4))
 
-## [4.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...4.1.1) - Jan 19, 2018
+## [4.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.0...4.1.1) - Jan 19, 2019
 ### Changes
 - Bumped `Newtonsoft.Json` to `12.0.1`.
 ### Fixes
