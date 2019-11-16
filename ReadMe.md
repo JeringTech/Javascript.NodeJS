@@ -67,7 +67,8 @@ Assert.Equal(8, result);
 - .NET Framework 4.6.1
  
 ## Prerequisites
-[NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable.
+[NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable. This library has been
+tested with NodeJS 10.5.2 - 12.13.0.
 
 ## Installation
 Using Package Manager:
@@ -726,14 +727,25 @@ only supports invoking javascript from a file):
 <tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr>
 </thead>
 <tbody>
-<tr><td>INodeJSService_InvokeFromFile</td><td>0.1148 ms</td><td>0.001062 ms</td><td>0.0009932 ms</td><td>2.1973</td><td>3.36 KB</td>
-</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1084 ms</td><td>0.002043 ms</td><td>0.0020064 ms</td><td>2.3193</td><td>3.28 KB</td>
-</tr><tr><td>INodeServices</td><td>0.1326 ms</td><td>0.001228 ms</td><td>0.0011483 ms</td><td>1.9531</td><td>4.14 KB</td></tr>
+<tr><td>INodeJSService_InvokeFromFile</td><td>0.1036 ms</td><td>0.076 ms</td><td>0.068 ms</td><td>2.9297</td><td>11.99 KB</td>
+</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1005 ms</td><td>0.037 ms</td><td>0.034 ms</td><td>2.9297</td><td>11.84 KB</td>
+</tr><tr><td>INodeServices</td><td>0.1161 ms</td><td>0.134 ms</td><td>0.112 ms</td><td>2.4414</td><td>10.37 KB</td></tr>
 </tbody>
 </table>
 </body>
 </html>
 
+System:
+```
+Jering.Javascript.NodeJS 4.3.0
+Microsoft.AspNetCore.NodeServices 3.0.0
+NodeJS v12.13.0
+BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.0.100
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+```
 
 The [benchmarks](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/Benchmarks.cs).
 
