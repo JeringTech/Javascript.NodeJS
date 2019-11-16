@@ -21,14 +21,15 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_ThrowsArgumentExceptionIfProcessHasNotBeenStarted()
         {
             // Arrange
-            var dummyProcess = new Process();
-
-            // Act and assert
-            ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
-            Assert.IsType<InvalidOperationException>(result.InnerException);
-            Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
-                result.Message,
-                ignoreLineEndingDifferences: true);
+            using (var dummyProcess = new Process())
+            {
+                // Act and assert
+                ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
+                Assert.IsType<InvalidOperationException>(result.InnerException);
+                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
+                    result.Message,
+                    ignoreLineEndingDifferences: true);
+            }
         }
 
         [Fact]

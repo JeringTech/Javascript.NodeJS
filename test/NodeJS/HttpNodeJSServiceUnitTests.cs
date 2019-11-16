@@ -33,15 +33,16 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object))
+            {
+                // Act
+                (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
-            // Act
-            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            Assert.False(success);
-            Assert.Null(value);
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.False(success);
+                Assert.Null(value);
+            }
         }
 
         [Fact]
@@ -61,14 +62,15 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.Deserialize<InvocationError>(It.IsAny<JsonTextReader>())).Returns(dummyInvocationError);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
-                jsonService: mockJsonService.Object);
-
-            // Act and assert
-            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
-            _mockRepository.VerifyAll();
-            Assert.Equal(dummyInvocationError.ErrorMessage + Environment.NewLine + dummyInvocationError.ErrorStack, result.Message, ignoreLineEndingDifferences: true);
+                jsonService: mockJsonService.Object))
+            {
+                // Act and assert
+                InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
+                _mockRepository.VerifyAll();
+                Assert.Equal(dummyInvocationError.ErrorMessage + Environment.NewLine + dummyInvocationError.ErrorStack, result.Message, ignoreLineEndingDifferences: true);
+            }
         }
 
         [Fact]
@@ -85,16 +87,17 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
-                httpClientService: mockHttpClientService.Object);
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+                httpClientService: mockHttpClientService.Object))
+            {
+                // Act
+                (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
-            // Act
-            (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            Assert.True(success);
-            Assert.NotNull(value);
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.True(success);
+                Assert.NotNull(value);
+            }
         }
 
         [Fact]
@@ -113,16 +116,17 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
-                httpClientService: mockHttpClientService.Object);
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+                httpClientService: mockHttpClientService.Object))
+            {
+                // Act
+                (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
-            // Act
-            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            Assert.True(success);
-            Assert.Equal(dummyValue, value);
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.True(success);
+                Assert.Equal(dummyValue, value);
+            }
         }
 
         [Fact]
@@ -142,17 +146,18 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyObject = new DummyClass();
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.Deserialize<DummyClass>(It.IsAny<JsonTextReader>())).Returns(dummyObject);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
-                jsonService: mockJsonService.Object);
+                jsonService: mockJsonService.Object))
+            {
+                // Act
+                (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
-            // Act
-            (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            Assert.True(success);
-            Assert.Same(dummyObject, value);
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.True(success);
+                Assert.Same(dummyObject, value);
+            }
         }
 
         [Fact]
@@ -170,14 +175,15 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object))
+            {
+                // Act and assert
+                InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
 
-            // Act and assert
-            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            Assert.Equal(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, dummyHttpStatusCode), result.Message);
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.Equal(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, dummyHttpStatusCode), result.Message);
+            }
         }
 
         [Theory]
@@ -186,13 +192,14 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
+            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService())
+            {
+                // Act
+                testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
-            // Act
-            testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
-
-            // Assert
-            Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
+                // Assert
+                Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
+            }
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()

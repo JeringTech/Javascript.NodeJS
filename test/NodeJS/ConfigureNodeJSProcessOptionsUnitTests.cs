@@ -36,9 +36,9 @@ namespace Jering.Javascript.NodeJS.Tests
 
         [Theory]
         [MemberData(nameof(Configure_ConfiguresOptionsUsingHostingEnvironmentState_Data))]
-        public void Configure_ConfiguresOptionsUsingHostingEnvironmentState(SerializableWrapper<Dictionary<string, string>> dummyExistingEnvironmentVariablesWrapper,
+        public void Configure_ConfiguresOptionsUsingHostingEnvironmentState(Dictionary<string, string> dummyExistingEnvironmentVariables,
             string dummyEnvironmentName,
-            SerializableWrapper<Dictionary<string, string>> expectedEnvironmentVariablesWrapper)
+            Dictionary<string, string> expectedEnvironmentVariables)
         {
             // Arrange
             const string dummyContentRootPath = "dummyContentRootPath";
@@ -51,7 +51,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
             mockServiceScopeFactory.Setup(s => s.CreateScope()).Returns(mockServiceScope.Object);
-            var dummyOptions = new NodeJSProcessOptions { ProjectPath = dummyContentRootPath, EnvironmentVariables = dummyExistingEnvironmentVariablesWrapper?.Value };
+            var dummyOptions = new NodeJSProcessOptions { ProjectPath = dummyContentRootPath, EnvironmentVariables = dummyExistingEnvironmentVariables };
             ConfigureNodeJSProcessOptions testSubject = CreateConfigureNodeJSProcessOptions(mockServiceScopeFactory.Object);
 
             // Act
@@ -60,7 +60,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             _mockRepository.VerifyAll();
             Assert.Equal(dummyContentRootPath, dummyOptions.ProjectPath);
-            Assert.Equal(expectedEnvironmentVariablesWrapper.Value, dummyOptions.EnvironmentVariables);
+            Assert.Equal(expectedEnvironmentVariables, dummyOptions.EnvironmentVariables);
         }
 
         public static IEnumerable<object[]> Configure_ConfiguresOptionsUsingHostingEnvironmentState_Data()
@@ -77,48 +77,38 @@ namespace Jering.Javascript.NodeJS.Tests
                 new object[]{
                     null,
                     EnvironmentName.Development,
-                    new SerializableWrapper<Dictionary<string, string>>(
-                        new Dictionary<string, string>
-                        {
-                            { expectedNodeEnvVarName, expectedDevelopmentNodeEnvValue }
-                        }
-                    )
+                    new Dictionary<string, string>
+                    {
+                        { expectedNodeEnvVarName, expectedDevelopmentNodeEnvValue }
+                    }
                 },
                 // Sets NODE_ENV to production if EnvironmentName is Production
                 new object[]{
                     null,
                     EnvironmentName.Production,
-                    new SerializableWrapper<Dictionary<string, string>>(
-                        new Dictionary<string, string>
-                        {
-                            { expectedNodeEnvVarName, expectedProductionNodeEnvValue }
-                        }
-                    )
+                    new Dictionary<string, string>
+                    {
+                        { expectedNodeEnvVarName, expectedProductionNodeEnvValue }
+                    }
                 },
                 // Defaults to "production"
                 new object[]{
                     null,
                     EnvironmentName.Staging,
-                    new SerializableWrapper<Dictionary<string, string>>(
-                        new Dictionary<string, string>
-                        {
-                            { expectedNodeEnvVarName, expectedProductionNodeEnvValue }
-                        }
-                    )
+                    new Dictionary<string, string>
+                    {
+                        { expectedNodeEnvVarName, expectedProductionNodeEnvValue }
+                    }
                 },
                 // Keeps existing environment variables
                 new object[]{
-                    new SerializableWrapper<Dictionary<string, string>>(
-                        new Dictionary<string, string> { { dummyEnvVarName, dummyEnvVarValue } }
-                    ),
+                    new Dictionary<string, string> { { dummyEnvVarName, dummyEnvVarValue } },
                     EnvironmentName.Development,
-                    new SerializableWrapper<Dictionary<string, string>>(
                     new Dictionary<string, string>
-                        {
-                            { dummyEnvVarName, dummyEnvVarValue },
-                            { expectedNodeEnvVarName, expectedDevelopmentNodeEnvValue }
-                        }
-                    )
+                    {
+                        { dummyEnvVarName, dummyEnvVarValue },
+                        { expectedNodeEnvVarName, expectedDevelopmentNodeEnvValue }
+                    }
                 }
             };
         }
