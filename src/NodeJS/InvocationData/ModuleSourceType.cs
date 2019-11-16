@@ -1,4 +1,4 @@
-﻿namespace Jering.Javascript.NodeJS
+namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// Source type of the module to be invoked in NodeJS.
