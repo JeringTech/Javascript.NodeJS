@@ -67,7 +67,7 @@ const server = http.createServer((req, res) => {
 
                     // Not cached
                     if (exports == null) {
-                        let module = new Module(null, null);
+                        let module = new Module('', null);
                         module._compile(invocationRequest.moduleSource, 'anonymous');
 
                         if (invocationRequest.newCacheIdentifier != null) {

@@ -4,7 +4,7 @@
         "build": "echo. && echo Yarn Install: && yarn install && echo. && echo Webpack: && webpack"
     },
     "dependencies": {
-        "@types/node": "^10.5.2",
+        "@types/node": "^12.12.8",
         "ts-loader": "^4.4.2",
         "typescript": "^2.9.2",
         "webpack": "^4.16.0",
