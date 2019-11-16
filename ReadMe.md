@@ -436,7 +436,7 @@ These are the steps for debugging javascript invoked using INodeJSService:
 1. Create an INodeJSService using the example options in the previous section (`NodeJSProcessOptions.NodeAndV8Options` = `--inspect-brk` and `OutOfProcessNodeJSServiceOptions.TimeoutMS` = `-1`).
 2. Add [`debugger`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger) statements to your javascript module.
 3. Call a [javascript invoking method](#api). 
-4. Navigate to `chrome://inspect/#device` in Chrome.
+4. Navigate to `chrome://inspect/` in Chrome.
 5. Click "Open dedicated DevTools for Node".
 6. Click continue to advance to your `debugger` statements.
 
@@ -749,8 +749,8 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 
 The [benchmarks](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/Benchmarks.cs).
 
-## Building
-This project can be built using Visual Studio 2017.
+## Building and Testing
+You can build and test this project in Visual Studio 2017/2019.
 
 ## Related Jering Projects
 #### Projects Using this Library

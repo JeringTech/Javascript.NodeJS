@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Buffers;
 using System.Globalization;
 using System.IO;

@@ -1,4 +1,4 @@
-﻿
+
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>

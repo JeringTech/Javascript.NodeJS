@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Diagnosers;
 using Microsoft.AspNetCore.NodeServices;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace Jering.Javascript.NodeJS.Performance
         private const string DUMMY_MODULE_IDENTIFIER = "dummyModuleIdentifier";
         private int _counter;
         private INodeJSService _nodeJSService;
+        [Obsolete]
         private INodeServices _nodeServices;
 
         [GlobalSetup(Target = nameof(INodeJSService_InvokeFromFile))]
@@ -55,6 +57,7 @@ namespace Jering.Javascript.NodeJS.Performance
             return result;
         }
 
+        [Obsolete]
         [GlobalSetup(Target = nameof(INodeServices))]
         public void INodeServices_Setup()
         {
@@ -69,6 +72,7 @@ namespace Jering.Javascript.NodeJS.Performance
             _counter = 0;
         }
 
+        [Obsolete]
         [Benchmark]
         public async Task<DummyResult> INodeServices()
         {
