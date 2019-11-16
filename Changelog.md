@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.3.0...HEAD)
+
+## [4.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...4.3.0) - Nov 16, 2019
+### Fixes
+- Fixed `TypeError [ERR_INVALID_ARG_TYPE]: The “path” argument must be of type string` error when using newer NodeJS versions. ([6cd3b3f](https://github.com/JeringTech/Javascript.NodeJS/commit/6cd3b3f088321e02d51450aebe43a7b55ce3922d))
+### Changes
+- Bumped several dependencies. ([f9e0dfc](https://github.com/JeringTech/Javascript.NodeJS/commit/f9e0dfcc8b0d6d808c52e8a550d85f81d53ed194))
 
 ## [4.2.2](https://github.com/JeringTech/Javascript.NodeJS/compare/4.1.2...4.2.2) - Apr 10, 2019
 ### Changes
