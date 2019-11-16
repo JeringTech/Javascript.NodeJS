@@ -64,13 +64,14 @@ namespace Jering.Javascript.NodeJS.Tests
 
         [Theory]
         [MemberData(nameof(Constructor_SetsContentTypeDependingOnModuleSourceType_Data))]
-        public void Constructor_SetsContentTypeDependingOnModuleSourceType(SerializableWrapper<InvocationRequest> dummyInvocationRequestWrapper, string expectedMediaType)
+        public void Constructor_SetsContentTypeDependingOnModuleSourceType(InvocationRequest dummyInvocationRequest, string expectedMediaType)
         {
             // Act
-            var result = new InvocationContent(null, dummyInvocationRequestWrapper.Value);
+            var result = new InvocationContent(null, dummyInvocationRequest);
 
             // Assert
             Assert.Equal(expectedMediaType, result.Headers.ContentType?.MediaType);
+
         }
 
         public static IEnumerable<object[]> Constructor_SetsContentTypeDependingOnModuleSourceType_Data()
