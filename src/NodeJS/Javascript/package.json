@@ -1,7 +1,7 @@
 {
     "private": true,
     "scripts": {
-        "build": "echo. && echo Yarn Install: && yarn install && echo. && echo Webpack: && webpack"
+        "build": "echo ------ Yarn Install ------ && yarn install && echo ------ Webpack Compile ------ && webpack"
     },
     "dependencies": {
         "@types/node": "^12.12.8",
