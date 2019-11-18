@@ -342,6 +342,37 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = _timeoutMS)]
+        public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedAsyncMethodThrowsError()
+        {
+            // Arrange
+            const string dummyErrorString = "error";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
+                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = async (errorString) => {throw new Error(errorString);}", args: new[] { dummyErrorString })).
+                ConfigureAwait(false);
+
+            // Assert
+            Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
+        }
+
+        [Fact(Timeout = _timeoutMS)]
+        public async void AllInvokeMethods_InvokeAsyncJavascriptMethods()
+        {
+            // Arrange
+            const string dummyResultString = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromStringAsync<DummyResult>("module.exports = async (resultString) => {return {result: resultString};}", args: new[] { dummyResultString }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyResultString, result.Result);
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsProvided()
         {
             // Arrange
