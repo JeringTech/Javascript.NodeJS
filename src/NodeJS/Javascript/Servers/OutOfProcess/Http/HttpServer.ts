@@ -28,7 +28,7 @@ const server = http.createServer((req, res) => {
     let bodyChunks = [];
     req.
         on('data', chunk => bodyChunks.push(chunk)).
-        on('end', () => {
+        on('end', async () => {
             try {
                 // Create InvocationRequest
                 let body: string = Buffer.concat(bodyChunks).toString();
@@ -40,7 +40,6 @@ const server = http.createServer((req, res) => {
                 } else {
                     invocationRequest = JSON.parse(body);
                 }
-
 
                 // Get exports of module specified by InvocationRequest.moduleSource
                 let exports: any;
@@ -143,10 +142,14 @@ const server = http.createServer((req, res) => {
                 }
 
                 // Invoke function 
-                let args: object[] = [callback];
-                functionToInvoke.apply(null, args.concat(invocationRequest.args));
-            } catch (synchronousError) {
-                respondWithError(res, synchronousError);
+                if (functionToInvoke.constructor.name === "AsyncFunction") {
+                    callback(null, await functionToInvoke.apply(null, invocationRequest.args));
+                } else {
+                    let args: object[] = [callback];
+                    functionToInvoke.apply(null, args.concat(invocationRequest.args));
+                }
+            } catch (error) {
+                respondWithError(res, error);
             }
         });
 }).listen(parseInt(args.port), 'localhost', function () {

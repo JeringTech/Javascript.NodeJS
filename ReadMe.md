@@ -27,7 +27,7 @@ Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://no
 
 This library is built to be flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
 
-Here is an example of invoking javascript using the static API:
+Static API example:
 
 ```csharp
 string javascriptModule = @"
@@ -43,7 +43,7 @@ int result = await StaticNodeJSService.InvokeFromStringAsync<int>(javascriptModu
 Assert.Equal(8, result);
 ```
 
-And here is an example of invoking javascript using the DI based API:
+DI based API example:
 
 ```csharp
 string javascriptModule = @"
@@ -131,8 +131,10 @@ The following section on using `INodeJSService` applies to usage of `StaticNodeJ
 
 ### Using INodeJSService
 #### Basics
-To invoke javascript, we'll first need to create a NodeJS module that exports a function or an object containing functions. These functions must take
-a callback as their first argument, and they must call the callback.
+To invoke javascript, we'll first need to create a [NodeJS module](#nodejs-modules) that exports a function or an object containing functions. Exported functions can be of two forms:
+
+##### Function With Callback Parameter
+These functions must take a callback as their first argument, and they must call the callback.
 The callback takes two optional arguments:
 - The first argument must be an error or an error message. It must be an instance of type [`Error`](https://nodejs.org/api/errors.html#errors_class_error) or a `string`.
 - The second argument is the result. It must be an instance of a JSON-serializable type, a `string`, or a [`stream.Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable). 
@@ -143,17 +145,18 @@ if you'd like to learn more about how asynchrony works in NodeJS).
 
 This is a module that exports a valid function:
 ```javascript
-module.exports = (callback) => {
-    ... // Do something
+module.exports = (callback, arg1, arg2, arg3) => {
+    ... // Do something with args
 
     callback(null, result);
 }
 ```
+
 And this is a module that exports an object containing valid functions:
 ```javascript
 module.exports = {
-    doSomething: (callback) => {
-        ... // Do something
+    doSomething: (callback, arg1) => {
+        ... // Do something arg
 
         callback(null, result);
     },
@@ -162,6 +165,45 @@ module.exports = {
 
         callback(null, result);
     }
+}
+```
+
+##### Async Function
+Async functions are really just syntactic sugar for functions with callback parameters.
+[Callbacks, Promises and Async/Await](https://medium.com/front-end-weekly/callbacks-promises-and-async-await-ad4756e01d90) provides a nice summary on how callbacks, promises and async/await work.
+
+This is a module that exports a valid function:
+```javascript
+module.exports = async (arg1, arg2) => {
+    ... // Do something with args
+
+    return result;
+}
+```
+
+And this is a module that exports an object containing valid functions:
+```javascript
+module.exports = {
+    doSomething: async (arg1, arg2, arg3, arg4) => {
+        ... // Do something with args
+
+        // async functions can explicitly return promises
+        return new Promise((resolve, reject) => {
+            resolve(result);
+        });
+    },
+    doSomethingElse: async (arg1) => {
+        ... // Do something with arg
+            
+        return result;
+    }
+}
+```
+
+If an error is thrown it is caught and handled by the caller (error message is sent back to the calling .Net process):
+```javascript
+module.exports = async () => {
+    throw new Error('error message');
 }
 ```
 
