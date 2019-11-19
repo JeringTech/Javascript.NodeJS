@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.3.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.0...HEAD)
+
+## [4.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.3.0...4.4.0) - Nov 19, 2019
+### Changes
+- Async Javascript methods are now supported, refer to [ReadMe](https://github.com/JeringTech/Javascript.NodeJS/tree/support-async-javascript-entry-methods#async-function) for more information. ([87bcacf](https://github.com/JeringTech/Javascript.NodeJS/commit/87bcacf1c4b6c170ea211ede162866055d8cd3be))
 
 ## [4.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...4.3.0) - Nov 16, 2019
 ### Fixes
