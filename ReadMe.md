@@ -156,7 +156,7 @@ And this is a module that exports an object containing valid functions:
 ```javascript
 module.exports = {
     doSomething: (callback, arg1) => {
-        ... // Do something arg
+        ... // Do something with arg
 
         callback(null, result);
     },
