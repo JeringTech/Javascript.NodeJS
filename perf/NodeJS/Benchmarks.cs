@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace Jering.Javascript.NodeJS.Performance
 {
     [MemoryDiagnoser]
+    [InProcess()]
     public class Benchmarks
     {
         private ServiceProvider _serviceProvider;
@@ -24,7 +25,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.."));
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../.."));
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>(); // Default INodeJSService is HttpNodeJSService
             _counter = 0;

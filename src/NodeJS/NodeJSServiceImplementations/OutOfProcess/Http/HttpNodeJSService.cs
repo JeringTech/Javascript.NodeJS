@@ -1,7 +1,6 @@
 using Jering.IocServices.System.Net.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
@@ -86,34 +85,30 @@ namespace Jering.Javascript.NodeJS
                     if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
                     {
                         using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                        using (var streamReader = new StreamReader(stream))
-                        using (var jsonTextReader = new JsonTextReader(streamReader))
                         {
-                            InvocationError invocationError = _jsonService.Deserialize<InvocationError>(jsonTextReader);
+                            InvocationError invocationError = await _jsonService.DeserializeAsync<InvocationError>(stream, cancellationToken);
                             throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
                         }
                     }
 
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
-                        Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-
                         if (typeof(T) == typeof(Stream))
                         {
+                            Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
                             return (true, (T)(object)stream);
                         }
 
-                        using (var streamReader = new StreamReader(stream))
+                        if (typeof(T) == typeof(string))
                         {
-                            if (typeof(T) == typeof(string))
-                            {
-                                return (true, (T)(object)await streamReader.ReadToEndAsync().ConfigureAwait(false));
-                            }
+                            string str = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            return (true, (T)(object)str);
+                        }
 
-                            using (var jsonTextReader = new JsonTextReader(streamReader))
-                            {
-                                return (true, _jsonService.Deserialize<T>(jsonTextReader));
-                            }
+                        using (var contentStream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                        {
+                            var result = await _jsonService.DeserializeAsync<T>(contentStream, cancellationToken).ConfigureAwait(false);
+                            return (true, result);
                         }
                     }
                 }

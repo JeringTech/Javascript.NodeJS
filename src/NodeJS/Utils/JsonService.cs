@@ -1,5 +1,9 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -8,32 +12,25 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class JsonService : IJsonService
     {
-        private static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+        public static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            DefaultBufferSize = 64536,
+
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            IgnoreNullValues = true,
+
+            //PropertyNameCaseInsensitive = true
         };
 
-        private readonly JsonSerializer _jsonSerializer;
-
-        /// <summary>
-        /// Creates a <see cref="JsonService"/> instance.
-        /// </summary>
-        public JsonService()
+        public ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default)
         {
-            _jsonSerializer = JsonSerializer.Create(_jsonSerializerSettings);
+            return JsonSerializer.DeserializeAsync<T>(stream, jsonSerializerOptions, cancellationToken);
         }
 
-        /// <inheritdoc />
-        public void Serialize(JsonWriter jsonWriter, object value)
+        public async Task SerializeAsync(Stream stream, object value, CancellationToken cancellationToken = default)
         {
-            _jsonSerializer.Serialize(jsonWriter, value);
-        }
-
-        /// <inheritdoc />
-        public T Deserialize<T>(JsonReader jsonReader)
-        {
-            return _jsonSerializer.Deserialize<T>(jsonReader);
+            await JsonSerializer.SerializeAsync(stream, value, value.GetType(), jsonSerializerOptions, cancellationToken);
         }
     }
 }

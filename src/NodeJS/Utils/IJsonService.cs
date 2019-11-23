@@ -1,4 +1,6 @@
-using Newtonsoft.Json;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -12,15 +14,17 @@ namespace Jering.Javascript.NodeJS
         /// Deserializes the JSON structure contained by the specified <see cref="JsonReader"/> into an instance of the specified type.
         /// </summary>
         /// <typeparam name="T">The type of the object to deserialize.</typeparam>
-        /// <param name="jsonReader">The <see cref="JsonReader"/> containing the object.</param>
+        /// <param name="stream">The <see cref="Stream"/> containing the object.</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>The instance of T being deserialized.</returns>
-        T Deserialize<T>(JsonReader jsonReader);
+        ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Serializes the specified System.Object and writes the JSON structure using the specified <see cref="JsonWriter"/>.
         /// </summary>
         /// <param name="jsonWriter">The <see cref="JsonWriter"/> used to write the JSON structure.</param>
         /// <param name="value">The object to serialize.</param>
-        void Serialize(JsonWriter jsonWriter, object value);
+        /// <param name="cancellationToken">Cancellation Token</param>
+        Task SerializeAsync(Stream stream, object value, CancellationToken cancellationToken = default);
     }
 }

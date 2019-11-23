@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -18,8 +18,8 @@ namespace Jering.Javascript.NodeJS
         /// <param name="moduleSource"><para>The source of the module to be invoked.</para>
         /// <para>The source can be the path of the module relative to <see cref="NodeJSProcessOptions.ProjectPath"/>,
         /// the module as a string, or the cache identifier of the module.</para>
-        /// <para> If <paramref name="moduleSourceType"/> is not <see cref="ModuleSourceType.Stream"/>, this parameter must be specified.
-        /// Additionally, if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/>, this parameter must not be an empty string
+        /// <para> If <paramref name="moduleSourceType"/> is not <see cref="Stream"/>, this parameter must be specified.
+        /// Additionally, if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or <see cref="string"/>, this parameter must not be an empty string
         /// or whitespace.</para>
         /// </param>
         /// <param name="newCacheIdentifier"><para>The new cache identifier for the module to be invoked.</para>
@@ -29,10 +29,10 @@ namespace Jering.Javascript.NodeJS
         /// If it is specified, it must not be an empty string or whitespace.</para></param>
         /// <param name="args">The arguments for the function to invoke.</param>
         /// <param name="moduleStreamSource">The module as a <see cref="Stream"/>.</param>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Stream"/> but 
+        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="Stream"/> but 
         /// <paramref name="moduleStreamSource"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or 
-        /// <see cref="ModuleSourceType.String"/> but <paramref name="moduleSource"/> is null, whitespace or an empty string.</exception>
+        /// <see cref="string"/> but <paramref name="moduleSource"/> is null, whitespace or an empty string.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Cache"/> but
         /// <paramref name="moduleSource"/> is null.</exception>
         public InvocationRequest(ModuleSourceType moduleSourceType,

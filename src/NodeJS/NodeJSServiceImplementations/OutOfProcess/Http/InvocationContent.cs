@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System.Buffers;
 using System.Globalization;
 using System.IO;
@@ -6,10 +5,13 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
+
     /// <summary>
     /// <para>An implementation of <see cref="HttpContent"/> that serializes an <see cref="InvocationRequest"/> to a <see cref="Stream"/>.</para>
     /// <para>Serializion is handled differently if <see cref="InvocationRequest.ModuleStreamSource"/> is specified since a stream cannot be efficiently serialized to JSON. 
@@ -18,6 +20,15 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class InvocationContent : HttpContent
     {
+        private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            DefaultBufferSize = 64536,
+
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            IgnoreNullValues = true,
+        };
+
         //private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         // Arbitrary boundary
@@ -51,38 +62,7 @@ namespace Jering.Javascript.NodeJS
         /// <returns>The task object representing the asynchronous operation.</returns>
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
-            char[] chars = null;
-            byte[] bytes = null;
-            try
-            {
-                // TODO can be better, the following types can make sizeable allocations
-                var stringBuilder = new StringBuilder(256);
-                var stringWriter = new StringWriter(stringBuilder, CultureInfo.InvariantCulture);
-                var jsonTextWriter = new JsonTextWriter(stringWriter);
-                _jsonService.Serialize(jsonTextWriter, _invocationRequest);
-
-                int numChars = stringBuilder.Length;
-                chars = ArrayPool<char>.Shared.Rent(numChars);
-                stringBuilder.CopyTo(0, chars, 0, numChars);
-
-                int numBytes = Encoding.UTF8.GetByteCount(chars, 0, numChars);
-                bytes = ArrayPool<byte>.Shared.Rent(numBytes);
-                Encoding.UTF8.GetBytes(chars, 0, numChars, bytes, 0);
-
-                await stream.WriteAsync(bytes, 0, numBytes).ConfigureAwait(false);
-            }
-            finally
-            {
-                if (bytes != null)
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
-
-                if (chars != null)
-                {
-                    ArrayPool<char>.Shared.Return(chars);
-                }
-            }
+            await _jsonService.SerializeAsync(stream, _invocationRequest).ConfigureAwait(false);
 
             // TODO Stream writer allocates both a char[] and a byte[] for buffering, it is slower than just serializing to string and writing the string to the stream
             // (at least for small-average size payloads). Support for ArrayPool buffers is coming - https://github.com/dotnet/corefx/issues/23874, might need to target

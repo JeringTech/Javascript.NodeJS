@@ -17,14 +17,19 @@ namespace Jering.Javascript.NodeJS
             ErrorStack = errorStack;
         }
 
+        public InvocationError()
+        {
+            
+        }
+
         /// <summary>
         /// A description of the error.
         /// </summary>
-        public string ErrorMessage { get; }
+        public string ErrorMessage { get; set; }
 
         /// <summary>
         /// The error's NodeJS stack trace.
         /// </summary>
-        public string ErrorStack { get; }
+        public string ErrorStack { get; set; }
     }
 }
