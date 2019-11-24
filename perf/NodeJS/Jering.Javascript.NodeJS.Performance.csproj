@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include=".\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
+        <Content Include=".\dummyModule.js" copyToOutputDirectory="Always" />
     </ItemGroup>
 
     <ItemGroup>

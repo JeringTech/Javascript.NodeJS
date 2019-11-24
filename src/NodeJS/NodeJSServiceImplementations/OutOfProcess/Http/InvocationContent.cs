@@ -20,15 +20,6 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class InvocationContent : HttpContent
     {
-        private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            DefaultBufferSize = 64536,
-
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            IgnoreNullValues = true,
-        };
-
         //private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         // Arbitrary boundary

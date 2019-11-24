@@ -12,15 +12,14 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class JsonService : IJsonService
     {
-        public static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            DefaultBufferSize = 64536,
 
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             IgnoreNullValues = true,
 
-            //PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true
         };
 
         public ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default)
@@ -28,9 +27,9 @@ namespace Jering.Javascript.NodeJS
             return JsonSerializer.DeserializeAsync<T>(stream, jsonSerializerOptions, cancellationToken);
         }
 
-        public async Task SerializeAsync(Stream stream, object value, CancellationToken cancellationToken = default)
+        public Task SerializeAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
-            await JsonSerializer.SerializeAsync(stream, value, value.GetType(), jsonSerializerOptions, cancellationToken);
+            return JsonSerializer.SerializeAsync(stream, value, jsonSerializerOptions, cancellationToken);
         }
     }
 }

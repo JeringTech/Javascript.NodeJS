@@ -25,6 +25,6 @@ namespace Jering.Javascript.NodeJS
         /// <param name="jsonWriter">The <see cref="JsonWriter"/> used to write the JSON structure.</param>
         /// <param name="value">The object to serialize.</param>
         /// <param name="cancellationToken">Cancellation Token</param>
-        Task SerializeAsync(Stream stream, object value, CancellationToken cancellationToken = default);
+        Task SerializeAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default);
     }
 }
