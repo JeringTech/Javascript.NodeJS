@@ -1,4 +1,6 @@
-using Newtonsoft.Json;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -9,18 +11,19 @@ namespace Jering.Javascript.NodeJS
     public interface IJsonService
     {
         /// <summary>
-        /// Deserializes the JSON structure contained by the specified <see cref="JsonReader"/> into an instance of the specified type.
+        /// Deserializes the JSON contained by <paramref name="stream"/> into a <typeparamref name="T"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the object to deserialize.</typeparam>
-        /// <param name="jsonReader">The <see cref="JsonReader"/> containing the object.</param>
-        /// <returns>The instance of T being deserialized.</returns>
-        T Deserialize<T>(JsonReader jsonReader);
+        /// <typeparam name="T">The type of the object to create.</typeparam>
+        /// <param name="stream">The <see cref="Stream"/> containing the JSON to deserialize.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel deserialization.</param>
+        ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Serializes the specified System.Object and writes the JSON structure using the specified <see cref="JsonWriter"/>.
+        /// Serializes <paramref name="value"/> and writes the generated JSON to <paramref name="stream"/>.
         /// </summary>
-        /// <param name="jsonWriter">The <see cref="JsonWriter"/> used to write the JSON structure.</param>
+        /// <param name="stream">The <see cref="Stream"/> to write generated JSON to.</param>
         /// <param name="value">The object to serialize.</param>
-        void Serialize(JsonWriter jsonWriter, object value);
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel serialization.</param>
+        Task SerializeAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default);
     }
 }

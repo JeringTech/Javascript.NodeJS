@@ -416,8 +416,8 @@ namespace Jering.Javascript.NodeJS.Tests
             // Note that console.log just writes to stdout under the hood -https://nodejs.org/docs/latest-v8.x/api/console.html#console_console_log_data_args.
             // There flakiness causes this test to fail randomly. The whole stdout flushing issue seems like a persistent Node.js problem - https://github.com/nodejs/node/issues/6456. 
             // Several attempts have been made to flush/write to stdout synchronously in the js above, to no avail.
-            // The following Thread.Sleep(500) works almost all the time, but isn't a clean solution.
-            Thread.Sleep(500);
+            // The following Thread.Sleep(1000) works almost all the time, but isn't a clean solution.
+            Thread.Sleep(1000);
             ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();
 
