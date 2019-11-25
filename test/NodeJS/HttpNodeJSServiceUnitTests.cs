@@ -60,7 +60,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 ReturnsAsync(dummyHttpResponseMessage);
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
-            mockJsonService.Setup(j => j.DeserializeAsync<InvocationError>(It.IsAny<Stream>(), It.IsAny<CancellationToken>())).Returns(new ValueTask<InvocationError>(dummyInvocationError));
+            mockJsonService.Setup(j => j.DeserializeAsync<InvocationError>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyInvocationError);
             using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
                 jsonService: mockJsonService.Object))
@@ -144,7 +144,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 ReturnsAsync(dummyHttpResponseMessage);
             var dummyObject = new DummyClass();
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
-            mockJsonService.Setup(j => j.DeserializeAsync<DummyClass>(It.IsAny<Stream>(), It.IsAny<CancellationToken>())).Returns(new ValueTask<DummyClass>(dummyObject));
+            mockJsonService.Setup(j => j.DeserializeAsync<DummyClass>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyObject);
             using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
                 jsonService: mockJsonService.Object))
