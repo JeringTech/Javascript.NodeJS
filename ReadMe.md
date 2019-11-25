@@ -660,6 +660,7 @@ You can build and test this project in Visual Studio 2017/2019.
 ## Projects Using this Library
 [Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeringTech/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
 [Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeringTech/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
+[NodeReact.NET](https://github.com/DaniilSokolyuk/NodeReact.NET) - Library to render React library components on the server-side with C# as well as on the client.
 
 ## Related Concepts
 
@@ -803,8 +804,9 @@ can be kept private.
 ## Contributing
 Contributions are welcome!
 
-### Contributers
+### Contributors
 - [JeremyTCD](https://github.com/JeremyTCD)
+- [Daniil Sokolyuk](https://github.com/DaniilSokolyuk)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
