@@ -13,6 +13,7 @@ jobs:
   parameters:
     nugetUnreleasedPrereleasePushEndpoint: "https://www.myget.org/F/jering/api/v3/index.json"
     outOfProcessBuildDependencies: ["nodejs"]
+    codecovKey: "e5de9f48-fb06-43c6-8368-44de5cf7e5d4"
 - template: templates/docs/main.yml@templates
   parameters:
     nugetRestoreEndpoints: "https://pkgs.dev.azure.com/JeremyTCD/_packaging/Main/nuget/v2"

@@ -280,7 +280,8 @@ namespace Jering.Javascript.NodeJS
 
         internal void OutputDataReceivedHandler(object _, DataReceivedEventArgs evt, EventWaitHandle waitHandle)
         {
-            if (evt.Data == null)
+            string data = evt.Data;
+            if (data == null)
             {
                 return;
             }
@@ -296,7 +297,7 @@ namespace Jering.Javascript.NodeJS
 
                 waitHandle.Set();
             }
-            else if (TryCreateMessage(_outputDataStringBuilder, evt.Data, out string message))
+            else if (TryCreateMessage(_outputDataStringBuilder, data, out string message))
             {
                 // Process output is received line by line. The last line of a message ends with a \0 (null character),
                 // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
@@ -306,27 +307,35 @@ namespace Jering.Javascript.NodeJS
 
         internal void ErrorDataReceivedHandler(object sender, DataReceivedEventArgs evt)
         {
-            if (evt.Data == null)
+            string data = evt.Data;
+            if (data == null)
             {
                 return;
             }
 
-            if (TryCreateMessage(_errorDataStringBuilder, evt.Data, out string message))
+            if (TryCreateMessage(_errorDataStringBuilder, data, out string message))
             {
                 Logger.LogError(message);
             }
         }
 
+        // OutputDataReceivedHandler and ErrorDataReceivedHandler are called every time a newline character is read in the stdout and stderr streams respectively.
+        // The event data supplied to the callback is a string containing all the characters between the previous newline character and the most recent one.
+        // In other words, the stream is read line by line. The last line in each message ends with a null terminating character (see HttpServer.ts).
         internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
         {
-            // OutputDataReceived is called everytime a newline character is read. The event data supplied to the callback
-            // is a string containing all the characters between the previous newline character and the most recent one.
-            // In other words, the stream is read line by line. The last line in each message ends with a null terminating 
-            // character (see HttpServer).
-            if (data[data.Length - 1] != '\0')
+            message = null;
+            int dataLength = data.Length;
+
+            if (dataLength == 0) // Empty line
+            {
+                stringBuilder.AppendLine();
+                return false;
+            }
+
+            if (data[dataLength - 1] != '\0')
             {
                 stringBuilder.AppendLine(data);
-                message = null;
                 return false;
             }
 

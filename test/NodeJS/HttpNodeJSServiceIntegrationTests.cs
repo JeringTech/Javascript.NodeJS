@@ -389,20 +389,18 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
-        [Fact(Timeout = _timeoutMS)]
-        public async void AllInvokeMethods_ReceiveAndLogMessages()
+        [Theory(Timeout = _timeoutMS)]
+        [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStdoutOutput_Data))]
+        public async void AllInvokeMethods_ReceiveAndLogStdoutOutput(string dummyLogArgument, string expectedResult)
         {
             // Arrange
-            const string dummySinglelineString = "dummySingleLineString";
-            const string dummyMultilineString = "dummy\nMultiline\nString\n";
             var resultStringBuilder = new StringBuilder();
             HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
 
             // Act
             await testSubject.
                 InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
-    console.log('{dummySinglelineString}'); 
-    console.log(`{dummyMultilineString}`);
+    console.log({dummyLogArgument}); 
     callback();
 
     // Does not work
@@ -424,7 +422,66 @@ namespace Jering.Javascript.NodeJS.Tests
             string result = resultStringBuilder.ToString();
 
             // Assert
-            Assert.Equal($"{nameof(LogLevel.Information)}: {dummySinglelineString}\n{nameof(LogLevel.Information)}: {dummyMultilineString}", result, ignoreLineEndingDifferences: true);
+            Assert.Equal($"{nameof(LogLevel.Information)}: {expectedResult}\n", result, ignoreLineEndingDifferences: true);
+        }
+
+        public static IEnumerable<object[]> AllInvokeMethods_ReceiveAndLogStdoutOutput_Data()
+        {
+            return new object[][]
+            {
+                new object[] { "'dummySingleLineString'", "dummySingleLineString" },
+                new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
+                new object[] { "''", "" },
+                new object[] { "undefined", "undefined" },
+                new object[] { "null", "null" },
+                new object[] { "", "" },
+                new object[] { "{}", "{}" },
+                new object[] { "'a\\n\\nb'", "a\n\nb" }
+            };
+        }
+
+        [Theory(Timeout = _timeoutMS)]
+        [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStderrOutput_Data))]
+        public async void AllInvokeMethods_ReceiveAndLogStderrOutput(string dummyLogArgument, string expectedResult)
+        {
+            // Arrange
+            var resultStringBuilder = new StringBuilder();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
+
+            // Act
+            await testSubject.
+                InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
+    console.error({dummyLogArgument}); 
+    callback();
+}}").ConfigureAwait(false);
+            // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
+            //
+            // TODO On Linux and macOS, Node.js does not flush stderr completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
+            // Note that console.log just writes to stderr under the hood -https://nodejs.org/docs/latest-v8.x/api/console.html#console_console_log_data_args.
+            // There flakiness causes this test to fail randomly. The whole stderr flushing issue seems like a persistent Node.js problem - https://github.com/nodejs/node/issues/6456. 
+            // Several attempts have been made to flush/write to stderr synchronously in the js above, to no avail.
+            // The following Thread.Sleep(500) works almost all the time, but isn't a clean solution.
+            Thread.Sleep(500);
+            ((IDisposable)_serviceProvider).Dispose();
+            string result = resultStringBuilder.ToString();
+
+            // Assert
+            Assert.Equal($"{nameof(LogLevel.Error)}: {expectedResult}\n", result, ignoreLineEndingDifferences: true);
+        }
+
+        public static IEnumerable<object[]> AllInvokeMethods_ReceiveAndLogStderrOutput_Data()
+        {
+            return new object[][]
+            {
+                new object[] { "'dummySingleLineString'", "dummySingleLineString" },
+                new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
+                new object[] { "''", "" },
+                new object[] { "undefined", "undefined" },
+                new object[] { "null", "null" },
+                new object[] { "", "" },
+                new object[] { "{}", "{}" },
+                new object[] { "'a\\n\\nb'", "a\n\nb" }
+            };
         }
 
         /// <summary>

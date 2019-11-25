@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.1...HEAD)
+
+## [4.4.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.0...4.4.1) - Nov 25, 2019
+### Fixes
+- Fixed index out of bounds exception thrown when a Javascript log message contains an empty line. ([#55](https://github.com/JeringTech/Javascript.NodeJS/pull/55))
 
 ## [4.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.3.0...4.4.0) - Nov 19, 2019
 ### Changes
