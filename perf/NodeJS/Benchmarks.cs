@@ -23,7 +23,6 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => { });
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>(); // Default INodeJSService is HttpNodeJSService
             _counter = 0;
