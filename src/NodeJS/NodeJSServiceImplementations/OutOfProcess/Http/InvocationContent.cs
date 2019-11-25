@@ -1,17 +1,12 @@
-using System.Buffers;
-using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
-
     /// <summary>
     /// <para>An implementation of <see cref="HttpContent"/> that serializes an <see cref="InvocationRequest"/> to a <see cref="Stream"/>.</para>
     /// <para>Serializion is handled differently if <see cref="InvocationRequest.ModuleStreamSource"/> is specified since a stream cannot be efficiently serialized to JSON. 
@@ -20,8 +15,6 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class InvocationContent : HttpContent
     {
-        //private static readonly Encoding UTF8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-
         // Arbitrary boundary
         internal static readonly byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
 
@@ -54,15 +47,6 @@ namespace Jering.Javascript.NodeJS
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
             await _jsonService.SerializeAsync(stream, _invocationRequest).ConfigureAwait(false);
-
-            // TODO Stream writer allocates both a char[] and a byte[] for buffering, it is slower than just serializing to string and writing the string to the stream
-            // (at least for small-average size payloads). Support for ArrayPool buffers is coming - https://github.com/dotnet/corefx/issues/23874, might need to target
-            // netcoreapp2.1
-            // using (var streamWriter = new StreamWriter(stream, UTF8NoBOM, 256, true))
-            // using (var jsonWriter = new JsonTextWriter(streamWriter))
-            // {
-            //     _jsonService.Serialize(jsonWriter, _invocationRequest);
-            // };
 
             if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
