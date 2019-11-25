@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
 using Microsoft.AspNetCore.NodeServices;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -23,6 +24,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.."));
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>(); // Default INodeJSService is HttpNodeJSService
             _counter = 0;
@@ -62,7 +64,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var services = new ServiceCollection();
             services.AddNodeServices(options =>
             {
-                options.ProjectPath = Directory.GetCurrentDirectory();
+                options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../..");
                 options.WatchFileExtensions = null;
             });
             _serviceProvider = services.BuildServiceProvider();
