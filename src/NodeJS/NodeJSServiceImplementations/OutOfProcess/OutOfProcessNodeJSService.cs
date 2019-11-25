@@ -319,7 +319,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        // OutputDataReceivedHandler/ErrorDataReceivedHandler are called everytime a newline character is read in the stdout and stderr streams respectively.
+        // OutputDataReceivedHandler and ErrorDataReceivedHandler are called every time a newline character is read in the stdout and stderr streams respectively.
         // The event data supplied to the callback is a string containing all the characters between the previous newline character and the most recent one.
         // In other words, the stream is read line by line. The last line in each message ends with a null terminating character (see HttpServer.ts).
         internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)

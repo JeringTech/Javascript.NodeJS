@@ -278,7 +278,7 @@ function demarcateMessageEndings(outputStream: NodeJS.WritableStream) {
         if (typeof value === 'string') {
             // Node appends a new line character at the end of the message. This facilitates reading of the stream: the process reading it reads messages line by line -
             // characters stay in its buffer until a new line character is received. This means that the null terminating character must appear before the last
-            // new line character of the message. This approach is inefficent since it allocates 2 new strings.
+            // new line character of the message. This approach is inefficent since it allocates 2 strings.
             //
             // TODO consider sending '\0\n' as a demarcator after sending value (profile). Also need to check if logging from worker threads might cause
             // concurrency issues.
