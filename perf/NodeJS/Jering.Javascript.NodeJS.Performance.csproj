@@ -17,10 +17,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include=".\dummyModule.js" copyToOutputDirectory="Always" />
+      <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
+      <None Update="dummyModule.js">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 </Project>

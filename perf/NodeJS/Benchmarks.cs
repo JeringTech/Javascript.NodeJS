@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 namespace Jering.Javascript.NodeJS.Performance
 {
     [MemoryDiagnoser]
-    [InProcess()]
     public class Benchmarks
     {
         private ServiceProvider _serviceProvider;
