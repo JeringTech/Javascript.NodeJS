@@ -388,8 +388,10 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyResultString, result.Result);
         }
 
+        // TODO these tests don't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
+        // They're are still useful for diagnosing issues with output piping.
         // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
-        [Theory(Timeout = _timeoutMS)]
+        [Theory(Timeout = _timeoutMS, Skip = "Node.js randomly truncates stdout/stderr")]
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStdoutOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStdoutOutput(string dummyLogArgument, string expectedResult)
         {
@@ -400,16 +402,16 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             await testSubject.
                 InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
-    console.log({dummyLogArgument}); 
-    callback();
+            console.log({dummyLogArgument}); 
+            callback();
 
-    // Does not work
-    // process.stdout.end();
-    // process.on(finish, () => callback());
+            // Does not work
+            // process.stdout.end();
+            // process.on(finish, () => callback());
 
-    // Does not work
-    // process.stdout.write('', 'utf8', () => callback());
-}}").ConfigureAwait(false);
+            // Does not work
+            // process.stdout.write('', 'utf8', () => callback());
+        }}").ConfigureAwait(false);
             // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
             //
             // TODO On Linux and macOS, Node.js does not flush stdout completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
@@ -429,18 +431,18 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             return new object[][]
             {
-                new object[] { "'dummySingleLineString'", "dummySingleLineString" },
-                new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
-                new object[] { "''", "" },
-                new object[] { "undefined", "undefined" },
-                new object[] { "null", "null" },
-                new object[] { "", "" },
-                new object[] { "{}", "{}" },
-                new object[] { "'a\\n\\nb'", "a\n\nb" }
+                        new object[] { "'dummySingleLineString'", "dummySingleLineString" },
+                        new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
+                        new object[] { "''", "" },
+                        new object[] { "undefined", "undefined" },
+                        new object[] { "null", "null" },
+                        new object[] { "", "" },
+                        new object[] { "{}", "{}" },
+                        new object[] { "'a\\n\\nb'", "a\n\nb" }
             };
         }
 
-        [Theory(Timeout = _timeoutMS)]
+        [Theory(Timeout = _timeoutMS, Skip = "Node.js randomly truncates stdout/stderr")]
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStderrOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStderrOutput(string dummyLogArgument, string expectedResult)
         {
@@ -451,9 +453,9 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             await testSubject.
                 InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
-    console.error({dummyLogArgument}); 
-    callback();
-}}").ConfigureAwait(false);
+            console.error({dummyLogArgument}); 
+            callback();
+        }}").ConfigureAwait(false);
             // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
             //
             // TODO On Linux and macOS, Node.js does not flush stderr completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
@@ -473,14 +475,14 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             return new object[][]
             {
-                new object[] { "'dummySingleLineString'", "dummySingleLineString" },
-                new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
-                new object[] { "''", "" },
-                new object[] { "undefined", "undefined" },
-                new object[] { "null", "null" },
-                new object[] { "", "" },
-                new object[] { "{}", "{}" },
-                new object[] { "'a\\n\\nb'", "a\n\nb" }
+                        new object[] { "'dummySingleLineString'", "dummySingleLineString" },
+                        new object[] { "`dummy\nMultiline\nString\n`", "dummy\nMultiline\nString\n" }, // backtick for multiline strings in js
+                        new object[] { "''", "" },
+                        new object[] { "undefined", "undefined" },
+                        new object[] { "null", "null" },
+                        new object[] { "", "" },
+                        new object[] { "{}", "{}" },
+                        new object[] { "'a\\n\\nb'", "a\n\nb" }
             };
         }
 
