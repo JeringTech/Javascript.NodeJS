@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.0.0...HEAD)
+
+## [5.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.1...5.0.0) - Nov 25, 2019
+### Changes
+- **Breaking**: We've replaced `IJsonService.Deserialize<T>` and `IJsonService.Serialize` with `IJsonService.DeserializeAsync<T>` and `IJsonService.SerializeAsync<T>` respectively. This
+change only matters if you're using a custom implementation of `IJsonService`. ([#53](https://github.com/JeringTech/Javascript.NodeJS/pull/53))
+- Switched from `Newtonsoft.Json` to `System.Text.Json` for performance gains. ([#53](https://github.com/JeringTech/Javascript.NodeJS/pull/53))
 
 ## [4.4.1](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.0...4.4.1) - Nov 25, 2019
 ### Fixes
