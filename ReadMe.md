@@ -14,7 +14,7 @@
 [Extensibility](#extensibility)  
 [Performance](#performance)  
 [Building and Testing](#building-and-testing)  
-[Related Jering Projects](#related-jering-projects)  
+[Projects Using this Library](#projects-using-this-library)  
 [Related Concepts](#related-concepts)  
 [Contributing](#contributing)  
 [About](#about)  
@@ -632,9 +632,9 @@ only supports invoking javascript from a file):
 <tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr>
 </thead>
 <tbody>
-<tr><td>INodeJSService_InvokeFromFile</td><td>0.1036 ms</td><td>0.076 ms</td><td>0.068 ms</td><td>2.9297</td><td>11.99 KB</td>
-</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1005 ms</td><td>0.037 ms</td><td>0.034 ms</td><td>2.9297</td><td>11.84 KB</td>
-</tr><tr><td>INodeServices</td><td>0.1161 ms</td><td>0.134 ms</td><td>0.112 ms</td><td>2.4414</td><td>10.37 KB</td></tr>
+<tr><td>INodeJSService_InvokeFromFile</td><td>0.1058 ms</td><td>0.069 ms</td><td>0.064 ms</td><td>1.2207</td><td>5.8 KB</td>
+</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1025 ms</td><td>0.091 ms</td><td>0.085 ms</td><td>1.2207</td><td>5.65 KB</td>
+</tr><tr><td>INodeServices</td><td>0.1164 ms</td><td>0.108 ms</td><td>0.90 ms</td><td>2.4414</td><td>10.35 KB</td></tr>
 </tbody>
 </table>
 </body>
@@ -657,8 +657,7 @@ The [benchmarks](https://github.com/JeringTech/Javascript.NodeJS/blob/master/per
 ## Building and Testing
 You can build and test this project in Visual Studio 2017/2019.
 
-## Related Jering Projects
-#### Projects Using this Library
+## Projects Using this Library
 [Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeringTech/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
 [Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeringTech/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
 
@@ -802,7 +801,10 @@ NodeJS modules serve a similar purpose. By wrapping modules in functions, NodeJS
 can be kept private.
 
 ## Contributing
-Contributions are welcome!  
+Contributions are welcome!
+
+### Contributers
+- [JeremyTCD](https://github.com/JeremyTCD)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
