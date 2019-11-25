@@ -86,28 +86,28 @@ namespace Jering.Javascript.NodeJS
                     {
                         using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
                         {
-                            InvocationError invocationError = await _jsonService.DeserializeAsync<InvocationError>(stream, cancellationToken);
+                            InvocationError invocationError = await _jsonService.DeserializeAsync<InvocationError>(stream, cancellationToken).ConfigureAwait(false);
                             throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
                         }
                     }
 
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
-                        if (typeof(T) == typeof(Stream))
-                        {
-                            Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                            return (true, (T)(object)stream);
-                        }
-
                         if (typeof(T) == typeof(string))
                         {
-                            string str = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            return (true, (T)(object)str);
+                            string result = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            return (true, (T)(object)result);
                         }
 
-                        using (var contentStream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                        using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
                         {
-                            var result = await _jsonService.DeserializeAsync<T>(contentStream, cancellationToken).ConfigureAwait(false);
+                            if (typeof(T) == typeof(Stream))
+                            {
+                                return (true, (T)(object)stream);
+                            }
+
+                            T result = await _jsonService.DeserializeAsync<T>(stream, cancellationToken).ConfigureAwait(false);
+
                             return (true, result);
                         }
                     }
