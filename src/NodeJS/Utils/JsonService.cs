@@ -1,5 +1,4 @@
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
@@ -12,7 +11,7 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class JsonService : IJsonService
     {
-        private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 
@@ -22,14 +21,16 @@ namespace Jering.Javascript.NodeJS
             PropertyNameCaseInsensitive = true
         };
 
+        /// <inheritdoc />
         public ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default)
         {
-            return JsonSerializer.DeserializeAsync<T>(stream, jsonSerializerOptions, cancellationToken);
+            return JsonSerializer.DeserializeAsync<T>(stream, _jsonSerializerOptions, cancellationToken);
         }
 
+        /// <inheritdoc />
         public Task SerializeAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
-            return JsonSerializer.SerializeAsync(stream, value, jsonSerializerOptions, cancellationToken);
+            return JsonSerializer.SerializeAsync(stream, value, _jsonSerializerOptions, cancellationToken);
         }
     }
 }
