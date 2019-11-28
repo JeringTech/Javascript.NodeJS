@@ -39,7 +39,7 @@ namespace Jering.Javascript.NodeJS
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly object _connectingLock = new object();
         private bool _disposed;
-        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock
+        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it is null)
         private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
         private readonly StringBuilder _errorDataStringBuilder = new StringBuilder();
 
@@ -353,7 +353,6 @@ namespace Jering.Javascript.NodeJS
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -367,16 +366,12 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            _nodeJSProcess?.Dispose();
-            _disposed = true;
-        }
+            if (disposing)
+            {
+                _nodeJSProcess?.Dispose();
+            }
 
-        /// <summary>
-        /// Implements the finalization part of the IDisposable pattern by calling Dispose(false).
-        /// </summary>
-        ~OutOfProcessNodeJSService()
-        {
-            Dispose(false);
+            _disposed = true;
         }
     }
 }
