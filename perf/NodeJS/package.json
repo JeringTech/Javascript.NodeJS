@@ -1,0 +1,9 @@
+{
+    "private": true,
+    "scripts": {
+        "build": "echo ------ Yarn Install ------ && yarn install"
+    },
+    "dependencies": {
+        "prismjs": "^1.17.1"
+    }
+}

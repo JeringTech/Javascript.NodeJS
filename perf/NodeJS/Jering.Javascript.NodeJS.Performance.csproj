@@ -4,23 +4,35 @@
         <TargetFramework>netcoreapp3</TargetFramework>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
+        <DefaultItemExcludes>node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
         <PackageReference Include="Microsoft.AspNetCore.NodeServices" Version="3.0.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.16.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include=".\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
+        <Content Include="dummyRealWorkloadModule.js" copyToOutputDirectory="PreserveNewest" />
+        <Content Include="dummyLatencyModule.js" copyToOutputDirectory="PreserveNewest" />
+        <Content Include="dummyConcurrencyModule.js" copyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <JavascriptInputs Include="package.json" />
+        <JavascriptOutputs Include="yarn.lock" />
+        <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
+        <UpToDateCheckInput Include="@(JavascriptInputs)" />
+    </ItemGroup>
+
+    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+        <Yarn WorkingDirectory="." Command="run build" />
+    </Target>
+
 </Project>
