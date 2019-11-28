@@ -25,7 +25,7 @@ Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://no
 > You can use this library as a replacement for the recently deprecated [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices).
 [`InvokeFromFileAsync<T>`](#inodejsserviceinvokefromfileasync) replaces `INodeService`'s `InvokeAsync<T>` and `InvokeExportAsync<T>`.
 
-This library is built to be flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
+This library is flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
 
 Static API example:
 
@@ -70,8 +70,8 @@ Assert.Equal(8, result);
 - .NET Framework 4.6.1
  
 ## Prerequisites
-[NodeJS](https://nodejs.org/en/) must be installed and node.exe's directory must be added to the `Path` environment variable. This library has been
-tested with NodeJS 10.5.2 - 12.13.0.
+You'll need to install [NodeJS](https://nodejs.org/en/) and add node.exe's directory to the `Path` environment variable (automatically done by the official installer). We've tested this library with
+NodeJS 10.5.2 - 12.13.0.
 
 ## Installation
 Using Package Manager:
@@ -91,7 +91,7 @@ Here, we'll use the vanilla Microsoft.Extensions.DependencyInjection framework:
 ```csharp
 var services = new ServiceCollection();
 services.AddNodeJS();
-ServiceProvider serviceProvider = services.BuildServiceProvider();
+ServiceProvider serviceProvider = services.BuildServiceProvider(); 
 INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
 ```
 The default implementation of `INodeJSService` is `HttpNodeJSService`. It starts a Http server in a NodeJS process and sends invocation requests
@@ -99,7 +99,7 @@ over Http. For simplicty's sake, this ReadMe assumes that `INodeJSService`'s def
 
 `INodeJSService` is a singleton service and `INodeJSService`'s members are thread safe.
 Where possible, inject `INodeJSService` into your types or keep a reference to a shared `INodeJSService` instance. 
-Try to avoid creating multiple `INodeJSService` instances since by default, each instance spawns a NodeJS process. 
+This avoids the overhead of killing and creating NodeJS processes repeatedly.
 
 When you're done, you can manually dispose of an `INodeJSService` instance by calling
 ```csharp
@@ -326,15 +326,17 @@ The next two sections list all available options.
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
 | ProjectPath | `string` | The base path for resolving paths of NodeJS modules on disk. | If the application is an ASP.NET Core application, this value defaults to `IHostingEnvironment.ContentRootPath`. Otherwise, it defaults to the current working directory. |
-| NodeAndV8Options | `string` | NodeJS and V8 options in the form "[NodeJS options] [V8 options]". The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options. | null |
-| Port | `int` | The port that the server running on NodeJS will listen on. If set to 0, the OS will choose the port. | 0 |
-| EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. | null |
+| NodeAndV8Options | `string` | NodeJS and V8 options in the form "[NodeJS options] [V8 options]". The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options. | `null` |
+| Port | `int` | The port that the server running on NodeJS will listen on. If set to 0, the OS will choose the port. | `0` |
+| EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. | `null` |
 
 #### OutOfProcessNodeJSServiceOptions
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
-| TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to initialize and to wait for responses to invocations. If set to a negative value, the maximum duration will be infinite. | 10000 |
-| NumRetries | `int` | The number of times an invocation will be retried. If set to a negative value, invocations will be retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation will not be retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| 1 |
+| TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations. If this value is negative, the maximum duration is infinite. | `60000` |
+| NumRetries | `int` | The number of times an invocation is retried. If set to a negative value, invocations are retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation is not retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| `1` |
+| Concurrency | `Concurrency` | The concurrency mode for invocations.<br><br>By default, this value is `Concurrency.None` and invocations are executed synchronously by a single NodeJS process; mode pros: lower memory overhead and supports all modules, cons: less performant.<br><br>If this value is `Concurrency.MultiProcess`, `ConcurrencyDegree` NodeJS processes are created and invocations are distributed among them using round-robin load balancing; mode pros: more performant, cons: higher memory overhead and doesn't work with modules that have persistent state. | `Concurrency.None` |
+| ConcurrencyDegree | `int` | The concurrency degree. If `Concurrency` is `Concurrency.MultiProcess`, this value is the number of NodeJS processes. If this value is less than or equal to 0, concurrency degree is the number of logical processors the current machine has. This value does nothing if `Concurrency` is `Concurrency.None`. | `0` |
 
 ### Debugging Javascript
 These are the steps for debugging javascript invoked using INodeJSService:
@@ -344,6 +346,102 @@ These are the steps for debugging javascript invoked using INodeJSService:
 4. Navigate to `chrome://inspect/` in Chrome.
 5. Click "Open dedicated DevTools for Node".
 6. Click continue to advance to your `debugger` statements.
+
+### Advanced Usage
+#### Concurrency
+To enable concurrency, set `OutOfProcessNodeJSServiceOptions.Concurrency` to `Concurrency.MultiProcess`:
+
+```csharp
+services.Configure<OutOfProcessNodeJSServiceOptions>(options => {
+    options.Concurrency = Concurrency.MultiProcess; // Concurrency.None by default
+    options.ConcurrencyDegree = 8; // Number of processes. Defaults to the number of logical processors on your machine.
+);
+```
+(see [Configuring INodeJSService](#configuring-inodejsservice) for more information on configuring)  
+
+All invocations will be distributed among multiple NodeJS processes using round-robin load balancing.  
+
+##### Why Bother?
+Enabling concurrency significantly speeds up CPU-bound workloads. For example, consider the following benchmarks:
+
+<table>
+<thead>
+<tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th></tr>
+</thead>
+<tbody>
+<tr><td>INodeJSService_Concurrency_MultiProcess</td><td>400.3 ms</td><td>0.62 ms</td><td>0.58 ms</td><td>-</td><td>-</td><td>-</td><td>134.95 KB</td>
+</tr><tr><td>INodeJSService_Concurrency_None</td><td>2,500.2 ms</td><td>0.51 ms</td><td>0.48 ms</td><td>-</td><td>-</td><td>-</td><td>135.13 KB</td>
+</tr><tr><td>INodeServices_Concurrency</td><td>2,500.2 ms</td><td>0.49 ms</td><td>0.46 ms</td><td>-</td><td>-</td><td>-</td><td>246.98 KB</td>
+</tr></tbody>
+</table>
+
+```
+BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.0.100
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+```
+
+These benchmarks invoke javascript asynchronously, as most applications would (view complete source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/ConcurrencyBenchmarks.cs)):
+
+```csharp
+const int numTasks = 25;
+var results = new Task<string>[numTasks];
+for (int i = 0; i < numTasks; i++)
+{
+    results[i] = _nodeJSService.InvokeFromFileAsync<string>(DUMMY_CONCURRENCY_MODULE);
+}
+
+return await Task.WhenAll(results);
+```
+
+Where the `DUMMY_CONCURRENCY_MODULE` file contains:
+
+```js
+// Minimal processor blocking logic
+module.exports = (callback) => {
+
+    // Block processor
+    var end = new Date().getTime() + 100; // 100ms block
+    while (new Date().getTime() < end) { /* do nothing */ }
+
+    callback(null);
+};
+```
+
+For `INodeJSService` with `Concurrency.MultiProcessing`, multiple NodeJS processes perform invocations concurrently, so the benchmark takes ~400ms ((25 tasks x 100ms) / number-of-logical-processors + overhead-from-unrelated-processes).  
+
+In the other two benchmarks, a single NodeJS process performs invocations synchronously, so those benchmarks take ~2500ms (25 tasks x 100ms = 2500ms).  
+
+##### Limitations
+1. You can't use concurrency if you persist data between invocations. For example, with concurrency enabled:
+
+    ```csharp
+    const string javascriptModule = @"
+    var lastResult;
+
+    module.exports = (callback, x) => {
+
+        var result = x + (lastResult ? lastResult : 0); // Use persisted value here
+        lastResult = result; // Persist
+  
+        callback(null, result);
+    }";
+
+    // result == 3
+    int result = await StaticNodeJSService.InvokeFromStringAsync<int>(javascriptModule, "customIdentifier", args: new object[] { 3 });
+
+    // expected 8, but result == 5 since different processes perform the invocations
+    result = await StaticNodeJSService.InvokeFromStringAsync<int>(javascriptModule, "customIdentifier", args: new object[] { 5 });
+    ```
+
+    This should not be a problem in most cases.
+
+2. Higher memory overhead. This isn't typically an issue - on a standard workstation you can start dozens of NodeJS processes, and in cloud scenarios you'll typically have memory proportional to 
+  the number of logical processors.
+
+3. Concurrency may not speed up workloads with lots of asynchronous operations, for example if your workload spends lots of time waiting on a databases.
 
 ## API
 ### INodeJSService.InvokeFromFileAsync
@@ -625,25 +723,20 @@ This is the list of implementable interfaces:
 
 ## Performance
 This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices). While the main
-additions to this library are ways to invoke in-memory javascript, this library also provides better performance (note that INodeServices has only 1 benchmark because it 
-only supports invoking javascript from a file):
-<table>
-<thead>
-<tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Allocated</th></tr>
-</thead>
-<tbody>
-<tr><td>INodeJSService_InvokeFromFile</td><td>0.1058 ms</td><td>0.069 ms</td><td>0.064 ms</td><td>1.2207</td><td>5.8 KB</td>
-</tr><tr><td>INodeJSService_InvokeFromCache</td><td>0.1025 ms</td><td>0.091 ms</td><td>0.085 ms</td><td>1.2207</td><td>5.65 KB</td>
-</tr><tr><td>INodeServices</td><td>0.1164 ms</td><td>0.108 ms</td><td>0.90 ms</td><td>2.4414</td><td>10.35 KB</td></tr>
-</tbody>
-</table>
-</body>
-</html>
+additions to this library are ways to invoke in-memory javascript, this library also provides better performance. 
 
-System:
+### Latency
+These benchmarks reflect inter-process communication latency:
+
+<table>
+<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>INodeJSService_Latency_InvokeFromFile</td><td>106.3 us</td><td>1.40 us</td><td>1.31 us</td><td>1.2207</td><td>-</td><td>-</td><td>5.7 KB</td>
+</tr><tr><td>INodeJSService_Latency_InvokeFromCache</td><td>102.3 us</td><td>0.34 us</td><td>0.32 us</td><td>1.2207</td><td>-</td><td>-</td><td>5.54 KB</td>
+</tr><tr><td>INodeServices_Latency</td><td>116.0 us</td><td>0.93 us</td><td>0.82 us</td><td>2.4414</td><td>-</td><td>-</td><td>10.25 KB</td>
+</tr></tbody></table>
+
 ```
-Jering.Javascript.NodeJS 4.3.0
-Microsoft.AspNetCore.NodeServices 3.0.0
 NodeJS v12.13.0
 BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
 Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
@@ -652,14 +745,59 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
   DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
 ```
 
-The [benchmarks](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/Benchmarks.cs).
+View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/LatencyBenchmarks.cs).
+
+### Concurrency
+These benchmarks perform asynchronous invocations:
+
+<table>
+<thead>
+<tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th></tr>
+</thead>
+<tbody>
+<tr><td>INodeJSService_Concurrency_MultiProcess</td><td>400.3 ms</td><td>0.62 ms</td><td>0.58 ms</td><td>-</td><td>-</td><td>-</td><td>134.95 KB</td>
+</tr><tr><td>INodeJSService_Concurrency_None</td><td>2,500.2 ms</td><td>0.51 ms</td><td>0.48 ms</td><td>-</td><td>-</td><td>-</td><td>135.13 KB</td>
+</tr><tr><td>INodeServices_Concurrency</td><td>2,500.2 ms</td><td>0.49 ms</td><td>0.46 ms</td><td>-</td><td>-</td><td>-</td><td>246.98 KB</td>
+</tr></tbody>
+</table>
+
+```
+BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.0.100
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+```
+
+View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/ConcurrencyBenchmarks.cs).
+
+### Real Workload
+These benchmarks mimic real world use of this library. In particular, they use the syntax highlighter, Prism, to highlight some C#:
+
+<table>
+<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>INodeJSService_RealWorkload</td><td>1.303 ms</td><td>0.0206 ms</td><td>0.0193 ms</td><td>54.6875</td><td>11.7188</td><td>-</td><td>222.99 KB</td>
+</tr><tr><td>INodeServices_RealWorkload</td><td>2.270 ms</td><td>0.0261 ms</td><td>0.0244 ms</td><td>70.3125</td><td>19.5313</td><td>-</td><td>283.94 KB</td>
+</tr></tbody></table>
+
+```
+NodeJS v12.13.0
+BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.0.100
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+```
+
+View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/RealWorkloadBenchmarks.cs).
 
 ## Building and Testing
 You can build and test this project in Visual Studio 2017/2019.
 
 ## Projects Using this Library
 [Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeringTech/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
-[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeringTech/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.
+[Jering.Web.SyntaxHighlighters.Prism](https://github.com/JeringTech/Web.SyntaxHighlighters.Prism) - Use the Syntax Highlighter, Prism, from C#.  
 [NodeReact.NET](https://github.com/DaniilSokolyuk/NodeReact.NET) - Library to render React library components on the server-side with C# as well as on the client.
 
 ## Related Concepts
