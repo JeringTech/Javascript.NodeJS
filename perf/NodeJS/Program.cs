@@ -6,7 +6,9 @@ namespace Jering.Javascript.NodeJS.Performance
     {
         public static void Main(string[] _)
         {
-            BenchmarkRunner.Run<Benchmarks>();
+            BenchmarkRunner.Run<LatencyBenchmarks>();
+            BenchmarkRunner.Run<ConcurrencyBenchmarks>();
+            BenchmarkRunner.Run<RealWorkloadBenchmarks>();
         }
     }
 }
