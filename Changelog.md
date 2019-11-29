@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.1...HEAD)
+
+## [5.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.0...5.1.1) - Nov 29, 2019
+### Fixes
+- Fixed requiring of modules from modules in string/stream form. ([#59](https://github.com/JeringTech/Javascript.NodeJS/pull/59))
 
 ## [5.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.0.0...5.1.0) - Nov 28, 2019
 ### Changes
