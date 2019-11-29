@@ -66,7 +66,13 @@ const server = http.createServer((req, res) => {
 
                     // Not cached
                     if (exports == null) {
-                        let module = new Module('', null);
+                        // global is analagous to window in browsers (the global namespace) - https://nodejs.org/api/globals.html#globals_global
+                        // module is a reference to the current module - https://nodejs.org/api/modules.html#modules_module
+                        let parent = global.module;
+                        let module = new Module('', parent);
+                        // This is typically done by Module._resolveLookupPaths which is called by Module._resolveFilename which in turn is called by Module._load.
+                        // Since we're loading a module in string form - not an actual file with a filename - we can't use Module._load. So we do this manually.
+                        module.paths = parent.paths;
                         module._compile(invocationRequest.moduleSource, 'anonymous');
 
                         if (invocationRequest.newCacheIdentifier != null) {
