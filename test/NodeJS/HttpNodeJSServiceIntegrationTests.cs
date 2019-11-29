@@ -130,6 +130,74 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = _timeoutMS)]
+        public async void InvokeFromStreamAsync_LoadsRequiredModulesFromNodeModulesInProjectDirectory()
+        {
+            // Arrange
+            const string dummyCode = @"public string ExampleFunction(string arg)
+{
+    // Example comment
+    return arg + ""dummyString"";
+}";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+
+            // Act
+            string result;
+            using (var memoryStream = new MemoryStream())
+            using (var streamWriter = new StreamWriter(memoryStream))
+            {
+                streamWriter.Write(@"const prismjs = require('prismjs');
+require('prismjs/components/prism-csharp');
+
+module.exports = (callback, code) => {
+    var result = prismjs.highlight(code, prismjs.languages.csharp, 'csharp');
+
+    callback(null, result);
+};");
+                streamWriter.Flush();
+                memoryStream.Position = 0;
+
+                // Act
+                result = await testSubject.InvokeFromStreamAsync<string>(memoryStream, args: new[] { dummyCode }).ConfigureAwait(false);
+            }
+
+            // Assert
+            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token keyword"">string</span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token keyword"">string</span> arg<span class=""token punctuation"">)</span>
+<span class=""token punctuation"">{</span>
+    <span class=""token comment"">// Example comment</span>
+    <span class=""token keyword"">return</span> arg <span class=""token operator"">+</span> <span class=""token string"">""dummyString""</span><span class=""token punctuation"">;</span>
+<span class=""token punctuation"">}</span>";
+            Assert.Equal(expectedResult, result);
+        }
+
+        [Fact(Timeout = _timeoutMS)]
+        public async void InvokeFromStreamAsync_LoadsRequiredModuleFromFileInProjectDirectory()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+
+            // Act
+            int result;
+            using (var memoryStream = new MemoryStream())
+            using (var streamWriter = new StreamWriter(memoryStream))
+            {
+                streamWriter.Write(@"const value = require('./dummyReturnsValueModule.js');
+
+module.exports = (callback) => {
+
+    callback(null, value);
+};");
+                streamWriter.Flush();
+                memoryStream.Position = 0;
+
+                // Act
+                result = await testSubject.InvokeFromStreamAsync<int>(memoryStream).ConfigureAwait(false);
+            }
+
+            // Assert
+            Assert.Equal(10, result); // dummyReturnsValueModule.js just exports 10
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public void InvokeFromStreamAsync_IsThreadSafe()
         {
             // Arrange
@@ -186,6 +254,54 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = _timeoutMS)]
+        public async void InvokeFromStringAsync_LoadsRequiredModulesFromNodeModulesInProjectDirectory()
+        {
+            // Arrange
+            const string dummyCode = @"public string ExampleFunction(string arg)
+{
+    // Example comment
+    return arg + ""dummyString"";
+}";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+
+            // Act
+            string result = await testSubject.InvokeFromStringAsync<string>(@"const prismjs = require('prismjs');
+require('prismjs/components/prism-csharp');
+
+module.exports = (callback, code) => {
+    var result = prismjs.highlight(code, prismjs.languages.csharp, 'csharp');
+
+    callback(null, result);
+};", args: new[] { dummyCode }).ConfigureAwait(false);
+
+            // Assert
+            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token keyword"">string</span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token keyword"">string</span> arg<span class=""token punctuation"">)</span>
+<span class=""token punctuation"">{</span>
+    <span class=""token comment"">// Example comment</span>
+    <span class=""token keyword"">return</span> arg <span class=""token operator"">+</span> <span class=""token string"">""dummyString""</span><span class=""token punctuation"">;</span>
+<span class=""token punctuation"">}</span>";
+            Assert.Equal(expectedResult, result);
+        }
+
+        [Fact(Timeout = _timeoutMS)]
+        public async void InvokeFromStringAsync_LoadsRequiredModuleFromFileInProjectDirectory()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+
+            // Act
+            int result = await testSubject.InvokeFromStringAsync<int>(@"const value = require('./dummyReturnsValueModule.js');
+
+module.exports = (callback) => {
+
+    callback(null, value);
+};").ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(10, result); // dummyReturnsValueModule.js just exports 10
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public void InvokeFromStringAsync_IsThreadSafe()
         {
             // Arrange
@@ -220,7 +336,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromFileAsync_InvokesJavascript()
         {
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/Javascript");
 
             // Act
             DummyResult result = await testSubject.
@@ -236,7 +352,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModule = "dummyModule.js";
             const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/Javascript");
 
             // Act
             var results = new ConcurrentQueue<DummyResult>();
@@ -489,10 +605,15 @@ namespace Jering.Javascript.NodeJS.Tests
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = null)
+        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = null,
+            string projectPath = null)
         {
             var services = new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
+            if (projectPath != null)
+            {
+                services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = projectPath);
+            }
             services.AddLogging(lb =>
             {
                 lb.
