@@ -186,6 +186,37 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = _timeoutMS)]
+        public async void InvokeFromStringAsync_InvokesJavascriptThatImportsFromNodeModules()
+        {
+            // Arrange
+            const string dummyCode = @"public string ExampleFunction(string arg)
+{
+    // Example comment
+    return arg + ""dummyString"";
+}";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            string result = await testSubject.InvokeFromStringAsync<string>(@"debugger;
+const prismjs = require('prismjs');
+require('prismjs/components/prism-csharp');
+
+module.exports = (callback, code) => {
+    var result = prismjs.highlight(code, prismjs.languages.csharp, 'csharp');
+
+    callback(null, result);
+};", args: new[] { dummyCode }).ConfigureAwait(false);
+
+            // Assert
+            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token keyword"">string</span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token keyword"">string</span> arg<span class=""token punctuation"">)</span>
+<span class=""token punctuation"">{</span>
+    <span class=""token comment"">// Example comment</span>
+    <span class=""token keyword"">return</span> arg <span class=""token operator"">+</span> <span class=""token string"">""dummyString""</span><span class=""token punctuation"">;</span>
+<span class=""token punctuation"">}</span>";
+            Assert.Equal(expectedResult, result);
+        }
+
+        [Fact(Timeout = _timeoutMS)]
         public void InvokeFromStringAsync_IsThreadSafe()
         {
             // Arrange

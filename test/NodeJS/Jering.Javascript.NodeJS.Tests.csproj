@@ -5,43 +5,52 @@
         <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.1</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="coverlet.msbuild" Version="2.7.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
         <PackageReference Include="Moq" Version="4.13.1" />
         <PackageReference Include="Roslynator.Analyzers" Version="2.2.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="xunit" Version="2.4.1" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.16.0" />
     </ItemGroup>
 
     <ItemGroup>
         <Content Include=".\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
     </ItemGroup>
-    
+
     <ItemGroup>
-      <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
+        <JavascriptInputs Include="package.json" />
+        <JavascriptOutputs Include="yarn.lock" />
+        <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
+        <UpToDateCheckInput Include="@(JavascriptInputs)" />
     </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
+    </ItemGroup>
+
+    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+        <Yarn WorkingDirectory="." Command="run build" />
+    </Target>
 
 </Project>
