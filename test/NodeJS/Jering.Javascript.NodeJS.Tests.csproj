@@ -6,7 +6,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-        <DefaultItemExcludes>node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+        <DefaultItemExcludes>Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -35,16 +35,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include=".\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
-        <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include=".\Javascript\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
+    </ItemGroup>
+
     <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent">
-        <Yarn WorkingDirectory="." Command="run build" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build" />
     </Target>
 
 </Project>

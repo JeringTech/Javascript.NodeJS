@@ -139,6 +139,8 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyResultString = "success";
+            StaticNodeJSService.
+                Configure<NodeJSProcessOptions>(options => options.ProjectPath = "./Javascript");
 
             // Act
             DummyResult result = await StaticNodeJSService.
