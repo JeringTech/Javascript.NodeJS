@@ -6,6 +6,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
+        <DefaultItemExcludes>node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>
@@ -39,17 +40,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <JavascriptInputs Include="package.json" />
-        <JavascriptOutputs Include="yarn.lock" />
-        <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
-        <UpToDateCheckInput Include="@(JavascriptInputs)" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
-    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent">
         <Yarn WorkingDirectory="." Command="run build" />
     </Target>
 
