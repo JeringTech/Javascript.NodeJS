@@ -239,5 +239,21 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Attempts to invoke a function from a module in NodeJS's cache.
+        /// </summary>
+        /// <param name="moduleCacheIdentifier">The module's cache identifier. This value mustn't be <c>null</c>.</param>
+        /// <param name="exportName">The name of the function in the module's exports to invoke. If this value is <c>null</c>, the module's exports is assumed to be a function and is invoked.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
+        /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
+        /// <returns>The <see cref="Task"/> representing the asynchronous operation. On completion, the task returns true on success and false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleCacheIdentifier"/> is <c>null</c>.</exception>
+        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
+        /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
+        Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);
     }
 }
