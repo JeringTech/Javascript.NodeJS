@@ -22,7 +22,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async Task TryInvokeAsync_ReturnsTupleContainingFalseAndDefaultIfHttpResponseHas404StatusCode()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -32,23 +32,24 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object))
-            {
-                // Act
-                (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
+#pragma warning disable IDE0067
 
-                // Assert
-                _mockRepository.VerifyAll();
-                Assert.False(success);
-                Assert.Null(value);
-            }
+            // Act
+            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.False(success);
+            Assert.Null(value);
         }
 
         [Fact]
         public async Task TryInvokeAsync_ThrowsInvocationExceptionIfHttpResponseHas500StatusCode()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -61,22 +62,51 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.DeserializeAsync<InvocationError>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyInvocationError);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
-                jsonService: mockJsonService.Object))
-            {
-                // Act and assert
-                InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
-                _mockRepository.VerifyAll();
-                Assert.Equal(dummyInvocationError.ErrorMessage + Environment.NewLine + dummyInvocationError.ErrorStack, result.Message, ignoreLineEndingDifferences: true);
-            }
+                jsonService: mockJsonService.Object);
+#pragma warning disable IDE0067
+
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
+            _mockRepository.VerifyAll();
+            Assert.Equal(dummyInvocationError.ErrorMessage + Environment.NewLine + dummyInvocationError.ErrorStack, result.Message, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public async Task TryInvokeAsync_ReturnsTupleContainingTrueAndNullIfHttpResponseHas200StatusCodeAndTypeParameterIsVoid()
+        {
+            // Arrange
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
+            Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
+            Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
+            mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
+            var dummyHttpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK);
+            Mock<IHttpClientService> mockHttpClientService = _mockRepository.Create<IHttpClientService>();
+            mockHttpClientService.Setup(h => h.SendAsync(It.Is<HttpRequestMessage>(hr => ReferenceEquals(hr.Content, mockRequestHttpContent.Object)),
+                    HttpCompletionOption.ResponseHeadersRead,
+                    CancellationToken.None)).
+                ReturnsAsync(dummyHttpResponseMessage);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+                httpClientService: mockHttpClientService.Object);
+#pragma warning disable IDE0067
+
+            // Act
+            (bool success, Void value) = await testSubject.ExposedTryInvokeAsync<Void>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.True(success);
+            Assert.Null(value);
         }
 
         [Fact]
         public async Task TryInvokeAsync_ReturnsTupleContainingTrueAndAStreamIfHttpResponseHas200StatusCodeAndTypeParameterIsStream()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -86,24 +116,25 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
-                httpClientService: mockHttpClientService.Object))
-            {
-                // Act
-                (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+                httpClientService: mockHttpClientService.Object);
+#pragma warning disable IDE0067
 
-                // Assert
-                _mockRepository.VerifyAll();
-                Assert.True(success);
-                Assert.NotNull(value);
-            }
+            // Act
+            (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.True(success);
+            Assert.NotNull(value);
         }
 
         [Fact]
         public async Task TryInvokeAsync_ReturnsTupleContainingTrueAndAStringIfHttpResponseHas200StatusCodeAndTypeParameterIsString()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -115,24 +146,25 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
-                httpClientService: mockHttpClientService.Object))
-            {
-                // Act
-                (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+                httpClientService: mockHttpClientService.Object);
+#pragma warning disable IDE0067
 
-                // Assert
-                _mockRepository.VerifyAll();
-                Assert.True(success);
-                Assert.Equal(dummyValue, value);
-            }
+            // Act
+            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.True(success);
+            Assert.Equal(dummyValue, value);
         }
 
         [Fact]
         public async Task TryInvokeAsync_ReturnsTupleContainingTrueAndAnObjectIfHttpResponseHas200StatusCodeAndTypeParameterIsAnObject()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -145,25 +177,26 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyObject = new DummyClass();
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.DeserializeAsync<DummyClass>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyObject);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
-                jsonService: mockJsonService.Object))
-            {
-                // Act
-                (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+                jsonService: mockJsonService.Object);
+#pragma warning disable IDE0067
 
-                // Assert
-                _mockRepository.VerifyAll();
-                Assert.True(success);
-                Assert.Same(dummyObject, value);
-            }
+            // Act
+            (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.True(success);
+            Assert.Same(dummyObject, value);
         }
 
         [Fact]
         public async Task TryInvokeAsync_ThrowsInvocationExceptionIfHttpResponseHasAnUnexpectedStatusCode()
         {
             // Arrange
-            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleSource: "dummyModuleSource");
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource");
             Mock<HttpContent> mockRequestHttpContent = _mockRepository.Create<HttpContent>(); // HttpContent is an abstract class
             Mock<IHttpContentFactory> mockHttpContentFactory = _mockRepository.Create<IHttpContentFactory>();
             mockHttpContentFactory.Setup(h => h.Create(dummyInvocationRequest)).Returns(mockRequestHttpContent.Object);
@@ -174,15 +207,16 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object))
-            {
-                // Act and assert
-                InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
+#pragma warning disable IDE0067
 
-                // Assert
-                _mockRepository.VerifyAll();
-                Assert.Equal(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, dummyHttpStatusCode), result.Message);
-            }
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal(string.Format(Strings.InvocationException_HttpNodeJSService_UnexpectedStatusCode, dummyHttpStatusCode), result.Message);
         }
 
         [Theory]
@@ -191,14 +225,15 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
-            using (ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService())
-            {
-                // Act
-                testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
+#pragma warning disable IDE0067
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
+#pragma warning disable IDE0067
 
-                // Assert
-                Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
-            }
+            // Act
+            testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
+
+            // Assert
+            Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
@@ -222,7 +257,7 @@ namespace Jering.Javascript.NodeJS.Tests
             INodeJSProcessFactory nodeProcessFactory = null,
             ILoggerFactory loggerFactory = null)
         {
-            if(loggerFactory == null)
+            if (loggerFactory == null)
             {
                 Mock<ILogger> mockLogger = _mockRepository.Create<ILogger>();
                 Mock<ILoggerFactory> mockLoggerFactory = _mockRepository.Create<ILoggerFactory>();

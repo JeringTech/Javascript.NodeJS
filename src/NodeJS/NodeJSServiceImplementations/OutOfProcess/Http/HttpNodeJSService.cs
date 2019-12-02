@@ -93,6 +93,11 @@ namespace Jering.Javascript.NodeJS
 
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
+                        if(typeof(T) == typeof(Void)) // Returned value doesn't matter
+                        {
+                            return (true, default);
+                        }
+
                         if (typeof(T) == typeof(string))
                         {
                             string result = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);

@@ -39,7 +39,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include=".\Javascript\dummyModule.js" copyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
     </ItemGroup>
 

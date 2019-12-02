@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Xunit;
@@ -13,82 +14,59 @@ using Xunit.Abstractions;
 namespace Jering.Javascript.NodeJS.Tests
 {
     /// <summary>
-    /// These tests are de facto tests for HttpServer.ts. They serve the additional role of verifying that IPC works.
+    /// These tests are de facto tests for HttpServer.ts. They serve the additional role of verifying that IPC works properly.
     /// </summary>
     public class HttpNodeJSServiceIntegrationTests : IDisposable
     {
+        // Set to true to break in NodeJS (see CreateHttpNodeJSService)
+        private const bool DEBUG_NODEJS = false;
+        // Set to -1 when debugging in NodeJS
+        private const int TIMEOUT_MS = 60000;
+        private const string DUMMY_RETURNS_ARG_MODULE_FILE = "dummyReturnsArgModule.js";
+        private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
+        private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
+
+        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+        private static readonly string _dummyReturnsArgModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_RETURNS_ARG_MODULE_FILE));
+        private static readonly string _dummyExportsMultipleFunctionsModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE));
+
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
-        private const int _timeoutMS = 60000;
-        // Set to true to break in NodeJS (see CreateHttpNodeJSService)
-        private const bool _debugNodeJS = false;
 
         public HttpNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
         {
-            // Arrange
-            const string dummyResultString = "success";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
-
-            // Cache
-            await testSubject.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
-                    dummyCacheIdentifier,
-                    args: new[] { dummyResultString }).
-                ConfigureAwait(false);
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
+            DummyResult result = await testSubject.
+                InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.True(success);
-            Assert.Equal(dummyResultString, value.Result);
+            Assert.Equal(dummyArg, result.Result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void TryInvokeFromCacheAsync_ReturnsFalseIfModuleIsNotCached()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void InvokeFromFileAsync_WithTypeParameter_IsThreadSafe()
         {
             // Arrange
-            const string dummyResultString = "success";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.False(success);
-            Assert.Null(value);
-        }
-
-        [Fact(Timeout = _timeoutMS)]
-        public async void TryInvokeFromCacheAsync_IsThreadSafe()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
-
-            // Cache
-            await testSubject.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
-                    dummyCacheIdentifier,
-                    args: new[] { dummyResultString }).
-                ConfigureAwait(false);
-
-            // Act
-            var results = new ConcurrentQueue<(bool, DummyResult)>();
+            var results = new ConcurrentQueue<DummyResult>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
             {
-                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                var thread = new Thread(() => results.Enqueue(testSubject.
+                    InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).GetAwaiter().GetResult()));
                 threads.Add(thread);
                 thread.Start();
             }
@@ -99,110 +77,289 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach ((bool success, DummyResult value) in results)
+            foreach (DummyResult result in results)
             {
-                Assert.True(success);
-                Assert.Equal(dummyResultString, value.Result);
+                Assert.Equal(dummyArg, result.Result);
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStreamAsync_InvokesJavascript()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WithoutTypeParameter_InvokesFromFile()
+        {
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            await testSubject.InvokeFromFileAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "setString", new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            DummyResult result = await testSubject.
+                InvokeFromFileAsync<DummyResult>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "getString").ConfigureAwait(false);
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WithoutTypeParameter_IsThreadSafe()
         {
             // Arrange
-            const string dummyResultString = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.
+                    InvokeFromFileAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "incrementNumber").GetAwaiter().GetResult());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            int result = await testSubject.InvokeFromFileAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "getNumber").ConfigureAwait(false);
+            Assert.Equal(numThreads, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithRawStringModule_InvokesFromString()
+        {
+            // Arrange
+            const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
-            DummyResult result;
-            using (var memoryStream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(memoryStream))
-            {
-                streamWriter.Write("module.exports = (callback, resultString) => callback(null, {result: resultString});");
-                streamWriter.Flush();
-                memoryStream.Position = 0;
-
-                // Act
-                result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
-            }
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyResultString, result.Result);
+            Assert.Equal(dummyArg, result.Result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStreamAsync_LoadsRequiredModulesFromNodeModulesInProjectDirectory()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void InvokeFromStringAsync_WithTypeParameter_WithRawStringModule_IsThreadSafe()
         {
             // Arrange
-            const string dummyCode = @"public string ExampleFunction(string arg)
-{
-    // Example comment
-    return arg + ""dummyString"";
-}";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            string result;
-            using (var memoryStream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(memoryStream))
+            var results = new ConcurrentQueue<DummyResult>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
             {
-                streamWriter.Write(@"const prismjs = require('prismjs');
-require('prismjs/components/prism-csharp');
-
-module.exports = (callback, code) => {
-    var result = prismjs.highlight(code, prismjs.languages.csharp, 'csharp');
-
-    callback(null, result);
-};");
-                streamWriter.Flush();
-                memoryStream.Position = 0;
-
-                // Act
-                result = await testSubject.InvokeFromStreamAsync<string>(memoryStream, args: new[] { dummyCode }).ConfigureAwait(false);
+                var thread = new Thread(() => results.Enqueue(testSubject.
+                    InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, args: new[] { dummyArg }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
             }
 
             // Assert
-            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token keyword"">string</span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token keyword"">string</span> arg<span class=""token punctuation"">)</span>
-<span class=""token punctuation"">{</span>
-    <span class=""token comment"">// Example comment</span>
-    <span class=""token keyword"">return</span> arg <span class=""token operator"">+</span> <span class=""token string"">""dummyString""</span><span class=""token punctuation"">;</span>
-<span class=""token punctuation"">}</span>";
-            Assert.Equal(expectedResult, result);
+            Assert.Equal(numThreads, results.Count);
+            foreach (DummyResult result in results)
+            {
+                Assert.Equal(dummyArg, result.Result);
+            }
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStreamAsync_LoadsRequiredModuleFromFileInProjectDirectory()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithRawStringModule_InvokesFromString()
         {
-            // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            int result;
-            using (var memoryStream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(memoryStream))
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            DummyResult result = await testSubject.
+                InvokeFromStringAsync<DummyResult>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithRawStringModule_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
             {
-                streamWriter.Write(@"const value = require('./dummyReturnsValueModule.js');
-
-module.exports = (callback) => {
-
-    callback(null, value);
-};");
-                streamWriter.Flush();
-                memoryStream.Position = 0;
-
-                // Act
-                result = await testSubject.InvokeFromStreamAsync<int>(memoryStream).ConfigureAwait(false);
+                var thread = new Thread(() => testSubject.
+                    InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
             }
 
             // Assert
-            Assert.Equal(10, result); // dummyReturnsValueModule.js just exports 10
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(numThreads, result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public void InvokeFromStreamAsync_IsThreadSafe()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
         {
             // Arrange
-            const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
-            const string dummyResultString = "success";
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
+
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromStringAsync<DummyResult>(() => null, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_InvokesFromStringAndCachesModuleIfModuleIsNotCached()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            // Module hasn't been cached, so if this returns the expected value, string was sent over
+            DummyResult result1 = await testSubject.
+                InvokeFromStringAsync<DummyResult>(() => _dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            // Ensure module was cached
+            (bool success, DummyResult result2) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            Assert.Equal(dummyArg, result1.Result);
+            Assert.True(success);
+            Assert.Equal(dummyArg, result2.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            var results = new ConcurrentQueue<int>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.
+                    InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementAndGetNumber").GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            // Module shouldn't get cached more than once, we should get exactly [1,2,3,4,5]
+            List<int> resultsList = results.ToList();
+            resultsList.Sort();
+            for (int i = 0; i < numThreads; i++)
+            {
+                Assert.Equal(resultsList[i], i + 1);
+            }
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Act
+            await testSubject.
+                InvokeFromStringAsync(() => null, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Assert
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(2, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithModuleFactory_InvokesFromStringAndCachesModuleIfModuleIsNotCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            await testSubject.
+                InvokeFromStringAsync(() => _dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Assert
+            // Ensure module was cached
+            (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.True(success);
+            Assert.Equal(1, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithModuleFactory_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.
+                    InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.True(success);
+            Assert.Equal(numThreads, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithRawStreamModule_InvokesFromStream()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
+
+            // Act
+            DummyResult result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void InvokeFromStreamAsync_WithTypeParameter_WithRawStreamModule_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
@@ -213,14 +370,8 @@ module.exports = (callback) => {
             {
                 var thread = new Thread(() =>
                 {
-                    using (var memoryStream = new MemoryStream())
-                    using (var streamWriter = new StreamWriter(memoryStream))
-                    {
-                        streamWriter.Write(dummyModule);
-                        streamWriter.Flush();
-                        memoryStream.Position = 0;
-                        results.Enqueue(testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).GetAwaiter().GetResult());
-                    }
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
+                    results.Enqueue(testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).GetAwaiter().GetResult());
                 });
                 threads.Add(thread);
                 thread.Start();
@@ -234,27 +385,317 @@ module.exports = (callback) => {
             Assert.Equal(numThreads, results.Count);
             foreach (DummyResult result in results)
             {
-                Assert.Equal(dummyResultString, result.Result);
+                Assert.Equal(dummyArg, result.Result);
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStringAsync_InvokesJavascript()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithRawStreamModule_InvokesFromStream()
         {
             // Arrange
-            const string dummyResultString = "success";
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+
+            // Act
+            await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            DummyResult result = await testSubject.
+                InvokeFromStreamAsync<DummyResult>(memoryStream, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithRawStreamModule_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
+                {
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+                    testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult();
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            int result = await testSubject.
+                InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(numThreads, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+            await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
             DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).ConfigureAwait(false);
+                InvokeFromStreamAsync<DummyResult>(() => null, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyResultString, result.Result);
+            Assert.Equal(dummyArg, result.Result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStringAsync_LoadsRequiredModulesFromNodeModulesInProjectDirectory()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_InvokesFromStreamAndCachesModuleIfModuleIsNotCached()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
+
+            // Act
+            // Module hasn't been cached, so if this returns the expected value, stream was sent over
+            DummyResult result1 = await testSubject.
+                InvokeFromStreamAsync<DummyResult>(() => memoryStream, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            // Ensure module was cached
+            (bool success, DummyResult result2) = await testSubject.
+                TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            Assert.Equal(dummyArg, result1.Result);
+            Assert.True(success);
+            Assert.Equal(dummyArg, result2.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            var results = new ConcurrentQueue<int>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
+                {
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+                    results.Enqueue(testSubject.InvokeFromStreamAsync<int>(() => memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementAndGetNumber").GetAwaiter().GetResult());
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            // Module shouldn't get cached more than once, we should get exactly [1,2,3,4,5]
+            List<int> resultsList = results.ToList();
+            resultsList.Sort();
+            for (int i = 0; i < numThreads; i++)
+            {
+                Assert.Equal(resultsList[i], i + 1);
+            }
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+            await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Act
+            await testSubject.
+                InvokeFromStreamAsync(() => null, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Assert
+            int result = await testSubject.InvokeFromStreamAsync<int>(memoryStream, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(2, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithModuleFactory_InvokesFromStreamAndCachesModuleIfModuleIsNotCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+
+            // Act
+            await testSubject.
+                InvokeFromStreamAsync(() => memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Assert
+            // Ensure module was cached
+            (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.True(success);
+            Assert.Equal(1, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithModuleFactory_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
+                {
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
+                    testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult();
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.True(success);
+            Assert.Equal(numThreads, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithTypeParameter_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Act
+            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            Assert.True(success);
+            Assert.Equal(dummyArg, value.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithTypeParameter_ReturnsFalseIfModuleIsNotCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { "success" }).ConfigureAwait(false);
+
+            // Assert
+            Assert.False(success);
+            Assert.Null(value);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithTypeParameter_IsThreadSafe()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Act
+            var results = new ConcurrentQueue<(bool, DummyResult)>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => results.Enqueue(testSubject.
+                    TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).GetAwaiter().GetResult()));
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            Assert.Equal(numThreads, results.Count);
+            foreach ((bool success, DummyResult value) in results)
+            {
+                Assert.True(success);
+                Assert.Equal(dummyArg, value.Result);
+            }
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithoutTypeParameter_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Act
+            bool success = await testSubject.TryInvokeFromCacheAsync(DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Assert
+            Assert.True(success);
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(2, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithoutTypeParameter_ReturnsFalseIfModuleIsNotCached()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            bool success = await testSubject.TryInvokeFromCacheAsync(DUMMY_CACHE_IDENTIFIER).ConfigureAwait(false);
+
+            // Assert
+            Assert.False(success);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void TryInvokeFromCacheAsync_WithoutTypeParameter_IsThreadSafe()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.TryInvokeFromCacheAsync(DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            Assert.Equal(numThreads + 1, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InMemoryInvokeMethods_LoadRequiredModulesFromNodeModulesInProjectDirectory()
         {
             // Arrange
             const string dummyCode = @"public string ExampleFunction(string arg)
@@ -262,7 +703,7 @@ module.exports = (callback) => {
     // Example comment
     return arg + ""dummyString"";
 }";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             string result = await testSubject.InvokeFromStringAsync<string>(@"const prismjs = require('prismjs');
@@ -283,17 +724,16 @@ module.exports = (callback, code) => {
             Assert.Equal(expectedResult, result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromStringAsync_LoadsRequiredModuleFromFileInProjectDirectory()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InMemoryInvokeMethods_LoadRequiredModulesFromFilesInProjectDirectory()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath); // Current directory is <test project path>/bin/debug/<framework>
 
             // Act
             int result = await testSubject.InvokeFromStringAsync<int>(@"const value = require('./dummyReturnsValueModule.js');
 
 module.exports = (callback) => {
-
     callback(null, value);
 };").ConfigureAwait(false);
 
@@ -301,83 +741,7 @@ module.exports = (callback) => {
             Assert.Equal(10, result); // dummyReturnsValueModule.js just exports 10
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public void InvokeFromStringAsync_IsThreadSafe()
-        {
-            // Arrange
-            const string dummyModule = "module.exports = (callback, resultString) => callback(null, {result: resultString});";
-            const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
-
-            // Act
-            var results = new ConcurrentQueue<DummyResult>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() => results.Enqueue(testSubject.InvokeFromStringAsync<DummyResult>(dummyModule, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
-            Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
-            {
-                Assert.Equal(dummyResultString, result.Result);
-            }
-        }
-
-        [Fact(Timeout = _timeoutMS)]
-        public async void InvokeFromFileAsync_InvokesJavascript()
-        {
-            const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/Javascript");
-
-            // Act
-            DummyResult result = await testSubject.
-                InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact(Timeout = _timeoutMS)]
-        public void InvokeFromFileAsync_IsThreadSafe()
-        {
-            // Arrange
-            const string dummyModule = "dummyModule.js";
-            const string dummyResultString = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: Directory.GetCurrentDirectory() + "/Javascript");
-
-            // Act
-            var results = new ConcurrentQueue<DummyResult>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() => results.Enqueue(testSubject.InvokeFromFileAsync<DummyResult>(dummyModule, args: new[] { dummyResultString }).GetAwaiter().GetResult()));
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
-            Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
-            {
-                Assert.Equal(dummyResultString, result.Result);
-            }
-        }
-
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleHasNoExports()
         {
             // Arrange
@@ -393,24 +757,23 @@ module.exports = (callback) => {
             Assert.StartsWith($"The module \"{dummyModule}...\" has no exports. Ensure that the module assigns a function or an object containing functions to module.exports.", result.Message);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfThereIsNoModuleExportWithSpecifiedExportName()
         {
             // Arrange
             const string dummyExportName = "dummyExportName";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() =>
-                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = (callback) => callback(null, {result: 'success'});", dummyCacheIdentifier, dummyExportName)).
+                testSubject.InvokeFromStringAsync<DummyResult>("module.exports = (callback) => callback(null, {result: 'success'});", DUMMY_CACHE_IDENTIFIER, dummyExportName)).
                 ConfigureAwait(false);
 
             // Assert
-            Assert.StartsWith($"The module {dummyCacheIdentifier} has no export named {dummyExportName}.", result.Message);
+            Assert.StartsWith($"The module {DUMMY_CACHE_IDENTIFIER} has no export named {dummyExportName}.", result.Message);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfModuleExportWithSpecifiedExportNameIsNotAFunction()
         {
             // Arrange
@@ -426,7 +789,7 @@ module.exports = (callback) => {
             Assert.StartsWith($"The export named {dummyExportName} from module \"module.exports = {{dummyEx...\" is not a function.", result.Message);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfNoExportNameSpecifiedAndModuleExportsIsNotAFunction()
         {
             // Arrange
@@ -441,7 +804,7 @@ module.exports = (callback) => {
             Assert.StartsWith("The module \"module.exports = {result:...\" does not export a function.", result.Message);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedMethodCallsCallbackWithError()
         {
             // Arrange
@@ -457,7 +820,7 @@ module.exports = (callback) => {
             Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_ThrowInvocationExceptionIfInvokedAsyncMethodThrowsError()
         {
             // Arrange
@@ -473,41 +836,41 @@ module.exports = (callback) => {
             Assert.StartsWith(dummyErrorString, result.Message); // Complete message includes the stack
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void AllInvokeMethods_InvokeAsyncJavascriptMethods()
         {
             // Arrange
-            const string dummyResultString = "success";
+            const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>("module.exports = async (resultString) => {return {result: resultString};}", args: new[] { dummyResultString }).ConfigureAwait(false);
+                InvokeFromStringAsync<DummyResult>("module.exports = async (resultString) => {return {result: resultString};}", args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyResultString, result.Result);
+            Assert.Equal(dummyArg, result.Result);
         }
 
-        [Fact(Timeout = _timeoutMS)]
-        public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsProvided()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void AllInvokeMethods_InvokeASpecificExportIfExportNameIsNotNull()
         {
             // Arrange
-            const string dummyResultString = "success";
+            const string dummyArg = "success";
             const string dummyExportName = "dummyExportName";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
             DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyResultString }).ConfigureAwait(false);
+                InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyResultString, result.Result);
+            Assert.Equal(dummyArg, result.Result);
         }
 
-        // TODO these tests don't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
-        // They're are still useful for diagnosing issues with output piping.
-        // Tests the interaction between the Http server and OutOfProcessNodeJSService.TryCreateMessage
-        [Theory(Timeout = _timeoutMS, Skip = "Node.js randomly truncates stdout/stderr")]
+        // TODO doesn't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
+        // Still useful for diagnosing issues with output piping.
+        // We're using Thread.Sleep(1000) to minimize issues, but it doesn't work all the time.
+        [Theory(Timeout = TIMEOUT_MS, Skip = "Node.js randomly truncates stdout/stderr")]
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStdoutOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStdoutOutput(string dummyLogArgument, string expectedResult)
         {
@@ -528,13 +891,6 @@ module.exports = (callback) => {
             // Does not work
             // process.stdout.write('', 'utf8', () => callback());
         }}").ConfigureAwait(false);
-            // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
-            //
-            // TODO On Linux and macOS, Node.js does not flush stdout completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
-            // Note that console.log just writes to stdout under the hood -https://nodejs.org/docs/latest-v8.x/api/console.html#console_console_log_data_args.
-            // There flakiness causes this test to fail randomly. The whole stdout flushing issue seems like a persistent Node.js problem - https://github.com/nodejs/node/issues/6456. 
-            // Several attempts have been made to flush/write to stdout synchronously in the js above, to no avail.
-            // The following Thread.Sleep(1000) works almost all the time, but isn't a clean solution.
             Thread.Sleep(1000);
             ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();
@@ -558,7 +914,10 @@ module.exports = (callback) => {
             };
         }
 
-        [Theory(Timeout = _timeoutMS, Skip = "Node.js randomly truncates stdout/stderr")]
+        // TODO doesn't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
+        // Still useful for diagnosing issues with output piping.
+        // We're using Thread.Sleep(1000) to minimize issues, but it doesn't work all the time.
+        [Theory(Timeout = TIMEOUT_MS, Skip = "Node.js randomly truncates stdout/stderr")]
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStderrOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStderrOutput(string dummyLogArgument, string expectedResult)
         {
@@ -572,14 +931,7 @@ module.exports = (callback) => {
             console.error({dummyLogArgument}); 
             callback();
         }}").ConfigureAwait(false);
-            // Disposing of HttpNodeServices causes Process.Kill and Process.WaitForExit(500) to be called on the node process, this gives it time for it to flush its output.
-            //
-            // TODO On Linux and macOS, Node.js does not flush stderr completely when Process.Kill is called, even if Process.WaitForExit is called immediately after.
-            // Note that console.log just writes to stderr under the hood -https://nodejs.org/docs/latest-v8.x/api/console.html#console_console_log_data_args.
-            // There flakiness causes this test to fail randomly. The whole stderr flushing issue seems like a persistent Node.js problem - https://github.com/nodejs/node/issues/6456. 
-            // Several attempts have been made to flush/write to stderr synchronously in the js above, to no avail.
-            // The following Thread.Sleep(500) works almost all the time, but isn't a clean solution.
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();
 
@@ -628,7 +980,7 @@ module.exports = (callback) => {
                 }
             });
 
-            if (Debugger.IsAttached && _debugNodeJS)
+            if (Debugger.IsAttached && DEBUG_NODEJS)
             {
                 services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk"); // An easy way to step through NodeJS code is to use Chrome. Consider option 1 from this list https://nodejs.org/en/docs/guides/debugging-getting-started/#chrome-devtools-55.
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
@@ -637,6 +989,19 @@ module.exports = (callback) => {
             _serviceProvider = services.BuildServiceProvider();
 
             return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
+        }
+
+        private MemoryStream CreateMemoryStream(string value)
+        {
+#pragma warning disable IDE0067
+            var memoryStream = new MemoryStream();
+            var streamWriter = new StreamWriter(memoryStream);
+#pragma warning disable IDE0067
+            streamWriter.Write(value);
+            streamWriter.Flush();
+            memoryStream.Position = 0;
+
+            return memoryStream;
         }
 
         private class DummyResult
