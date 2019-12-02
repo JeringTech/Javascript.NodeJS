@@ -25,7 +25,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
-        private const int _timeoutMS = 60000;
+        private const int TIMEOUT_MS = 60000;
 
         public OutOfProcessNodeJSServiceUnitTests(ITestOutputHelper testOutputHelper)
         {
@@ -33,7 +33,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public async void InvokeFromFileAsync_CreatesInvocationRequestAndCallsTryInvokeCoreAsync()
+        public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
         {
             // Arrange
             const int dummyResult = 1;
@@ -43,26 +43,49 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.File &&
+                            invocationRequest.ModuleSource == dummyModulePath &&
+                            invocationRequest.NewCacheIdentifier == null &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == null),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
 
             // Act
             int result = await mockTestSubject.Object.InvokeFromFileAsync<int>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyResult, result);
             _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                It.Is<InvocationRequest>(
-                    invocationRequest =>
-                    invocationRequest.ModuleSourceType == ModuleSourceType.File &&
-                    invocationRequest.ModuleSource == dummyModulePath &&
-                    invocationRequest.ExportName == dummyExportName &&
-                    invocationRequest.Args == dummyArgs),
-                dummyCancellationToken));
+            Assert.Equal(dummyResult, result);
         }
 
         [Fact]
-        public async void InvokeFromStringAsync_CreatesInvocationRequestAndCallsTryInvokeCoreAsync()
+        public async void InvokeFromFileAsync_WithoutTypeParameter_InvokesFromFile()
+        {
+            // Arrange
+            const string dummyModulePath = "dummyModulePath";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.InvokeFromFileAsync<Void>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((Void)null);
+
+            // Act
+            await mockTestSubject.Object.InvokeFromFileAsync(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+        }
+
+        [Fact]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithRawStringModule_InvokesFromString()
         {
             // Arrange
             const int dummyResult = 1;
@@ -73,7 +96,17 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.String &&
+                            invocationRequest.ModuleSource == dummyModuleString &&
+                            invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == null),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
 
             // Act
             int result = await mockTestSubject.Object.InvokeFromStringAsync<int>(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -81,19 +114,126 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             Assert.Equal(dummyResult, result);
             _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                It.Is<InvocationRequest>(
-                    invocationRequest =>
-                    invocationRequest.ModuleSourceType == ModuleSourceType.String &&
-                    invocationRequest.ModuleSource == dummyModuleString &&
-                    invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
-                    invocationRequest.ExportName == dummyExportName &&
-                    invocationRequest.Args == dummyArgs),
-                dummyCancellationToken));
         }
 
         [Fact]
-        public async void InvokeFromStreamAsync_CreatesInvocationRequestAndCallsTryInvokeCoreAsync()
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithRawStringModule_InvokesFromString()
+        {
+            // Arrange
+            const string dummyModuleString = "dummyModuleString";
+            const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.InvokeFromStringAsync<Void>(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((Void)null);
+
+            // Act
+            await mockTestSubject.Object.InvokeFromStringAsync(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+        }
+
+        [Fact]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_ThrowsArgumentNullExceptionIfModuleIsNotCachedButModuleFactoryIsNull()
+        {
+            // Arrange
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>("dummyCacheIdentifier", null, null, default)).
+                ReturnsAsync((false, 0));
+
+            // Act and assert
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await mockTestSubject.Object.InvokeFromStringAsync<int>((Func<string>)null, "dummyCacheIdentifier").ConfigureAwait(false)).ConfigureAwait(false);
+        }
+
+        [Fact]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            const int dummyResult = 1;
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>(dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
+
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStringAsync<int>(() => "dummyModule", dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal(dummyResult, result);
+        }
+
+        [Fact]
+        public async void InvokeFromStringAsync_WithTypeParameter_WithModuleFactory_InvokesFromStringAndCachesModuleIfModuleIsNotCached()
+        {
+            // Arrange
+            const int dummyResult = 1;
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            const string dummyModule = "dummyModule";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>(dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((false, 0));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.String &&
+                            invocationRequest.ModuleSource == dummyModule &&
+                            invocationRequest.NewCacheIdentifier == dummyCacheIdentifier &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == null),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
+
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStringAsync<int>(() => dummyModule, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal(dummyResult, result);
+        }
+
+        [Fact]
+        public async void InvokeFromStringAsync_WithoutTypeParameter_WithModuleFactory_IfModuleIsCachedInvokesFromCacheOtherwiseInvokesFromString()
+        {
+            // Arrange
+            Func<string> dummyFactory = () => "dummyModule";
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.InvokeFromStringAsync<Void>(dummyFactory, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((Void)null);
+
+            // Act
+            await mockTestSubject.Object.InvokeFromStringAsync(dummyFactory, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+        }
+
+        [Fact]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithRawStreamModule_InvokesFromStream()
         {
             // Arrange
             const int dummyResult = 1;
@@ -104,7 +244,17 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.Stream &&
+                            invocationRequest.ModuleSource == null &&
+                            invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == dummyModuleStream),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
 
             // Act
             int result = await mockTestSubject.Object.InvokeFromStreamAsync<int>(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -112,19 +262,127 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             Assert.Equal(dummyResult, result);
             _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                It.Is<InvocationRequest>(
-                    invocationRequest =>
-                    invocationRequest.ModuleSourceType == ModuleSourceType.Stream &&
-                    invocationRequest.ModuleStreamSource == dummyModuleStream &&
-                    invocationRequest.NewCacheIdentifier == dummyNewCacheIdentifier &&
-                    invocationRequest.ExportName == dummyExportName &&
-                    invocationRequest.Args == dummyArgs),
-                dummyCancellationToken));
         }
 
         [Fact]
-        public async void TryInvokeFromCacheAsync_CreatesInvocationRequestAndCallsTryInvokeCoreAsync()
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithRawStreamModule_InvokesFromStream()
+        {
+            // Arrange
+            var dummyModuleStream = new MemoryStream();
+            const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.InvokeFromStreamAsync<Void>(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((Void)null);
+
+            // Act
+            await mockTestSubject.Object.InvokeFromStreamAsync(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+        }
+
+        [Fact]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_ThrowsArgumentNullExceptionIfModuleIsNotCachedButModuleFactoryIsNull()
+        {
+            // Arrange
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>("dummyCacheIdentifier", null, null, default)).
+                ReturnsAsync((false, 0));
+
+            // Act and assert
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await mockTestSubject.Object.InvokeFromStreamAsync<int>((Func<Stream>)null, "dummyCacheIdentifier").ConfigureAwait(false)).ConfigureAwait(false);
+        }
+
+        [Fact]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_InvokesFromCacheIfModuleIsCached()
+        {
+            // Arrange
+            const int dummyResult = 1;
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>(dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
+
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStreamAsync<int>(() => new MemoryStream(), dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal(dummyResult, result);
+        }
+
+        [Fact]
+        public async void InvokeFromStreamAsync_WithTypeParameter_WithModuleFactory_InvokesFromStreamIfModuleIsNotCached()
+        {
+            // Arrange
+            const int dummyResult = 1;
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+#pragma warning disable IDE0067
+            var dummyModule = new MemoryStream();
+#pragma warning disable IDE0067
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<int>(dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((false, 0));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.Stream &&
+                            invocationRequest.ModuleSource == null &&
+                            invocationRequest.NewCacheIdentifier == dummyCacheIdentifier &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == dummyModule),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
+
+            // Act
+            int result = await mockTestSubject.Object.InvokeFromStreamAsync<int>(() => dummyModule, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            Assert.Equal(dummyResult, result);
+        }
+
+        [Fact]
+        public async void InvokeFromStreamAsync_WithoutTypeParameter_WithModuleFactory_IfModuleIsCachedInvokesFromCacheOtherwiseInvokesFromStream()
+        {
+            // Arrange
+            Func<Stream> dummyFactory = () => new MemoryStream();
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.InvokeFromStreamAsync<Void>(dummyFactory, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).ReturnsAsync((Void)null);
+
+            // Act
+            await mockTestSubject.Object.InvokeFromStreamAsync(dummyFactory, dummyCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+        }
+
+        [Fact]
+        public async void TryInvokeFromCacheAsync_WithTypeParameter_InvokesFromCache()
         {
             // Arrange
             const int dummyResult = 1;
@@ -134,7 +392,17 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.TryInvokeCoreAsync<int>(It.IsAny<InvocationRequest>(), It.IsAny<CancellationToken>())).ReturnsAsync((true, dummyResult));
+            mockTestSubject.
+                Setup(t => t.TryInvokeCoreAsync<int>(It.Is<InvocationRequest>(
+                        invocationRequest =>
+                            invocationRequest.ModuleSourceType == ModuleSourceType.Cache &&
+                            invocationRequest.ModuleSource == dummyModuleCacheIdentifier &&
+                            invocationRequest.NewCacheIdentifier == null &&
+                            invocationRequest.ExportName == dummyExportName &&
+                            invocationRequest.Args == dummyArgs &&
+                            invocationRequest.ModuleStreamSource == null),
+                    dummyCancellationToken)).
+                ReturnsAsync((true, dummyResult));
 
             // Act
             (bool success, int result) = await mockTestSubject.Object.TryInvokeFromCacheAsync<int>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -143,14 +411,28 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.True(success);
             Assert.Equal(dummyResult, result);
             _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.TryInvokeCoreAsync<int>(
-                It.Is<InvocationRequest>(
-                    invocationRequest =>
-                    invocationRequest.ModuleSourceType == ModuleSourceType.Cache &&
-                    invocationRequest.ModuleSource == dummyModuleCacheIdentifier &&
-                    invocationRequest.ExportName == dummyExportName &&
-                    invocationRequest.Args == dummyArgs),
-                dummyCancellationToken));
+        }
+
+        [Fact]
+        public async void TryInvokeFromCacheAsync_WithoutTypeParameter_InvokesFromCache()
+        {
+            // Arrange
+            const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
+            const string dummyExportName = "dummyExportName";
+            var dummyArgs = new object[0];
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.TryInvokeFromCacheAsync<Void>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
+                ReturnsAsync((true, null));
+
+            // Act
+            bool success = await mockTestSubject.Object.TryInvokeFromCacheAsync(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
+
+            // Assert
+            Assert.True(success);
+            _mockRepository.VerifyAll();
         }
 
         [Fact]
@@ -166,7 +448,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal($"Cannot access a disposed object.\nObject name: '{nameof(OutOfProcessNodeJSService)}'.", result.Message, ignoreLineEndingDifferences: true);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_FirstThreadLazilyCreatesNodeJSProcessBeforeInvoking()
         {
             // Arrange
@@ -227,7 +509,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void TryInvokeCoreAsync_IfNodeJSProcessIsNotConnectedFirstThreadCreatesNodeJSProcessBeforeInvoking()
         {
             // Arrange
@@ -290,7 +572,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_RetriesConnectionIfConnectionAttemptTimesoutAndThrowsInvocationExceptionIfNoRetriesRemain()
         {
             // Arrange
@@ -366,7 +648,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_DoesNotRetryInvocationsThatAreCanceledAndThrowsOperationCanceledException()
         {
             // Arrange
@@ -441,7 +723,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_RetriesInvocationsThatTimeoutAndThrowsInvocationExceptionIfNoRetriesRemain()
         {
             // Arrange
@@ -523,7 +805,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_RetriesInvocationsThatThrowExceptionsAndThrowsExceptionIfNoRetriesRemain()
         {
             // Arrange
@@ -595,7 +877,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_DoesNotRetryInvocationIfModuleSourceIsAnUnseekableStream()
         {
             // Arrange
@@ -636,7 +918,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Once()); // No retries
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_ResetsStreamPositionAndRetriesInvocationIfModuleSourceIsASeekableStreamThatIsNotAtItsInitialPosition()
         {
             // Arrange
@@ -680,7 +962,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition);
         }
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void TryInvokeCoreAsync_RetriesInvocationIfModuleSourceIsASeekableStream()
         {
             // Arrange

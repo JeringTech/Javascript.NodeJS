@@ -88,49 +88,117 @@ namespace Jering.Javascript.NodeJS
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.File,
-                    modulePath,
-                    exportName: exportName,
-                    args: args);
+            var invocationRequest = new InvocationRequest(ModuleSourceType.File, modulePath, exportName: exportName, args: args);
 
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.String,
-                    moduleString,
-                    newCacheIdentifier,
-                    exportName,
-                    args);
+            // Task<T> extends Task
+            return InvokeFromFileAsync<Void>(modulePath, exportName, args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            var invocationRequest = new InvocationRequest(ModuleSourceType.String, moduleString, newCacheIdentifier, exportName, args);
 
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />
-        public async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStringAsync(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream,
-                    newCacheIdentifier: newCacheIdentifier,
-                    exportName: exportName,
-                    args: args,
-                    moduleStreamSource: moduleStream);
+            return InvokeFromStringAsync<Void>(moduleString, newCacheIdentifier, exportName, args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<T> InvokeFromStringAsync<T>(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            (bool success, T result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
+
+            if (success)
+            {
+                return result;
+            }
+
+            if (moduleFactory == null)
+            {
+                throw new ArgumentNullException(nameof(moduleFactory));
+            }
+
+            // If module doesn't exist in cache, create module string and send it to the NodeJS process
+            var invocationRequest = new InvocationRequest(ModuleSourceType.String, moduleFactory(), cacheIdentifier, exportName, args);
 
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />
-        public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStringAsync(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.Cache,
-                    moduleCacheIdentifier,
-                    exportName: exportName,
-                    args: args);
+            return InvokeFromStringAsync<Void>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, newCacheIdentifier, exportName, args, moduleStream);
+
+            return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
+        }
+
+        /// <inheritdoc />
+        public virtual Task InvokeFromStreamAsync(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            return InvokeFromStreamAsync<Void>(moduleStream, newCacheIdentifier, exportName, args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<T> InvokeFromStreamAsync<T>(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            (bool success, T result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
+
+            if (success)
+            {
+                return result;
+            }
+
+            if (moduleFactory == null)
+            {
+                throw new ArgumentNullException(nameof(moduleFactory));
+            }
+
+            using (Stream moduleStream = moduleFactory())
+            {
+                // If module doesn't exist in cache, create module stream and send it to the NodeJS process
+                var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, cacheIdentifier, exportName, args, moduleStream);
+
+                return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
+            }
+        }
+
+        /// <inheritdoc />
+        public virtual Task InvokeFromStreamAsync(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            return InvokeFromStreamAsync<Void>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleCacheIdentifier, exportName: exportName, args: args);
 
             return TryInvokeCoreAsync<T>(invocationRequest, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public virtual async Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        {
+            return (await TryInvokeFromCacheAsync<Void>(moduleCacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false)).Item1;
         }
 
         internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
