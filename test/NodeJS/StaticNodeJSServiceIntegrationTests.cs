@@ -1,168 +1,97 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Threading;
 using Xunit;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
+    [Collection(nameof(StaticNodeJSService))]
     public class StaticNodeJSServiceIntegrationTests
     {
-        private const int _timeoutMS = 60000;
+        private const int TIMEOUT_MS = 60000;
 
-        [Fact]
-        public async void Configure_ConfiguresOptions()
-        {
-            // Arrange
-            const int dummyInitialInvocationResult = 1;
-            const string dummyTestVariableName1 = "TEST_VARIABLE_1";
-            const string dummyTestVariableValue1 = "testVariableValue1";
-            const string dummyTestVariableName2 = "TEST_VARIABLE_2";
-            const string dummyTestVariableValue2 = "testVariableValue2";
-
-            // Act
-            // Invoke javascript once to ensure that an initial NodeJSService is created. The invocation after configuration should properly dispose of this initial instance and create a new one with the
-            // specified options.
-            int initialInvocationResult = await StaticNodeJSService.
-                InvokeFromStringAsync<int>($"module.exports = (callback) => callback(null, {dummyInitialInvocationResult});").ConfigureAwait(false);
-            StaticNodeJSService.
-                    Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName1, dummyTestVariableValue1));
-            StaticNodeJSService.
-                    Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName2, dummyTestVariableValue2));
-
-            // Assert
-            Assert.Equal(dummyInitialInvocationResult, initialInvocationResult);
-            DummyResult result = await StaticNodeJSService.
-                InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName1} + process.env.{dummyTestVariableName2}}});").
-                ConfigureAwait(false);
-            Assert.Equal(dummyTestVariableValue1 + dummyTestVariableValue2, result.Result);
-        }
-
-        [Fact]
-        public async void DisposeServiceProvider_DisposesServiceProvider()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void DisposeServiceProvider_RestartsNodeJSProcess()
         {
             // Arrange
             const string dummyTestVariableName = "TEST_VARIABLE";
             const string dummyTestVariableValue = "testVariableValue";
-            StaticNodeJSService.
-                Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue));
-            DummyResult initialInvocationResult = await StaticNodeJSService.
-                InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName}}});").
-                ConfigureAwait(false);
+            StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue));
+            string result1 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
 
             // Act
             StaticNodeJSService.DisposeServiceProvider(); // Dispose, environment variable should not be set in the next call
-            DummyResult result = await StaticNodeJSService.
-                InvokeFromStringAsync<DummyResult>($"module.exports = (callback) => callback(null, {{result: process.env.{dummyTestVariableName}}});").
-                ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyTestVariableValue, initialInvocationResult.Result);
-            Assert.Null(result.Result);
+            string result2 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
+            Assert.Equal(dummyTestVariableValue, result1);
+            Assert.Equal(string.Empty, result2);
         }
 
-        [Fact]
-        public async void TryInvokeFromCacheAsync_InvokesJavascriptIfModuleIsCached()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void Configure_RestartsNodeJSProcessWithNewOptions()
         {
             // Arrange
-            const string dummyResultString = "success";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
-
-            // Cache
-            await StaticNodeJSService.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});",
-                    dummyCacheIdentifier,
-                    args: new[] { dummyResultString }).
-                ConfigureAwait(false);
+            const string dummyTestVariableName = "TEST_VARIABLE";
+            const string dummyTestVariableValue1 = "testVariableValue1";
+            const string dummyTestVariableValue2 = "testVariableValue2";
+            StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue1));
+            string result1 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
 
             // Act
-            (bool success, DummyResult value) = await StaticNodeJSService.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
+            StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue2));
 
             // Assert
-            Assert.True(success);
-            Assert.Equal(dummyResultString, value.Result);
+            string result2 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
+            Assert.Equal(dummyTestVariableValue1, result1);
+            Assert.Equal(dummyTestVariableValue2, result2);
         }
 
-        [Fact]
-        public async void TryInvokeFromCacheAsync_ReturnsFalseIfModuleIsNotCached()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void SetServices_RestartsNodeJSProcessWithNewServices()
         {
             // Arrange
-            const string dummyResultString = "success";
-            const string dummyCacheIdentifier = "dummyCacheIdentifier";
+            const string dummyTestVariableName = "TEST_VARIABLE_1";
+            const string dummyTestVariableValue1 = "testVariableValue1";
+            const string dummyTestVariableValue2 = "testVariableValue2";
+            StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue1));
+            string result1 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
+            var dummyServices = new ServiceCollection();
+            dummyServices.
+                AddNodeJS().
+                Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue2));
 
             // Act
-            (bool success, DummyResult value) = await StaticNodeJSService.TryInvokeFromCacheAsync<DummyResult>(dummyCacheIdentifier, args: new[] { dummyResultString }).ConfigureAwait(false);
+            StaticNodeJSService.SetServices(dummyServices);
 
             // Assert
-            Assert.False(success);
-            Assert.Null(value);
+            string result2 = await StaticNodeJSService.
+                InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
+            Assert.Equal(dummyTestVariableValue1, result1);
+            Assert.Equal(dummyTestVariableValue2, result2);
         }
 
-        [Fact]
-        public async void InvokeFromStreamAsync_InvokesJavascript()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-
-            DummyResult result;
-            using (var memoryStream = new MemoryStream())
-            using (var streamWriter = new StreamWriter(memoryStream))
-            {
-                streamWriter.Write("module.exports = (callback, resultString) => callback(null, {result: resultString});");
-                streamWriter.Flush();
-                memoryStream.Position = 0;
-
-                // Act
-                result = await StaticNodeJSService.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyResultString }).ConfigureAwait(false);
-            }
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact]
-        public async void InvokeFromStringAsync_InvokesJavascript()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-
-            // Act
-            DummyResult result = await StaticNodeJSService.
-                InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact]
-        public async void InvokeFromFileAsync_InvokesJavascript()
-        {
-            // Arrange
-            const string dummyResultString = "success";
-            StaticNodeJSService.
-                Configure<NodeJSProcessOptions>(options => options.ProjectPath = "./Javascript");
-
-            // Act
-            DummyResult result = await StaticNodeJSService.
-                InvokeFromFileAsync<DummyResult>("dummyModule.js", args: new[] { dummyResultString }).ConfigureAwait(false);
-
-            // Assert
-            Assert.Equal(dummyResultString, result.Result);
-        }
-
-        [Fact(Timeout = _timeoutMS)]
+        // This test ensures that private method GetOrCreateNodeJSService properly handles multiple concurrent requests
+        [Fact(Timeout = TIMEOUT_MS)]
         public void AllInvokeMethods_AreThreadSafe()
         {
             // Arrange
-            const string dummyResultString = "success";
+            StaticNodeJSService.DisposeServiceProvider(); // In case previous test registered a custom service
 
             // Act
-            var results = new ConcurrentQueue<DummyResult>();
+            var results = new ConcurrentQueue<string>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
             {
-                var thread = new Thread(() => results.Enqueue(StaticNodeJSService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, resultString) => callback(null, {result: resultString});", args: new[] { dummyResultString }).GetAwaiter().GetResult()));
+                var thread = new Thread(() => results.Enqueue(StaticNodeJSService.InvokeFromStringAsync<string>("module.exports = (callback) => callback(null, process.pid);").GetAwaiter().GetResult()));
                 threads.Add(thread);
                 thread.Start();
             }
@@ -173,15 +102,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
-            {
-                Assert.Equal(dummyResultString, result.Result);
-            }
-        }
-
-        private class DummyResult
-        {
-            public string Result { get; set; }
+            Assert.Single(results.Distinct()); // All invocations should run in process started by first invocation
         }
     }
 }
