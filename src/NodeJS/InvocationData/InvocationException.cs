@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>
-    /// Represents an exception caused by an error caught in NodeJS.
+    /// Represents an unrecoverable issue encountered when trying to invoke javascript in NodeJS.
     /// </summary>
     [Serializable]
     public class InvocationException : Exception
@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates an <see cref="InvocationException"/> instance.
         /// </summary>
-        public InvocationException() : base()
+        public InvocationException()
         {
         }
 
