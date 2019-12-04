@@ -11,11 +11,10 @@ namespace Jering.Javascript.NodeJS.Tests
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
 
         [Fact]
-        public void Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsStreamButModuleStreamSourceIsNull()
+        public void Constructor_ThrowsArgumentNullExceptionIfModuleSourceTypeIsStreamButModuleStreamSourceIsNull()
         {
             // Act and assert
-            ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(ModuleSourceType.Stream));
-            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull + "\nParameter name: moduleStreamSource", result.Message, ignoreLineEndingDifferences: true);
+            ArgumentNullException result = Assert.Throws<ArgumentNullException>(() => new InvocationRequest(ModuleSourceType.Stream));
         }
 
         [Theory]
@@ -24,7 +23,6 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Act and assert
             ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(dummyModuleSourceType, dummyModuleSource));
-            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString + "\nParameter name: moduleSource", result.Message, ignoreLineEndingDifferences: true);
         }
 
         public static IEnumerable<object[]> Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsFileOrStringButModuleSourceIsNullWhitespaceOrAnEmptyString_Data()
@@ -41,11 +39,10 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsCacheButModuleSourceIsNull()
+        public void Constructor_ThrowsArgumentNullExceptionIfModuleSourceTypeIsCacheButModuleSourceIsNull()
         {
             // Act and assert
-            ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(ModuleSourceType.Cache));
-            Assert.Equal(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNull + "\nParameter name: moduleSource", result.Message, ignoreLineEndingDifferences: true);
+            ArgumentNullException result = Assert.Throws<ArgumentNullException>(() => new InvocationRequest(ModuleSourceType.Cache));
         }
 
         [Fact]

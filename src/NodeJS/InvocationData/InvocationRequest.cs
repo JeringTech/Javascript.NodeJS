@@ -14,27 +14,21 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates an <see cref="InvocationRequest"/> instance.
         /// </summary>
-        /// <param name="moduleSourceType">The source type of the module to be invoked.</param>
-        /// <param name="moduleSource"><para>The source of the module to be invoked.</para>
-        /// <para>The source can be the path of the module relative to <see cref="NodeJSProcessOptions.ProjectPath"/>,
-        /// the module as a string, or the cache identifier of the module.</para>
-        /// <para> If <paramref name="moduleSourceType"/> is not <see cref="ModuleSourceType.Stream"/>, this parameter must be specified.
-        /// Additionally, if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/>, this parameter must not be an empty string
-        /// or whitespace.</para>
+        /// <param name="moduleSourceType">The source type of the module.</param>
+        /// <param name="moduleSource">
+        /// <para>The module's source.</para>
+        /// <para>This value may be the path of the module relative to <see cref="NodeJSProcessOptions.ProjectPath"/>, the module as a string, or the module's cache identifier.</para>
+        /// <para>If <paramref name="moduleSourceType"/> is not <see cref="ModuleSourceType.Stream"/>, this value must not be <c>null</c>. Additionally, if <paramref name="moduleSourceType"/> 
+        /// is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/>, this value must not be an empty string or whitespace.</para>
         /// </param>
-        /// <param name="newCacheIdentifier"><para>The new cache identifier for the module to be invoked.</para>
-        /// <para>If this parameter is not specified, the module will not be cached. If it is specified, this parameter must not be an empty string or whitespace.</para></param>
-        /// <param name="exportName"><para>The name of the function in the module's exports to invoke.</para> 
-        /// <para>If this value is not specified, the module's exports object is assumed to be a function, and that function is invoked.
-        /// If it is specified, it must not be an empty string or whitespace.</para></param>
-        /// <param name="args">The arguments for the function to invoke.</param>
+        /// <param name="newCacheIdentifier">The module's cache identifier. If this value is <c>null</c>, no attempt is made to retrieve or cache the module's exports.</param>
+        /// <param name="exportName">The name of the function in the module's exports to invoke. If this value is <c>null</c>, the module's exports is assumed to be a function and is invoked.</param>
+        /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
         /// <param name="moduleStreamSource">The module as a <see cref="Stream"/>.</param>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Stream"/> but 
-        /// <paramref name="moduleStreamSource"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or 
-        /// <see cref="ModuleSourceType.String"/> but <paramref name="moduleSource"/> is null, whitespace or an empty string.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Cache"/> but
-        /// <paramref name="moduleSource"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Stream"/> but <paramref name="moduleStreamSource"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Cache"/> but <paramref name="moduleSource"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/> but <paramref name="moduleSource"/> 
+        /// is <c>null</c>, whitespace or an empty string.</exception>
         public InvocationRequest(ModuleSourceType moduleSourceType,
             string moduleSource = null,
             string newCacheIdentifier = null,
@@ -47,7 +41,7 @@ namespace Jering.Javascript.NodeJS
                 // moduleSourceType is stream but moduleStreamSource is null
                 if (moduleStreamSource == null)
                 {
-                    throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull, nameof(moduleStreamSource));
+                    throw new ArgumentNullException(nameof(moduleStreamSource), Strings.ArgumentException_InvocationRequest_ModuleStreamSourceCannotBeNull);
                 }
 
                 if (moduleStreamSource.CanSeek)
@@ -61,12 +55,11 @@ namespace Jering.Javascript.NodeJS
                 if (moduleSource == null)
                 {
                     // moduleSourceType is cache but moduleSource is null
-                    throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNull, nameof(moduleSource));
+                    throw new ArgumentNullException(nameof(moduleSource), Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNull);
                 }
             }
-            else if (string.IsNullOrWhiteSpace(moduleSource))
+            else if (string.IsNullOrWhiteSpace(moduleSource)) // moduleSourceType is file or string but moduleSource is null, whitespace or an empty string
             {
-                // moduleSourceType is file or string but moduleSource is null, whitespace or an empty string
                 throw new ArgumentException(Strings.ArgumentException_InvocationRequest_ModuleSourceCannotBeNullWhitespaceOrAnEmptyString, nameof(moduleSource));
             }
 
@@ -102,7 +95,8 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if <see cref="ModuleStreamSource"/> is an unseekable <see cref="Stream"/>.</exception>
-        public bool CheckStreamAtInitialPosition() {
+        public bool CheckStreamAtInitialPosition()
+        {
             if (ModuleStreamSource == null)
             {
                 throw new InvalidOperationException(Strings.InvalidOperationException_InvocationRequest_StreamIsNull);
@@ -117,17 +111,17 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Gets the source type of the module to be invoked.
+        /// Gets the source type of the module.
         /// </summary>
         public ModuleSourceType ModuleSourceType { get; }
 
         /// <summary>
-        /// Gets the source of the module to be invoked.
+        /// Gets the module's source
         /// </summary>
         public string ModuleSource { get; }
 
         /// <summary>
-        /// Gets the new cache identifier for the module to be invoked.
+        /// Gets the module's cache identifier.
         /// </summary>
         public string NewCacheIdentifier { get; }
 
@@ -137,7 +131,7 @@ namespace Jering.Javascript.NodeJS
         public string ExportName { get; }
 
         /// <summary>
-        /// Gets the arguments for the function to invoke.
+        /// Gets the sequence of JSON-serializable arguments to pass to the function to invoke.
         /// </summary>
         public object[] Args { get; }
 

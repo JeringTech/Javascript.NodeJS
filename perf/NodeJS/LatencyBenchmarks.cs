@@ -11,7 +11,8 @@ namespace Jering.Javascript.NodeJS.Performance
     [MemoryDiagnoser]
     public class LatencyBenchmarks
     {
-        private const string DUMMY_LATENCY_MODULE = "dummyLatencyModule.js";
+        private const string DUMMY_WARMUP_MODULE = "module.exports = (callback) => callback()";
+        private const string DUMMY_LATENCY_MODULE_FILE = "dummyLatencyModule.js";
         private const string DUMMY_MODULE_IDENTIFIER = "dummyLatencyModuleIdentifier";
 
         private ServiceProvider _serviceProvider;
@@ -30,15 +31,14 @@ namespace Jering.Javascript.NodeJS.Performance
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
             _counter = 0;
 
-            // Warm up. First run starts a Node.js process.
-            _nodeJSService.InvokeFromStringAsync<string>("module.exports = (callback) => callback(null, null)", "warmup").GetAwaiter().GetResult();
+            // Warmup. First run starts a Node.js process.
+            _nodeJSService.InvokeFromStringAsync(DUMMY_WARMUP_MODULE).GetAwaiter().GetResult();
         }
 
         [Benchmark]
         public async Task<DummyResult> INodeJSService_Latency_InvokeFromFile()
         {
-            DummyResult result = await _nodeJSService.InvokeFromFileAsync<DummyResult>(DUMMY_LATENCY_MODULE, args: new object[] { _counter++ });
-            return result;
+            return await _nodeJSService.InvokeFromFileAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, args: new object[] { _counter++ });
         }
 
         [GlobalSetup(Target = nameof(INodeJSService_Latency_InvokeFromCache))]
@@ -50,15 +50,19 @@ namespace Jering.Javascript.NodeJS.Performance
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
             _counter = 0;
 
-            // Cache module/warmup
-            _nodeJSService.InvokeFromStringAsync<DummyResult>("module.exports = (callback, result) => callback(null, { result: result });", DUMMY_MODULE_IDENTIFIER, args: new object[] { _counter++ }).GetAwaiter().GetResult();
+            // Warmup/cache.
+            _nodeJSService.InvokeFromStringAsync<DummyResult>(DummyModuleFactory, DUMMY_MODULE_IDENTIFIER, args: new object[] { _counter++ }).GetAwaiter().GetResult();
         }
 
         [Benchmark]
         public async Task<DummyResult> INodeJSService_Latency_InvokeFromCache()
         {
-            (bool _, DummyResult result) = await _nodeJSService.TryInvokeFromCacheAsync<DummyResult>(DUMMY_MODULE_IDENTIFIER, args: new object[] { _counter++ });
-            return result;
+            return await _nodeJSService.InvokeFromStringAsync<DummyResult>(DummyModuleFactory, DUMMY_MODULE_IDENTIFIER, args: new object[] { _counter++ });
+        }
+
+        private string DummyModuleFactory()
+        {
+            return File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../../../..", DUMMY_LATENCY_MODULE_FILE));
         }
 
         [Obsolete]
@@ -75,15 +79,15 @@ namespace Jering.Javascript.NodeJS.Performance
             _nodeServices = _serviceProvider.GetRequiredService<INodeServices>();
             _counter = 0;
 
-            // Warm up. First run starts a Node.js process.
-            _nodeServices.InvokeAsync<DummyResult>(DUMMY_LATENCY_MODULE, 0).GetAwaiter().GetResult();
+            // Warmup. First run starts a Node.js process.
+            _nodeServices.InvokeAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, 0).GetAwaiter().GetResult();
         }
 
         [Obsolete]
         [Benchmark]
         public async Task<DummyResult> INodeServices_Latency()
         {
-            DummyResult result = await _nodeServices.InvokeAsync<DummyResult>(DUMMY_LATENCY_MODULE, _counter++);
+            DummyResult result = await _nodeServices.InvokeAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, _counter++);
             return result;
         }
 

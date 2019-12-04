@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS.Performance
 {
-    // TODO after adding invoke method with no return value (analagous to execute method in js engines), remove string type parameters
     [MemoryDiagnoser]
     public class ConcurrencyBenchmarks
     {
-        private const string DUMMY_CONCURRENCY_MODULE = "dummyConcurrencyModule.js";
+        private const string DUMMY_WARMUP_MODULE = "module.exports = (callback) => callback()";
+        private const string DUMMY_CONCURRENCY_MODULE_FILE = "dummyConcurrencyModule.js";
 
         private ServiceProvider _serviceProvider;
         private INodeJSService _nodeJSService;
@@ -29,11 +29,11 @@ namespace Jering.Javascript.NodeJS.Performance
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
 
-            // Warm up. First few runs start Node.js processes, so they take longer. If we don't manually warm up, BenchmarkDotNet erroneously complains
+            // Warmup. First few runs start Node.js processes, so they take longer. If we don't manually warm up, BenchmarkDotNet erroneously complains
             // about iteration time being too low
             for (int i = 0; i < Environment.ProcessorCount; i++)
             {
-                _nodeJSService.InvokeFromStringAsync<string>("module.exports = (callback) => callback(null, null)", "warmup").GetAwaiter().GetResult();
+                _nodeJSService.InvokeFromStringAsync(DUMMY_WARMUP_MODULE).GetAwaiter().GetResult();
             }
         }
 
@@ -45,7 +45,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var results = new Task<string>[numTasks];
             for (int i = 0; i < numTasks; i++)
             {
-                results[i] = _nodeJSService.InvokeFromFileAsync<string>(DUMMY_CONCURRENCY_MODULE);
+                results[i] = _nodeJSService.InvokeFromFileAsync<string>(DUMMY_CONCURRENCY_MODULE_FILE);
             }
 
             return await Task.WhenAll(results);
@@ -60,8 +60,8 @@ namespace Jering.Javascript.NodeJS.Performance
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
 
-            // Warm up. First run starts a Node.js processes.
-            _nodeJSService.InvokeFromStringAsync<string>("module.exports = (callback) => callback(null, null)", "warmup").GetAwaiter().GetResult();
+            // Warmup. First run starts a Node.js processes.
+            _nodeJSService.InvokeFromStringAsync(DUMMY_WARMUP_MODULE).GetAwaiter().GetResult();
         }
 
         [Benchmark]
@@ -72,7 +72,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var results = new Task<string>[numTasks];
             for (int i = 0; i < numTasks; i++)
             {
-                results[i] = _nodeJSService.InvokeFromFileAsync<string>(DUMMY_CONCURRENCY_MODULE);
+                results[i] = _nodeJSService.InvokeFromFileAsync<string>(DUMMY_CONCURRENCY_MODULE_FILE);
             }
 
             return await Task.WhenAll(results);
@@ -91,7 +91,7 @@ namespace Jering.Javascript.NodeJS.Performance
             _serviceProvider = services.BuildServiceProvider();
             _nodeServices = _serviceProvider.GetRequiredService<INodeServices>();
 
-            // Warm up. First run starts a Node.js processes.
+            // Warmup. First run starts a Node.js processes.
             _nodeServices.InvokeAsync<DummyResult>("dummyLatencyModule.js", 0).GetAwaiter().GetResult();
         }
 
@@ -104,7 +104,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var results = new Task<string>[numTasks];
             for (int i = 0; i < numTasks; i++)
             {
-                results[i] = _nodeServices.InvokeAsync<string>(DUMMY_CONCURRENCY_MODULE);
+                results[i] = _nodeServices.InvokeAsync<string>(DUMMY_CONCURRENCY_MODULE_FILE);
             }
 
             return await Task.WhenAll(results);

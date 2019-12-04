@@ -17,21 +17,23 @@ namespace Jering.Javascript.NodeJS
         /// Adds NodeJS services to the an <see cref="IServiceCollection"/>.
         /// </summary>
         /// <param name="services">The target <see cref="IServiceCollection"/>.</param>
-        public static void AddNodeJS(this IServiceCollection services)
+        public static IServiceCollection AddNodeJS(this IServiceCollection services)
         {
             // Third party services
-            services.AddLogging();
-            services.AddOptions();
+            services.
+                AddLogging().
+                AddOptions();
             services.TryAddSingleton(typeof(IHttpClientService), IHttpClientServiceFactory);
 
             // Services defined in this project
-            services.AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>();
-            services.AddSingleton<IHttpContentFactory, InvocationContentFactory>();
-            services.AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>();
-            services.AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>();
-            services.AddSingleton(typeof(INodeJSService), INodeJSServiceFactory);
-            services.AddSingleton<IJsonService, JsonService>();
-            services.AddSingleton<IEnvironmentService, EnvironmentService>();
+            return services.
+                AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>().
+                AddSingleton<IHttpContentFactory, InvocationContentFactory>().
+                AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>().
+                AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>().
+                AddSingleton(typeof(INodeJSService), INodeJSServiceFactory).
+                AddSingleton<IJsonService, JsonService>().
+                AddSingleton<IEnvironmentService, EnvironmentService>();
         }
 
         internal static IHttpClientService IHttpClientServiceFactory(IServiceProvider serviceProvider)
@@ -52,7 +54,7 @@ namespace Jering.Javascript.NodeJS
             int concurrencyDegree = outOfProcessNodeJSServiceOptions.ConcurrencyDegree;
             int processorCount = environmentService.ProcessorCount; // TODO to be safe we should ensure that this is >= 1
 
-            if(outOfProcessNodeJSServiceOptions.Concurrency == Concurrency.None ||
+            if (outOfProcessNodeJSServiceOptions.Concurrency == Concurrency.None ||
                 concurrencyDegree == 1 || // MultiProcess mode but only 1 process
                 concurrencyDegree <= 0 && processorCount == 1) // Machine has only 1 logical processor
             {

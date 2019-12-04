@@ -22,7 +22,7 @@
 ## Overview
 Jering.Javascript.NodeJS enables you to invoke javascript in [NodeJS](https://nodejs.org/en/), from C#. With this ability, you can use javascript libraries and scripts from your C# projects.  
 
-> You can use this library as a replacement for the recently deprecated [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices).
+> You can use this library as a replacement for the recently obsoleted [Microsoft.AspNetCore.NodeServices](https://github.com/aspnet/JavaScriptServices/tree/master/src/Microsoft.AspNetCore.NodeServices).
 [`InvokeFromFileAsync<T>`](#inodejsserviceinvokefromfileasync) replaces `INodeService`'s `InvokeAsync<T>` and `InvokeExportAsync<T>`.
 
 This library is flexible; you can use a dependency injection (DI) based API or a static API, also, you can invoke both in-memory and on-disk javascript. 
@@ -52,7 +52,7 @@ module.exports = (callback, x, y) => {  // Module must export a function that ta
     callback(null /* If an error occurred, provide an error object or message */, result); // Call the callback when you're done.
 }";
 
-// Create INodeJSService instance
+// Create an INodeJSService
 var services = new ServiceCollection();
 services.AddNodeJS();
 ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -87,21 +87,19 @@ Using .Net CLI:
 ### Creating INodeJSService
 This library provides a DI based API to facilitate [extensibility](#extensibility) and testability.
 You can use any DI framework that has adapters for [Microsoft.Extensions.DependencyInjection](https://github.com/aspnet/DependencyInjection).
-Here, we'll use the vanilla Microsoft.Extensions.DependencyInjection framework:
+Here, we'll use vanilla Microsoft.Extensions.DependencyInjection:
 ```csharp
 var services = new ServiceCollection();
 services.AddNodeJS();
 ServiceProvider serviceProvider = services.BuildServiceProvider(); 
 INodeJSService nodeJSService = serviceProvider.GetRequiredService<INodeJSService>();
 ```
-The default implementation of `INodeJSService` is `HttpNodeJSService`. It starts a Http server in a NodeJS process and sends invocation requests
-over Http. For simplicty's sake, this ReadMe assumes that `INodeJSService`'s default implementation is used.
-
+The default implementation of `INodeJSService` is `HttpNodeJSService`, which manages a NodeJS process that it sends javascript invocations to via HTTP.
 `INodeJSService` is a singleton service and `INodeJSService`'s members are thread safe.
-Where possible, inject `INodeJSService` into your types or keep a reference to a shared `INodeJSService` instance. 
+Where possible, inject `INodeJSService` into your types or share an `INodeJSService`. 
 This avoids the overhead of killing and creating NodeJS processes repeatedly.
 
-When you're done, you can manually dispose of an `INodeJSService` instance by calling
+When you're done, you can dispose of an `INodeJSService` by calling
 ```csharp
 nodeJSService.Dispose();
 ```
@@ -109,17 +107,16 @@ or
 ```csharp
 serviceProvider.Dispose(); // Calls Dispose on objects it has instantiated that are disposable
 ```
-`Dispose` kills the spawned NodeJS process.
-Note that even if `Dispose` isn't called manually, `INodeJSService` will kill the 
-NodeJS process when the application shuts down - if the application shuts down gracefully. If the application doesn't shutdown gracefully, the NodeJS process will kill 
-itself when it detects that its parent has been killed. 
-Essentially, manually disposing of `INodeJSService` instances is not mandatory.
+Disposing of an `INodeJSService` kills its associated NodeJS process.
+Note that even if `Dispose` isn't called, the NodeJS process is killed when the application shuts down - if the application shuts down gracefully.
+If the application doesn't shutdown gracefully, the NodeJS process will kill itself when it detects that its parent has been killed.
+Essentially, manually disposing of `INodeJSService`s isn't mandatory.
 
 #### Static API
-This library also provides a static API as an alternative. The `StaticNodeJSService` type wraps an `INodeJSService` instance, exposing most of its [public members](#api) statically.
-Whether you use the static API or the DI based API depends on your development needs. If you are already using DI, if you want to mock 
+This library provides a static API as an alternative. The `StaticNodeJSService` type wraps an `INodeJSService`, exposing most of its [public members](#api).
+Whether you use the static API or the DI based API depends on your development needs. If you're already using DI, if you want to mock 
 out javascript invocations in your tests or if you want to [overwrite](#extensibility) services, use the DI based API. Otherwise,
-use the static API. An example usage:
+use the static API. Example usage:
 
 ```csharp
 string result = await StaticNodeJSService
@@ -127,21 +124,21 @@ string result = await StaticNodeJSService
 
 Assert.Equal("success", result);
 ```
-The following section on using `INodeJSService` applies to usage of `StaticNodeJSService`.
 
 ### Using INodeJSService
 #### Basics
-To invoke javascript, we'll first need to create a [NodeJS module](#nodejs-modules) that exports a function or an object containing functions. Exported functions can be of two forms:
+To invoke javascript, you'll need a [NodeJS module](#nodejs-modules) that exports either a function or an object containing functions. Exported functions can be of two forms:
 
 ##### Function With Callback Parameter
-These functions must take a callback as their first argument, and they must call the callback.
+These functions take a callback as their first argument, and call the callback when they're done.  
+
 The callback takes two optional arguments:
-- The first argument must be an error or an error message. It must be an instance of type [`Error`](https://nodejs.org/api/errors.html#errors_class_error) or a `string`.
-- The second argument is the result. It must be an instance of a JSON-serializable type, a `string`, or a [`stream.Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable). 
+- The first argument is an error or an error message. It must be of type [`Error`](https://nodejs.org/api/errors.html#errors_class_error) or `string`.
+- The second argument is the result. It must be a JSON-serializable type, a `string`, or a [`stream.Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable). 
  
-This sort of callback is known as an [error-first callback](https://nodejs.org/api/errors.html#errors_error_first_callbacks).
-Such callbacks are commonly used for [error handling](https://nodejs.org/api/errors.html#errors_error_propagation_and_interception) in NodeJS asynchronous code (check out the [NodeJS event loop](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
-if you'd like to learn more about how asynchrony works in NodeJS).
+This is known as an [error-first callback](https://nodejs.org/api/errors.html#errors_error_first_callbacks).
+Such callbacks are commonly used for [error handling](https://nodejs.org/api/errors.html#errors_error_propagation_and_interception) in NodeJS asynchronous code (check out [NodeJS Event Loop](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/)
+for more information on asynchrony in NodeJS).
 
 This is a module that exports a valid function:
 ```javascript
@@ -152,7 +149,7 @@ module.exports = (callback, arg1, arg2, arg3) => {
 }
 ```
 
-And this is a module that exports an object containing valid functions:
+This is a module that exports an object containing valid functions:
 ```javascript
 module.exports = {
     doSomething: (callback, arg1) => {
@@ -169,8 +166,8 @@ module.exports = {
 ```
 
 ##### Async Function
-Async functions are really just syntactic sugar for functions with callback parameters.
-[Callbacks, Promises and Async/Await](https://medium.com/front-end-weekly/callbacks-promises-and-async-await-ad4756e01d90) provides a nice summary on how callbacks, promises and async/await work.
+Async functions are syntactic sugar for [functions with callback parameters](#function-with-callback-parameter) (check out 
+[Callbacks, Promises and Async/Await](https://medium.com/front-end-weekly/callbacks-promises-and-async-await-ad4756e01d90) for a summary on how callbacks, promises and async/await are related).
 
 This is a module that exports a valid function:
 ```javascript
@@ -200,7 +197,7 @@ module.exports = {
 }
 ```
 
-If an error is thrown it is caught and handled by the caller (error message is sent back to the calling .Net process):
+If an error is thrown in an async function, the error message is sent back to the calling .Net process, where an `InvocationException` is thrown:
 ```javascript
 module.exports = async () => {
     throw new Error('error message');
@@ -208,88 +205,112 @@ module.exports = async () => {
 ```
 
 #### Invoking Javascript From a File
-If we have a file named `exampleModule.js` (located in [`NodeJSProcessOptions.ProjectPath`](#nodejsprocessoptions)), with contents:
+If you have a javascript file named `exampleModule.js` (located in [`NodeJSProcessOptions.ProjectPath`](#nodejsprocessoptions)):
 ```javascript
 module.exports = (callback, message) => callback(null, { resultMessage: message });
 ```
-And we have the class `Result`:
+And a .Net class `Result`:
 ```csharp
 public class Result
 {
-    public string ResultMessage { get; set; }
+    public string Message { get; set; }
 }
 ```
-We can invoke the javascript using [`InvokeFromFileAsync<T>`](#inodejsserviceinvokefromfileasync) ):
+You can invoke the javascript using [`InvokeFromFileAsync<T>`](#inodejsserviceinvokefromfileasync):
 ```csharp
 Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", args: new[] { "success" });
 
-Assert.Equal("success", result.ResultMessage);
+Assert.Equal("success", result.Message);
 ```
-If we change `exampleModule.js` to export an object containing functions:
+If you change `exampleModule.js` to export an object containing functions:
 ```javascript
 module.exports = {
     appendExclamationMark: (callback, message) => callback(null, { resultMessage: message + '!' }),
     appendFullStop: (callback, message) => callback(null, { resultMessage: message + '.' })
 }
 ```
-We can invoke javascript by providing an export's name to `InvokeFromFileAsync`:
+You can invoke a specific function by providing an export's name:
 ```csharp
 Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", "appendExclamationMark", args: new[] { "success" });
 
-Assert.Equal("success!", result.ResultMessage);
+Assert.Equal("success!", result.Message);
 ```
-When using `InvokeFromFileAsync`, NodeJS always caches the module, using the absolute path of the `.js` file as the module's cache identifier. This is great for
-performance, since the file will not be read more than once.
+When using `InvokeFromFileAsync`, NodeJS always caches the module using the `.js` file's absolute path as cache identifier. This is great for
+performance, since the file will not be reread or recompiled on subsequent invocations.
 
 #### Invoking Javascript in String Form
-We can invoke javascript in string form using [`InvokeFromStringAsync<T>`](#inodejsserviceinvokefromstringasync) :
+You can invoke javascript in string form using [`InvokeFromStringAsync<T>`](#inodejsserviceinvokefromstringasync):
 ```csharp
-Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
-    args: new[] { "success" });
+string module = "module.exports = (callback, message) => callback(null, { resultMessage: message });";
 
-Assert.Equal("success", result.ResultMessage);
+// Invoke javascript
+Result result = await nodeJSService.InvokeFromStringAsync<Result>(module, args: new[] { "success" });
+
+Assert.Equal("success", result.Message);
 ```
 
-If we're going to invoke the module repeatedly, it would make sense to have NodeJS cache the module so that it doesn't need to be kept in 
-memory and sent with every invocation. To cache the module, we must specify a custom cache identifier, since unlike a file, a string has no 
-"absolute file path" for NodeJS to use as a cache identifier. Once NodeJS has cached the module, we should invoke logic directly from the NodeJS cache: 
+In the above example, the module string is sent to NodeJS and recompiled on every invocation. If you're going to invoke a module repeatedly, 
+to avoid resending and recompiling, you'll want to have NodeJS cache the module.
+To do this, you must specify a custom cache identifier, since unlike a file, a string has no "absolute file path" for NodeJS to use as cache identifier.
+Once NodeJS has cached the module, invoke directly from the NodeJS cache: 
+
 ```csharp
 string cacheIdentifier = "exampleModule";
 
 // Try to invoke from the NodeJS cache
 (bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
-// If the NodeJS process dies and restarts, the module will have to be re-cached, so we must always check whether success is false
+
+// If the module hasn't been cached, cache it. If the NodeJS process dies and restarts, the cache will be invalidated, so always check whether success is false.
 if(!success)
 {
-    // Retrieve the module string, this is a trivialized example for demonstration purposes
+    // This is a trivialized example. In practice, to avoid holding large module strings in memory, you might retrieve the module 
+    // string from an on-disk or remote source, like a file.
     string moduleString = "module.exports = (callback, message) => callback(null, { resultMessage: message });"; 
-    // Cache and invoke the module
+
+    // Send the module string to NodeJS where it's compiled, invoked and cached.
     result = await nodeJSService.InvokeFromStringAsync<Result>(moduleString, cacheIdentifier, args: new[] { "success" });
 }
 
 Assert.Equal("success", result.ResultMessage);
 ```
 
-Like when [invoking javascript form a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, we can invoke a function by specifying
-an export's name.  
-#### Invoking Javascript in Stream Form
-We can invoke javascript in Stream form using [`InvokeFromStreamAsync<T>`](#inodejsserviceinvokefromstreamasync) :
-```csharp
-using (var memoryStream = new MemoryStream())
-using (var streamWriter = new StreamWriter(memoryStream))
-{
-    // Write the module to a MemoryStream for demonstration purposes.
-    streamWriter.Write("module.exports = (callback, message) => callback(null, {resultMessage: message});");
-    streamWriter.Flush();
-    memoryStream.Position = 0;
+We recommend using the following [`InvokeFromStringAsync<T>`](#inodejsserviceinvokefromstringasync) overload to perform the above example's operations.
+The above example is really there to explain what this overload does.
+If you've enabled [concurrency](#concurrency), [you must use this overload](#concurrency):
 
-    Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" });
-    
-    Assert.Equal("success", result.ResultMessage);
-}
+```csharp
+string module = "module.exports = (callback, message) => callback(null, { resultMessage: message });";
+string cacheIdentifier = "exampleModule";
+
+// This is a trivialized example. In practice, to avoid holding large module strings in memory, you might retrieve the module 
+// string from an on-disk or remote source, like a file.
+Func<string> moduleFactory = () => module;
+
+// Initially, sends only cacheIdentifier to NodeJS, in an attempt to invoke from the NodeJS cache. If the module hasn't been cached, creates the module string using moduleFactory and
+// sends it to NodeJS where it's compiled, invoked and cached. 
+Result result = await nodeJSService.InvokeFromStringAsync<Result>(moduleFactory, cacheIdentifier, args: new[] { "success" });
+
+Assert.Equal("success", result.Message);
 ```
+
+Like when [invoking javascript form a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, you can invoke a specific function by specifying
+its name.  
+
+#### Invoking Javascript in Stream Form
+You can invoke javascript in stream form using [`InvokeFromStreamAsync<T>`](#inodejsserviceinvokefromstreamasync) :
+```csharp
+// Write the module to a MemoryStream for demonstration purposes.
+streamWriter.Write("module.exports = (callback, message) => callback(null, {resultMessage: message});");
+streamWriter.Flush();
+memoryStream.Position = 0;
+
+Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" });
+    
+Assert.Equal("success", result.Message);
+```
+
 `InvokeFromStreamAsync` behaves in a similar manner to `InvokeFromStringAsync`, refer to [Invoking Javascript in String Form](#invoking-javascript-in-string-form) for details on caching and more. 
-The utility of this method is in providing a way to avoid allocating a string if the source of the module is a Stream. Avoiding `string` allocations can improve performance.
+This method provides a way to avoid allocating a string if the source of the module is a stream. Avoiding `string` allocations can improve performance.
 
 ### Configuring INodeJSService
 This library uses the [ASP.NET Core options pattern](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-2.1). While developed for ASP.NET Core,
@@ -317,7 +338,7 @@ StaticNodeJSService.Configure<OutOfProcessNodeJSServiceOptions>(options => optio
 Configurations made using `StaticNodeJSService.Configure<T>` only apply to javascript invocations made using the static API. 
 Ideally, such configurations should be done before the first javascript invocation.
 Any existing NodeJS process is killed and a new one is created in the first javascript invocation after every `StaticNodeJSService.Configure<T>` call. 
-Re-creating the NodeJS process is resource intensive. Also, if you are using the static API from multiple threads and 
+Re-creating the NodeJS process is resource intensive. Also, if you're using the static API from multiple threads and 
 the NodeJS process is performing invocations for other threads, you might get unexpected results.
 
 The next two sections list all available options.
@@ -334,7 +355,7 @@ The next two sections list all available options.
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
 | TimeoutMS | `int` | The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations. If this value is negative, the maximum duration is infinite. | `60000` |
-| NumRetries | `int` | The number of times an invocation is retried. If set to a negative value, invocations are retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation is not retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| `1` |
+| NumRetries | `int` | The number of times an invocation is retried. If set to a negative value, invocations are retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation isn't retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| `1` |
 | Concurrency | `Concurrency` | The concurrency mode for invocations.<br><br>By default, this value is `Concurrency.None` and invocations are executed synchronously by a single NodeJS process; mode pros: lower memory overhead and supports all modules, cons: less performant.<br><br>If this value is `Concurrency.MultiProcess`, `ConcurrencyDegree` NodeJS processes are created and invocations are distributed among them using round-robin load balancing; mode pros: more performant, cons: higher memory overhead and doesn't work with modules that have persistent state. | `Concurrency.None` |
 | ConcurrencyDegree | `int` | The concurrency degree. If `Concurrency` is `Concurrency.MultiProcess`, this value is the number of NodeJS processes. If this value is less than or equal to 0, concurrency degree is the number of logical processors the current machine has. This value does nothing if `Concurrency` is `Concurrency.None`. | `0` |
 
@@ -359,7 +380,7 @@ services.Configure<OutOfProcessNodeJSServiceOptions>(options => {
 ```
 (see [Configuring INodeJSService](#configuring-inodejsservice) for more information on configuring)  
 
-All invocations will be distributed among multiple NodeJS processes using round-robin load balancing.  
+All invocations will be distributed among multiple NodeJS processes using round-robin load balancing. 
 
 ##### Why Bother?
 Enabling concurrency significantly speeds up CPU-bound workloads. For example, consider the following benchmarks:
@@ -412,7 +433,7 @@ module.exports = (callback) => {
 
 For `INodeJSService` with `Concurrency.MultiProcessing`, multiple NodeJS processes perform invocations concurrently, so the benchmark takes ~400ms ((25 tasks x 100ms) / number-of-logical-processors + overhead-from-unrelated-processes).  
 
-In the other two benchmarks, a single NodeJS process performs invocations synchronously, so those benchmarks take ~2500ms (25 tasks x 100ms = 2500ms).  
+In the other two benchmarks, a single NodeJS process performs invocations synchronously, so those benchmarks take ~2500ms (25 tasks x 100ms).  
 
 ##### Limitations
 1. You can't use concurrency if you persist data between invocations. For example, with concurrency enabled:
@@ -438,11 +459,48 @@ In the other two benchmarks, a single NodeJS process performs invocations synchr
 
     This should not be a problem in most cases.
 
-2. Higher memory overhead. This isn't typically an issue - on a standard workstation you can start dozens of NodeJS processes, and in cloud scenarios you'll typically have memory proportional to 
+2. Higher memory overhead. This isn't typically an issue - a standard workstation can host dozens of NodeJS processes, and in cloud scenarios you'll typically have memory proportional to 
   the number of logical processors.
 
-3. Concurrency may not speed up workloads with lots of asynchronous operations, for example if your workload spends lots of time waiting on a databases.
+3. Concurrency may not speed up workloads with lots of asynchronous operations. For example if your workload spends lots of time waiting on a databases, 
+  more NodeJS processes will not speed things up significantly.
+4. With concurrency enabled, you can't use the following [pattern](#invoking-javascript-in-string-form) to invoke from NodeJS's cache:
 
+    ```csharp
+    string cacheIdentifier = "exampleModule";
+
+    // If you have an even number of NodeJS processes, success will always be false since the resulting caching attempt is
+    // sent to the next NodeJS process.
+    (bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
+
+    // False, so we attempt to cache
+    if(!success)
+    {
+        string moduleString = "module.exports = (callback, message) => callback(null, { resultMessage: message });"; 
+
+        // Because of round-robin load balancing, this caching attempt is sent to the next NodeJS process.
+        result = await nodeJSService.InvokeFromStringAsync<Result>(moduleString, cacheIdentifier, args: new[] { "success" });
+    }
+
+    Assert.Equal("success", result.ResultMessage);
+    ```
+
+    Instead, call an overload that atomically handles caching and invoking:
+
+    ```csharp
+    string module = "module.exports = (callback, message) => callback(null, { resultMessage: message });";
+    string cacheIdentifier = "exampleModule";
+
+    // This is a trivialized example. In practice, to avoid holding large module strings in memory, you might retrieve the module 
+    // string from an on-disk or remote source, like a file.
+    Func<string> moduleFactory = () => module;
+
+    // Initially, sends only cacheIdentifier to NodeJS, in an attempt to invoke from the NodeJS cache. If the module hasn't been cached, creates the module string using moduleFactory and
+    // sends it to NodeJS where it's compiled, invoked and cached. 
+    Result result = await nodeJSService.InvokeFromStringAsync<Result>(moduleFactory, cacheIdentifier, args: new[] { "success" });
+
+    Assert.Equal("success", result.Message);
+    ```
 ## API
 ### INodeJSService.InvokeFromFileAsync
 #### Signature
@@ -471,14 +529,14 @@ Invokes a function exported by a NodeJS module on disk.
   - Type: `CancellationToken`
   - Description: The cancellation token for the asynchronous operation.
 #### Returns
-The task object representing the asynchronous operation.
+The task representing the asynchronous operation.
 #### Exceptions
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
-  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+  - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
   - Thrown if `cancellationToken` is cancelled.
 #### Example
@@ -490,14 +548,14 @@ And we have the class `Result`:
 ```csharp
 public class Result
 {
-    public string ResultMessage { get; set; }
+    public string Message { get; set; }
 }
 ```
 The following assertion will pass:
 ```csharp
 Result result = await nodeJSService.InvokeFromFileAsync<Result>("exampleModule.js", args: new[] { "success" });
 
-Assert.Equal("success", result.ResultMessage);
+Assert.Equal("success", result.Message);
 ```
 
 ### INodeJSService.InvokeFromStringAsync
@@ -531,14 +589,14 @@ Invokes a function exported by a NodeJS module in string form.
   - Type: `CancellationToken`
   - Description: The cancellation token for the asynchronous operation.
 #### Returns
-The task object representing the asynchronous operation.
+The task representing the asynchronous operation.
 #### Exceptions
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
-  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+  - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
   - Thrown if `cancellationToken` is cancelled.
 #### Example
@@ -546,7 +604,7 @@ Using the class `Result`:
 ```csharp
 public class Result
 {
-    public string ResultMessage { get; set; }
+    public string Message { get; set; }
 }
 ```
 The following assertion will pass:
@@ -554,7 +612,7 @@ The following assertion will pass:
 Result result = await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, message) => callback(null, { resultMessage: message });", 
     args: new[] { "success" });
 
-Assert.Equal("success", result.ResultMessage);
+Assert.Equal("success", result.Message);
 ```
 ### INodeJSService.InvokeFromStreamAsync
 #### Signature
@@ -587,14 +645,14 @@ Invokes a function exported by a NodeJS module in Stream form.
   - Type: `CancellationToken`
   - Description: The cancellation token for the asynchronous operation.
 #### Returns
-The task object representing the asynchronous operation.
+The task representing the asynchronous operation.
 #### Exceptions
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
-  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+  - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
   - Thrown if `cancellationToken` is cancelled.
 #### Example
@@ -602,7 +660,7 @@ Using the class `Result`:
 ```csharp
 public class Result
 {
-    public string ResultMessage { get; set; }
+    public string Message { get; set; }
 }
 ```
 The following assertion will pass:
@@ -617,7 +675,7 @@ using (var streamWriter = new StreamWriter(memoryStream))
 
     Result result = await nodeJSService.InvokeFromStreamAsync<Result>(memoryStream, args: new[] { "success" });
     
-    Assert.Equal("success", result.ResultMessage);
+    Assert.Equal("success", result.Message);
 }
 ```
 ### INodeJSService.TryInvokeFromCacheAsync
@@ -647,7 +705,7 @@ Attempts to invoke a function exported by a NodeJS module cached by NodeJS.
   - Type: `CancellationToken`
   - Description: The cancellation token for the asynchronous operation.
 #### Returns
-The task object representing the asynchronous operation. On completion, the task returns a `(bool, T)` with the bool set to true on 
+The task representing the asynchronous operation. On completion, the task returns a `(bool, T)` with the bool set to true on 
 success and false otherwise.
 #### Exceptions
 - `InvocationException`
@@ -655,7 +713,7 @@ success and false otherwise.
   - Thrown if the invocation request times out.
   - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
-  - Thrown if this instance has been disposed or if an attempt is made to use one of its dependencies that has been disposed.
+  - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
   - Thrown if `cancellationToken` is cancelled.
 #### Example
@@ -663,7 +721,7 @@ Using the class `Result`:
 ```csharp
 public class Result
 {
-    public string ResultMessage { get; set; }
+    public string Message { get; set; }
 }
 ```
 The following assertion will pass:
@@ -678,7 +736,7 @@ await nodeJSService.InvokeFromStringAsync<Result>("module.exports = (callback, m
 (bool success, Result result) = await nodeJSService.TryInvokeFromCacheAsync<Result>(cacheIdentifier, args: new[] { "success" });
 
 Assert.True(success);
-Assert.Equal("success", result.ResultMessage);
+Assert.Equal("success", result.Message);
 ```
 
 ## Extensibility

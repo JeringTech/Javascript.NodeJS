@@ -16,11 +16,12 @@ namespace Jering.Javascript.NodeJS.Tests
     public class HttpNodeJSPoolServiceIntegrationTests : IDisposable
     {
         private IServiceProvider _serviceProvider;
-        private const int _timeoutMS = 60000;
         // Set to true to break in NodeJS (see CreateHttpNodeJSPoolService)
-        private const bool _debugNodeJS = false;
+        private const bool DEBUG_NODEJS = false;
+        // Set to -1 when debugging in NodeJS
+        private const int TIMEOUT_MS = 60000;
 
-        [Fact(Timeout = _timeoutMS)]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void AllInvokeMethods_InvokeJavascriptInMultipleProcesses()
         {
             // Arrange
@@ -75,7 +76,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 options.ConcurrencyDegree = numProcesses;
             });
 
-            if (Debugger.IsAttached && _debugNodeJS)
+            if (Debugger.IsAttached && DEBUG_NODEJS)
             {
                 services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk"); // An easy way to step through NodeJS code is to use Chrome. Consider option 1 from this list https://nodejs.org/en/docs/guides/debugging-getting-started/#chrome-devtools-55.
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
