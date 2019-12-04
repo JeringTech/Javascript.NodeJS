@@ -3,7 +3,20 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.0...HEAD)
+
+## [5.2.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.1...5.2.0) - Dec 4, 2019
+### Fixes
+- Expanded API. ([#57](https://github.com/JeringTech/Javascript.NodeJS/pull/57)). Added `INodeJSService` members for invocations without return values and 
+  atomic/simplified caching-invoking:
+  - `Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task InvokeFromStringAsync(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task<T> InvokeFromStringAsync<T>(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task InvokeFromStringAsync(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task InvokeFromStreamAsync(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task<T> InvokeFromStreamAsync<T>(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task InvokeFromStreamAsync(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
+  - `Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
 
 ## [5.1.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.0...5.1.1) - Nov 29, 2019
 ### Fixes
