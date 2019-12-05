@@ -14,6 +14,7 @@ namespace Jering.Javascript.NodeJS.Performance
         private const string DUMMY_WARMUP_MODULE = "module.exports = (callback) => callback()";
         private const string DUMMY_LATENCY_MODULE_FILE = "dummyLatencyModule.js";
         private const string DUMMY_MODULE_IDENTIFIER = "dummyLatencyModuleIdentifier";
+        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../../../../../Javascript"); // BenchmarkDotNet creates a project nested deep in bin
 
         private ServiceProvider _serviceProvider;
         private int _counter;
@@ -26,7 +27,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.."));
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = _projectPath);
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
             _counter = 0;
@@ -62,7 +63,7 @@ namespace Jering.Javascript.NodeJS.Performance
 
         private string DummyModuleFactory()
         {
-            return File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../../../..", DUMMY_LATENCY_MODULE_FILE));
+            return File.ReadAllText(Path.Combine(_projectPath, DUMMY_LATENCY_MODULE_FILE));
         }
 
         [Obsolete]
@@ -72,7 +73,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var services = new ServiceCollection();
             services.AddNodeServices(options =>
             {
-                options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../..");
+                options.ProjectPath = _projectPath;
                 options.WatchFileExtensions = null;
             });
             _serviceProvider = services.BuildServiceProvider();

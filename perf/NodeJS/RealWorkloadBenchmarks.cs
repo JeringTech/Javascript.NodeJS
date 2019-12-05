@@ -22,6 +22,7 @@ namespace Jering.Javascript.NodeJS.Performance
         Console.WriteLine(""Hello world {0}!"");
     }}
 }}";
+        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../../../../../Javascript"); // BenchmarkDotNet creates a project nested deep in bin
 
         private int _counter;
         private ServiceProvider _serviceProvider;
@@ -34,7 +35,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../.."));
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = _projectPath); // Module loads prismjs from node_modules
             services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.Concurrency = Concurrency.MultiProcess);
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
@@ -65,7 +66,7 @@ namespace Jering.Javascript.NodeJS.Performance
 
         private string DummyModuleFactory()
         {
-            return File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "../../../..", DUMMY_REAL_WORKLOAD_MODULE_FILE));
+            return File.ReadAllText(Path.Combine(_projectPath, DUMMY_REAL_WORKLOAD_MODULE_FILE));
         }
 
         [Obsolete]
@@ -75,7 +76,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var services = new ServiceCollection();
             services.AddNodeServices(options =>
             {
-                options.ProjectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../..");
+                options.ProjectPath = _projectPath;
                 options.WatchFileExtensions = null;
             });
             _serviceProvider = services.BuildServiceProvider();
