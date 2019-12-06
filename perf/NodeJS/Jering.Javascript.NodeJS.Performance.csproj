@@ -5,7 +5,9 @@
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-        <DefaultItemExcludes>node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+        <DefaultItemExcludes>Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,17 +17,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="dummyRealWorkloadModule.js" copyToOutputDirectory="PreserveNewest" />
-        <Content Include="dummyLatencyModule.js" copyToOutputDirectory="PreserveNewest" />
-        <Content Include="dummyConcurrencyModule.js" copyToOutputDirectory="PreserveNewest" />
+        <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
-    </ItemGroup>
-
-    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent">
-        <Yarn WorkingDirectory="." Command="run build" />
+    <Target Name="JavascriptBuild" BeforeTargets="PreBuildEvent">
+        <Yarn WorkingDirectory=".\Javascript" Command="run build" />
     </Target>
 
 </Project>
