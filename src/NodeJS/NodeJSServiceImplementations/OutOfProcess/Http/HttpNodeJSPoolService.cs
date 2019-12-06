@@ -11,12 +11,10 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class HttpNodeJSPoolService : INodeJSService
     {
-        private readonly int _maxIndex;
-        private readonly object _httpNodeJSServicesLock = new object();
         private readonly ReadOnlyCollection<HttpNodeJSService> _httpNodeJSServices;
 
         private bool _disposed;
-        private int _nextIndex;
+        private volatile int _nextIndex = -1;
 
         /// <summary>
         /// Gets the size of the <see cref="HttpNodeJSPoolService"/>.
@@ -30,7 +28,6 @@ namespace Jering.Javascript.NodeJS
         {
             _httpNodeJSServices = httpNodeJSServices;
             Size = httpNodeJSServices.Count;
-            _maxIndex = Size - 1;
         }
 
         /// <inheritdoc />
@@ -107,18 +104,8 @@ namespace Jering.Javascript.NodeJS
 
         internal HttpNodeJSService GetHttpNodeJSService()
         {
-            int index = 0;
-            lock (_httpNodeJSServicesLock)
-            {
-                if (_nextIndex > _maxIndex)
-                {
-                    _nextIndex = 0;
-                }
-
-                index = _nextIndex++;
-            }
-
-            return _httpNodeJSServices[index];
+            uint index = unchecked((uint)Interlocked.Increment(ref _nextIndex));
+            return _httpNodeJSServices[(int)(index % Size)];
         }
 
         /// <summary>
