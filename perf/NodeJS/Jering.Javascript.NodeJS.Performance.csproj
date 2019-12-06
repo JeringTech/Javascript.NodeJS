@@ -20,7 +20,7 @@
         <ProjectReference Include="..\..\src\NodeJS\Jering.Javascript.NodeJS.csproj" />
     </ItemGroup>
 
-    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent">
+    <Target Name="JavascriptBuild" BeforeTargets="PreBuildEvent">
         <Yarn WorkingDirectory=".\Javascript" Command="run build" />
     </Target>
 

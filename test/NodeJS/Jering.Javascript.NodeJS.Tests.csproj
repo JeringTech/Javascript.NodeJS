@@ -44,7 +44,11 @@
         <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
     </ItemGroup>
 
-    <Target Name="YarnInstall" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent">
+    <Target Name="JavascriptBuildNonWindows" BeforeTargets="PreBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
+        <Yarn WorkingDirectory=".\Javascript" Command="run build" />
+    </Target>
+
+    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Condition="'$(OS)' == 'Windows_NT'">
         <Yarn WorkingDirectory=".\Javascript" Command="run build" />
     </Target>
 

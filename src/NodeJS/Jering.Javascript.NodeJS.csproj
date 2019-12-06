@@ -83,7 +83,11 @@
         So we must specify both. This way if we are multi-targeting, JavascriptBuild runs once, before DispatchToInnerBuilds after which inputs == outputs. 
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
-    <Target Name="JavascriptBuild" BeforeTargets="DispatchToInnerBuilds;PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
+    <Target Name="JavascriptBuildNonWindows" BeforeTargets="PreBuildEvent"  Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' != 'Windows_NT'">
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
+    </Target>
+
+    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds"  Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' == 'Windows_NT'">
         <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
     </Target>
 
