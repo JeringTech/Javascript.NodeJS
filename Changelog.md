@@ -3,10 +3,14 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.1...HEAD)
+
+## [5.2.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.0...5.2.1) - Dec 6, 2019
+### Fixes
+- Improved HTTP connection stability and error logging. ([#61](https://github.com/JeringTech/Javascript.NodeJS/pull/61)).
 
 ## [5.2.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.1...5.2.0) - Dec 4, 2019
-### Fixes
+### Changes
 - Expanded API. ([#57](https://github.com/JeringTech/Javascript.NodeJS/pull/57)). Added `INodeJSService` members for invocations without return values and 
   atomic/simplified caching-invoking:
   - `Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
