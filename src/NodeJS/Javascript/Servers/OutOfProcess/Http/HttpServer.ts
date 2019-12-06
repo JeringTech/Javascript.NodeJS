@@ -23,8 +23,19 @@ patchLStat();
 // Set by NodeJSProcessFactory
 let projectDir = process.cwd();
 
+// Create server
+const server = http.createServer(serverOnRequestListener);
+
+// In Node.js v13+ this is the default, however for earlier versions it is 120 seconds.
+server.setTimeout(0);
+
+// Send client error details to client for debugging
+server.on('clientError', serverOnClientError);
+
 // Start server
-const server = http.createServer((req, res) => {
+server.listen(parseInt(args.port), 'localhost', serverOnListeningListener);
+
+function serverOnRequestListener(req, res) {
     let bodyChunks = [];
     req.
         on('data', chunk => bodyChunks.push(chunk)).
@@ -158,12 +169,25 @@ const server = http.createServer((req, res) => {
                 respondWithError(res, error);
             }
         });
-}).listen(parseInt(args.port), 'localhost', function () {
+}
+
+// Send error details to client for debugging - https://nodejs.org/api/http.html#http_event_clienterror
+function serverOnClientError(error: Error, socket: stream.Duplex) {
+    let errorJson = JSON.stringify({
+        errorMessage: error.message,
+        errorStack: error.stack
+    });
+
+    let httpResponseMessage = `HTTP/1.1 500 Internal Server Error\r\nContent-Length: ${Buffer.byteLength(errorJson, 'utf8')}\r\nContent-Type: text/html\r\n\r\n${errorJson}`;
+    socket.end(httpResponseMessage);
+}
+
+function serverOnListeningListener() {
     // Signal to HttpNodeHost which loopback IP address (IPv4 or IPv6) and port it should make its HTTP connections on
     // and that we are ready to process invocations.
     let info = server.address() as AddressInfo;
     console.log(`[Jering.Javascript.NodeJS: Listening on IP - ${info.address} Port - ${info.port}]`);
-});
+}
 
 function getTempIdentifier(invocationRequest: InvocationRequest): string {
     if (invocationRequest.newCacheIdentifier == null) {
