@@ -9,6 +9,7 @@ namespace Jering.Javascript.NodeJS.Performance
             BenchmarkRunner.Run<LatencyBenchmarks>();
             BenchmarkRunner.Run<ConcurrencyBenchmarks>();
             BenchmarkRunner.Run<RealWorkloadBenchmarks>();
+            BenchmarkRunner.Run<PoolThreadingBenchmarks>();
         }
     }
 }
