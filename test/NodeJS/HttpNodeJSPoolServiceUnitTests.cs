@@ -18,6 +18,7 @@ namespace Jering.Javascript.NodeJS.Tests
     // - Ensure INodeJSService member implementations call the right method on the returned HttpNodeJSService.
     public class HttpNodeJSPoolServiceUnitTests
     {
+        private const int TIMEOUT_MS = 60000;
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
 
         [Fact]
@@ -293,7 +294,7 @@ namespace Jering.Javascript.NodeJS.Tests
             _mockRepository.VerifyAll();
         }
 
-        [Fact]
+        [Fact(Timeout = TIMEOUT_MS)]
         public void GetHttpNodeJSService_ReturnsEachHttpNodeJSServiceAnEqualNumberOfTimes()
         {
             // Arrange
