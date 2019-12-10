@@ -4,9 +4,9 @@
     ".NETFramework,Version=v4.6.1": {
       "Jering.IocServices.System.Net.Http": {
         "type": "Direct",
-        "requested": "[0.3.0, )",
-        "resolved": "0.3.0",
-        "contentHash": "F7Wq5iaY5eCJriYe3SijaKqhvRbMKWpdPSAAUvXR/dxVDBgkldx+NIS1wLYRRTYeYAMooO1lelPvHPhackLchw==",
+        "requested": "[0.4.0, )",
+        "resolved": "0.4.0",
+        "contentHash": "EyaYjK7wTMfXRQ1xUC98+vFiV5Tkg0NW4Z5OjWa4dnY6Z6nD5JQokZeobzohT0suQichbeX/7AOLtiQNyEcaLQ==",
         "dependencies": {
           "NETStandard.Library": "1.6.1"
         }
@@ -543,9 +543,9 @@
     ".NETStandard,Version=v2.0": {
       "Jering.IocServices.System.Net.Http": {
         "type": "Direct",
-        "requested": "[0.3.0, )",
-        "resolved": "0.3.0",
-        "contentHash": "F7Wq5iaY5eCJriYe3SijaKqhvRbMKWpdPSAAUvXR/dxVDBgkldx+NIS1wLYRRTYeYAMooO1lelPvHPhackLchw==",
+        "requested": "[0.4.0, )",
+        "resolved": "0.4.0",
+        "contentHash": "EyaYjK7wTMfXRQ1xUC98+vFiV5Tkg0NW4Z5OjWa4dnY6Z6nD5JQokZeobzohT0suQichbeX/7AOLtiQNyEcaLQ==",
         "dependencies": {
           "NETStandard.Library": "1.6.1"
         }

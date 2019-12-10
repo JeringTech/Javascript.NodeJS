@@ -42,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Jering.IocServices.System.Net.Http" Version="0.3.0" />
+        <PackageReference Include="Jering.IocServices.System.Net.Http" Version="0.4.0" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

@@ -48,8 +48,8 @@
       },
       "Jering.IocServices.System.Net.Http": {
         "type": "Transitive",
-        "resolved": "0.3.0",
-        "contentHash": "F7Wq5iaY5eCJriYe3SijaKqhvRbMKWpdPSAAUvXR/dxVDBgkldx+NIS1wLYRRTYeYAMooO1lelPvHPhackLchw==",
+        "resolved": "0.4.0",
+        "contentHash": "EyaYjK7wTMfXRQ1xUC98+vFiV5Tkg0NW4Z5OjWa4dnY6Z6nD5JQokZeobzohT0suQichbeX/7AOLtiQNyEcaLQ==",
         "dependencies": {
           "NETStandard.Library": "1.6.1"
         }
@@ -1218,7 +1218,7 @@
       "jering.javascript.nodejs": {
         "type": "Project",
         "dependencies": {
-          "Jering.IocServices.System.Net.Http": "0.3.0",
+          "Jering.IocServices.System.Net.Http": "0.4.0",
           "Microsoft.AspNetCore.Hosting.Abstractions": "2.1.0",
           "Microsoft.Extensions.DependencyInjection": "2.1.0",
           "Microsoft.Extensions.Logging": "2.1.0",
