@@ -3,14 +3,19 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.0...HEAD)
+
+## [5.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.1...5.3.0) - Dec 10, 2019
+### Changes
+- Jering.Javascript.NodeJS.dll is now strong named. ([#65](https://github.com/JeringTech/Javascript.NodeJS/pull/65)).
+- `HttpNodeJSPoolService` round robin logic is now lock free. ([#63](https://github.com/JeringTech/Javascript.NodeJS/pull/63)).
 
 ## [5.2.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.0...5.2.1) - Dec 6, 2019
 ### Fixes
 - Improved HTTP connection stability and error logging. ([#61](https://github.com/JeringTech/Javascript.NodeJS/pull/61)).
 
 ## [5.2.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.1.1...5.2.0) - Dec 4, 2019
-### Changes
+### Additions
 - Expanded API. ([#57](https://github.com/JeringTech/Javascript.NodeJS/pull/57)). Added `INodeJSService` members for invocations without return values and 
   atomic/simplified caching-invoking:
   - `Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default);`
@@ -27,7 +32,7 @@ for an overview of semantic versioning.
 - Fixed requiring of modules from modules in string/stream form. ([#59](https://github.com/JeringTech/Javascript.NodeJS/pull/59))
 
 ## [5.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.0.0...5.1.0) - Nov 28, 2019
-### Changes
+### Additions
 - Added out-of-the-box concurrency. ([#52](https://github.com/JeringTech/Javascript.NodeJS/pull/52))
 
 ## [5.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.4.1...5.0.0) - Nov 25, 2019
@@ -41,7 +46,7 @@ change only matters if you're using a custom implementation of `IJsonService`. (
 - Fixed index out of bounds exception thrown when a Javascript log message contains an empty line. ([#55](https://github.com/JeringTech/Javascript.NodeJS/pull/55))
 
 ## [4.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.3.0...4.4.0) - Nov 19, 2019
-### Changes
+### Additions
 - Async Javascript methods are now supported, refer to [ReadMe](https://github.com/JeringTech/Javascript.NodeJS/tree/support-async-javascript-entry-methods#async-function) for more information. ([87bcacf](https://github.com/JeringTech/Javascript.NodeJS/commit/87bcacf1c4b6c170ea211ede162866055d8cd3be))
 
 ## [4.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...4.3.0) - Nov 16, 2019
