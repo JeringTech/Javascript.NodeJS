@@ -1,8 +1,11 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+#if NETSTANDARD2_0
+using Microsoft.AspNetCore.Hosting;
+#endif
 
 namespace Jering.Javascript.NodeJS
 {
@@ -28,10 +31,13 @@ namespace Jering.Javascript.NodeJS
         /// <param name="options">The target <see cref="NodeJSProcessOptions"/> to configure.</param>
         public void Configure(NodeJSProcessOptions options)
         {
+
+#if NETSTANDARD2_0
             // Create a scope to avoid leaking unintended singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
             using (IServiceScope scope = _serviceScopeFactory.CreateScope())
             {
                 IServiceProvider serviceProvider = scope.ServiceProvider;
+
 
                 IHostingEnvironment hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
                 if (hostingEnvironment == null)
@@ -44,8 +50,10 @@ namespace Jering.Javascript.NodeJS
                 {
                     options.EnvironmentVariables = new Dictionary<string, string>();
                 }
+
                 options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
             }
+#endif
         }
     }
 }
