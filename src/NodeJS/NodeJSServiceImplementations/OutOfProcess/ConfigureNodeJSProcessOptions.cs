@@ -1,8 +1,8 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -44,7 +44,11 @@ namespace Jering.Javascript.NodeJS
                 {
                     options.EnvironmentVariables = new Dictionary<string, string>();
                 }
-                options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
+
+                if (!options.EnvironmentVariables.ContainsKey("NODE_ENV"))
+                {
+                    options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
+                }
             }
         }
     }
