@@ -28,6 +28,27 @@ namespace Jering.Javascript.NodeJS
         /// <param name="options">The target <see cref="NodeJSProcessOptions"/> to configure.</param>
         public void Configure(NodeJSProcessOptions options)
         {
+            // Check whether project path already specified
+            bool projectPathSpecified = !string.IsNullOrWhiteSpace(options.ProjectPath);
+
+            // Check whether NODE_ENV already specified
+            bool nodeEnvSpecified;
+            if (options.EnvironmentVariables == null)
+            {
+                options.EnvironmentVariables = new Dictionary<string, string>();
+                nodeEnvSpecified = false;
+            }
+            else
+            {
+                nodeEnvSpecified = options.EnvironmentVariables.ContainsKey("NODE_ENV");
+            }
+
+            // Return if both project path and NODE_ENV already specified
+            if (projectPathSpecified && nodeEnvSpecified)
+            {
+                return;
+            }
+
             // Create a scope to avoid leaking unintended singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
             using (IServiceScope scope = _serviceScopeFactory.CreateScope())
             {
@@ -39,13 +60,12 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
-                options.ProjectPath = hostingEnvironment.ContentRootPath;
-                if (options.EnvironmentVariables == null)
+                if(!projectPathSpecified)
                 {
-                    options.EnvironmentVariables = new Dictionary<string, string>();
+                    options.ProjectPath = hostingEnvironment.ContentRootPath;
                 }
 
-                if (!options.EnvironmentVariables.ContainsKey("NODE_ENV"))
+                if (!nodeEnvSpecified)
                 {
                     options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
                 }
