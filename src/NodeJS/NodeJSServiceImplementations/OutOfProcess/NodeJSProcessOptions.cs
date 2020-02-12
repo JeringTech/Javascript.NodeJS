@@ -11,8 +11,8 @@ namespace Jering.Javascript.NodeJS
     {
         /// <summary>
         /// <para>The base path for resolving paths of NodeJS modules on disk.</para>
-        /// <para>If the application is an ASP.NET Core application, this value defaults to <see cref="IHostingEnvironment.ContentRootPath"/>.
-        /// Otherwise, it defaults to the current working directory.</para>
+        /// <para>If this value is <c>null</c>, whitespace or an empty string and the application is an ASP.NET Core application, 
+        /// project path is <see cref="IHostingEnvironment.ContentRootPath"/>.</para>
         /// </summary>
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
@@ -31,6 +31,9 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>The environment variables for the NodeJS process.</para>
         /// <para>The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
+        /// <para>If this value doesn't contain an element with key "NODE_ENV" and the application is an ASP.NET Core application,
+        /// an element with key "NODE_ENV" is added. The added element's value is "development" if <see cref="IHostingEnvironment.EnvironmentName"/> is <see cref="EnvironmentName.Development"/>,
+        /// and "production" otherwise.</para>
         /// </summary>
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
     }

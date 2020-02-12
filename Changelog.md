@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.1...HEAD)
+
+## [5.3.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.0...5.3.1) - Feb 12, 2020
+### Fixes
+- `ConfigureNodeJSProcessOptions` no longer overwrites user specified `NodeJSProcessOptions` options. ([#71](https://github.com/JeringTech/Javascript.NodeJS/pull/71)).
 
 ## [5.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.2.1...5.3.0) - Dec 10, 2019
 ### Changes

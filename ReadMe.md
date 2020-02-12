@@ -346,10 +346,10 @@ The next two sections list all available options.
 #### NodeJSProcessOptions
 | Option | Type | Description | Default |  
 | ------ | ---- | ----------- | ------- |
-| ProjectPath | `string` | The base path for resolving paths of NodeJS modules on disk. | If the application is an ASP.NET Core application, this value defaults to `IHostingEnvironment.ContentRootPath`. Otherwise, it defaults to the current working directory. |
+| ProjectPath | `string` | The base path for resolving paths of NodeJS modules on disk. If this value is `null`, whitespace or an empty string and the application is an ASP.NET Core application, project path is `IHostingEnvironment.ContentRootPath` | The current directory (value returned by `Directory.GetCurrentDirectory()`) |
 | NodeAndV8Options | `string` | NodeJS and V8 options in the form "[NodeJS options] [V8 options]". The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options. | `null` |
 | Port | `int` | The port that the server running on NodeJS will listen on. If set to 0, the OS will choose the port. | `0` |
-| EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. | `null` |
+| EnvironmentVariables | `IDictionary<string, string>` | The environment variables for the NodeJS process. The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables. If this value doesn't contain an element with key "NODE_ENV" and the application is an ASP.NET Core application, an element with key "NODE_ENV" is added with value "development" if `IHostingEnvironment.EnvironmentName` is `EnvironmentName.Development` or "production" otherwise. | An Empty `IDictionary<string, string>`  |
 
 #### OutOfProcessNodeJSServiceOptions
 | Option | Type | Description | Default |  
@@ -1003,6 +1003,7 @@ Contributions are welcome!
 ### Contributors
 - [JeremyTCD](https://github.com/JeremyTCD)
 - [Daniil Sokolyuk](https://github.com/DaniilSokolyuk)
+- [dustinsoftware](https://github.com/dustinsoftware)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
