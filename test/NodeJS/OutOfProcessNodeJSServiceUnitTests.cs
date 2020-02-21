@@ -6,7 +6,6 @@ using Moq.Protected;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -462,9 +461,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
@@ -523,9 +522,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
@@ -586,8 +585,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
@@ -664,9 +663,9 @@ namespace Jering.Javascript.NodeJS.Tests
                 mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
                 Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
                 mockNodeJSProcess.
-                    Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                    Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-                mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                    Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                    Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+                mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
                 mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
                 mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
                 mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
@@ -737,9 +736,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
@@ -818,9 +817,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
@@ -889,9 +888,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected());
@@ -930,9 +929,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected());
@@ -974,9 +973,9 @@ namespace Jering.Javascript.NodeJS.Tests
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+                Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>())).
+                Callback<MessageReceivedEventHandler>(messageReceivedEventHandler => messageReceivedEventHandler(null, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             mockNodeJSProcess.Setup(n => n.SetConnected());
@@ -1066,7 +1065,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void CreateAndConnectNodeJSProcess_DisposesOfExistingNodeJSProcess()
+        public void CreateAndConnectNodeJSProcess_DisposesOfExistingNodeJSProcessCreatesAndSetsUpNodeJSProcess()
         {
             // Arrange
             const string dummyServerScript = "dummyServerScript";
@@ -1075,8 +1074,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
@@ -1097,31 +1096,10 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void OutputDataReceivedHandler_DoesNothingIfEventDataIsNull()
+        public void OutputReceivedHandler_IfNodeJSProcessIsNotConnectedAndMessageIsConnectionEstablishedMessageEstablishesConnection()
         {
             // Arrange
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(null)).Returns(mockNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object);
-            mockTestSubject.CallBase = true;
-            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
-
-            // Act
-            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(null), null);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            mockNodeJSProcess.Verify(n => n.Connected, Times.Never());
-        }
-
-        [Fact]
-        public void OutputDataReceivedHandler_IfNodeJSProcessIsNotConnectedAndEventDataIsConnectionEstablishedMessageEstablishesConnection()
-        {
-            // Arrange
-            const string dummyData = OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START;
+            const string dummyMessage = OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START;
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
@@ -1135,18 +1113,18 @@ namespace Jering.Javascript.NodeJS.Tests
                 mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
 
                 // Act
-                mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), dummyWaitHandle);
+                mockTestSubject.Object.OutputReceivedHandler(null, dummyMessage, dummyWaitHandle);
 
                 // Assert
                 _mockRepository.VerifyAll();
                 Assert.True(dummyWaitHandle.WaitOne(0)); // Ensure that it gets signaled
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(dummyData), Times.Once());
+                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(dummyMessage), Times.Once());
             }
         }
 
         [Theory]
-        [MemberData(nameof(OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages_Data))]
-        public void OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages(bool dummyConnected, string dummyData)
+        [MemberData(nameof(OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data))]
+        public void OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages(bool dummyConnected, string dummyMessage)
         {
             // Arrange
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
@@ -1160,98 +1138,42 @@ namespace Jering.Javascript.NodeJS.Tests
                 loggerStringBuilder: loggerStringBuilder,
                 logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
-            string dummyOutMessage = "dummyOutMessage";
-            mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
             mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), null);
+            mockTestSubject.Object.OutputReceivedHandler(null, dummyMessage, null);
 
             // Assert
             _mockRepository.VerifyAll();
             string logResult = loggerStringBuilder.ToString();
-            Assert.Contains(dummyOutMessage, logResult);
+            Assert.Contains(dummyMessage, logResult);
         }
 
-        public static IEnumerable<object[]> OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages_Data()
+        public static IEnumerable<object[]> OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data()
         {
             return new object[][]
             {
                 new object[]{true, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START},
-                new object[]{false, "dummyData"},
+                new object[]{false, "dummyMessage"},
             };
         }
 
         [Fact]
-        public void ErrorDataReceivedHandler_DoesNothingIfEventDataIsNull()
+        public void ErrorReceivedHandler_LogsMessages()
         {
             // Arrange
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
-            mockTestSubject.CallBase = true;
-
-            // Act
-            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(null));
-
-            // Assert
-            string dummyOutMessage = null;
-            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), null, out dummyOutMessage), Times.Never());
-        }
-
-        [Fact]
-        public void ErrorDataReceivedHandler_IfDataIsNotNullLogsMessages()
-        {
-            // Arrange
-            const string dummyData = "dummyData";
+            const string dummyMessage = "dummyMessage";
             var loggerStringBuilder = new StringBuilder();
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder, logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
-            string dummyOutMessage = null;
-            mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
 
             // Act
-            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData));
+            mockTestSubject.Object.ErrorReceivedHandler(null, dummyMessage);
 
             // Assert
             _mockRepository.VerifyAll();
             string logResult = loggerStringBuilder.ToString();
-            Assert.Single(Regex.Matches(logResult, $"{nameof(LogLevel.Error)}: "));
-        }
-
-        [Fact]
-        public void TryCreateMessage_AppendsDataToStringBuilderAndReturnsFalseIfTheDataDoesNotEndWithANullTerminatingCharacter()
-        {
-            // Arrange
-            var dummyStringBuilder = new StringBuilder();
-            const string dummyData = "dummyData";
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
-            mockTestSubject.CallBase = true;
-
-            // Act
-            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyData, out string resultMessage);
-
-            // Assert
-            Assert.False(result);
-            Assert.Null(resultMessage);
-            Assert.Equal(dummyData + "\n", dummyStringBuilder.ToString(), ignoreLineEndingDifferences: true);
-        }
-
-        [Fact]
-        public void TryCreate_ResetsStringBuilderReturnsTrueAndAMessageIfTheDataEndsWithANullTerminatingCharacter()
-        {
-            // Arrange
-            var dummyStringBuilder = new StringBuilder();
-            const string dummyData = "dummyData";
-            string dummyDataWithNullTerminatingCharacter = $"{dummyData}\0";
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
-            mockTestSubject.CallBase = true;
-
-            // Act
-            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string resultMessage);
-
-            // Assert
-            Assert.True(result);
-            Assert.Equal(dummyData, resultMessage);
-            Assert.Equal(0, dummyStringBuilder.Length);
+            Assert.Equal(logResult, $"{nameof(LogLevel.Error)}: {dummyMessage}\n", ignoreLineEndingDifferences: true);
         }
 
         // Mocking protected members: https://github.com/Moq/moq4/wiki/Quickstart#miscellaneous
@@ -1303,24 +1225,6 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         private class DummyAssembly : Assembly { }
-
-        // https://stackoverflow.com/questions/1354308/how-to-instantiate-datareceivedeventargs-or-be-able-to-fill-it-with-data
-        private DataReceivedEventArgs CreateDataReceivedEventArgs(string TestData)
-        {
-            var MockEventArgs =
-                (DataReceivedEventArgs)System.Runtime.Serialization.FormatterServices
-                 .GetUninitializedObject(typeof(DataReceivedEventArgs));
-
-            FieldInfo[] EventFields = typeof(DataReceivedEventArgs)
-                .GetFields(
-                    BindingFlags.NonPublic |
-                    BindingFlags.Instance |
-                    BindingFlags.DeclaredOnly);
-
-            EventFields[0].SetValue(MockEventArgs, TestData);
-
-            return MockEventArgs;
-        }
 
         public void Dispose()
         {

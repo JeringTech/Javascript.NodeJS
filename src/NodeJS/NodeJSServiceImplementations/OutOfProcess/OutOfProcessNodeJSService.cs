@@ -40,8 +40,6 @@ namespace Jering.Javascript.NodeJS
         private readonly object _connectingLock = new object();
         private bool _disposed;
         private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it is null)
-        private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
-        private readonly StringBuilder _errorDataStringBuilder = new StringBuilder();
 
         /// <summary>
         /// Creates an<see cref="OutOfProcessNodeJSService"/> instance.
@@ -340,23 +338,17 @@ namespace Jering.Javascript.NodeJS
             _nodeJSProcess = _nodeProcessFactory.Create(serverScript);
 
             // Connect through stdout
-            _nodeJSProcess.AddOutputDataReceivedHandler((object sender, DataReceivedEventArgs evt) => OutputDataReceivedHandler(sender, evt, waitHandle));
-            _nodeJSProcess.AddErrorDataReceivedHandler(ErrorDataReceivedHandler);
+            _nodeJSProcess.AddOutputReceivedHandler((object sender, string message) => OutputReceivedHandler(sender, message, waitHandle));
+            _nodeJSProcess.AddErrorReceivedHandler(ErrorReceivedHandler);
             _nodeJSProcess.BeginOutputReadLine();
             _nodeJSProcess.BeginErrorReadLine();
         }
 
-        internal void OutputDataReceivedHandler(object _, DataReceivedEventArgs evt, EventWaitHandle waitHandle)
+        internal void OutputReceivedHandler(object _, string message, EventWaitHandle waitHandle)
         {
-            string data = evt.Data;
-            if (data == null)
+            if (!_nodeJSProcess.Connected && message.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
             {
-                return;
-            }
-
-            if (!_nodeJSProcess.Connected && evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
-            {
-                OnConnectionEstablishedMessageReceived(evt.Data);
+                OnConnectionEstablishedMessageReceived(message);
 
                 if (_debugLoggingEnabled)
                 {
@@ -365,54 +357,15 @@ namespace Jering.Javascript.NodeJS
 
                 waitHandle.Set();
             }
-            else if (TryCreateMessage(_outputDataStringBuilder, data, out string message))
+            else
             {
-                // Process output is received line by line. The last line of a message ends with a \0 (null character),
-                // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
                 Logger.LogInformation(message);
             }
         }
 
-        internal void ErrorDataReceivedHandler(object sender, DataReceivedEventArgs evt)
+        internal void ErrorReceivedHandler(object _, string message)
         {
-            string data = evt.Data;
-            if (data == null)
-            {
-                return;
-            }
-
-            if (TryCreateMessage(_errorDataStringBuilder, data, out string message))
-            {
-                Logger.LogError(message);
-            }
-        }
-
-        // OutputDataReceivedHandler and ErrorDataReceivedHandler are called every time a newline character is read in the stdout and stderr streams respectively.
-        // The event data supplied to the callback is a string containing all the characters between the previous newline character and the most recent one.
-        // In other words, the stream is read line by line. The last line in each message ends with a null terminating character (see HttpServer.ts).
-        internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
-        {
-            message = null;
-            int dataLength = data.Length;
-
-            if (dataLength == 0) // Empty line
-            {
-                stringBuilder.AppendLine();
-                return false;
-            }
-
-            if (data[dataLength - 1] != '\0')
-            {
-                stringBuilder.AppendLine(data);
-                return false;
-            }
-
-            stringBuilder.Append(data);
-            stringBuilder.Length--; // Remove null terminating character
-            message = stringBuilder.ToString();
-            stringBuilder.Length = 0;
-
-            return true;
+            Logger.LogError(message);
         }
 
         /// <summary>
