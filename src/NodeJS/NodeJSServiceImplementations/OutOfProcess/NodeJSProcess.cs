@@ -23,7 +23,7 @@ namespace Jering.Javascript.NodeJS
         private readonly Process _process;
         private readonly object _lock = new object();
         private bool _connected;
-        private bool _disposed;
+        private volatile bool _disposed; // Used in double checked lock
         private readonly StringBuilder _outputDataStringBuilder;
         private MessageReceivedEventHandler _outputReceivedHandler;
         private bool _internalOutputDataReceivedHandlerAdded;
@@ -233,19 +233,24 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Kills and disposes of this instance's underlying NodeJS <see cref="Process"/>.
+        /// Kills and disposes of the NodeJS <see cref="Process"/>.
         /// </summary>
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this); // In case a sub class overrides Object.Finalize - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-overload
         }
 
         /// <summary>
-        /// Kills and disposes of this instance's underlying NodeJS <see cref="Process"/>.
+        /// Kills and disposes of the NodeJS <see cref="Process"/>.
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             lock (_lock)
             {
                 if (_disposed)
@@ -253,32 +258,27 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
-                // Unmanaged resource, so always call, even if called by finalizer
-                try
+                if (disposing) // If this method was called by a finalizer, we shouldn't try to release managed resources - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-disposeboolean-overload
                 {
-                    Kill();
-                    // Give async output some time to push its messages
-                    _process?.WaitForExit(500);
+                    // A finalizer can run even if an object's constructor never completed, so use null conditional operator
+                    try
+                    {
+                        Kill();
+                        _process?.WaitForExit(500); // Give async output some time to push its messages
+                    }
+                    catch
+                    {
+                        // Do nothing if we catch an exception, since if kill fails the process is already dead
+                    }
+                    finally
+                    {
+                        _process?.Dispose();
+                    }
                 }
-                catch
-                {
-                    // Do nothing, since if kill fails, we can assume that the process is already dead
-                }
-
-                // After process has exited, dispose of instance to release handle - https://docs.microsoft.com/en-sg/dotnet/api/system.diagnostics.process?view=netframework-4.7.1
-                _process?.Dispose();
 
                 _disposed = true;
                 _connected = false;
             }
-        }
-
-        /// <summary>
-        /// Implements the finalization part of the IDisposable pattern by calling Dispose(false).
-        /// </summary>
-        ~NodeJSProcess()
-        {
-            Dispose(false);
         }
     }
 }

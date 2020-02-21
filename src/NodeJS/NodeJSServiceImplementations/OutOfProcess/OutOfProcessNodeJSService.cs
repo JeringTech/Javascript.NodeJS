@@ -374,6 +374,7 @@ namespace Jering.Javascript.NodeJS
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this); // In case a sub class overrides Object.Finalize - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-overload
         }
 
         /// <summary>
