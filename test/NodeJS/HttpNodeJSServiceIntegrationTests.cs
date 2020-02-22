@@ -983,6 +983,31 @@ module.exports = (callback) => {
             }
         }
 
+        [Fact]
+        public async void AllInvokeMethodsThatReturnAValue_HandleStreamReturnType()
+        {
+            // Arrange
+            const string dummyData = "dummyData";
+            string dummyModule = $@"var Readable = require('stream').Readable;
+module.exports = (callback) => {{ 
+    var stream = new Readable();
+    stream.push('{dummyData}');
+    stream.push(null);
+
+    callback(null, stream);
+}}";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            using (Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false))
+            using (var streamReader = new StreamReader(resultStream))
+            {
+                // Assert
+                string result = streamReader.ReadToEnd();
+                Assert.Equal(dummyData, result);
+            }
+        }
+
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>

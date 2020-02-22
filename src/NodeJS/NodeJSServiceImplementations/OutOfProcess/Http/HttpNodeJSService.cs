@@ -104,15 +104,15 @@ namespace Jering.Javascript.NodeJS
                             return (true, (T)(object)result);
                         }
 
+                        if (typeof(T) == typeof(Stream))
+                        {
+                            Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                            return (true, (T)(object)stream); // User's reponsibility to handle disposal
+                        }
+
                         using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
                         {
-                            if (typeof(T) == typeof(Stream))
-                            {
-                                return (true, (T)(object)stream);
-                            }
-
                             T result = await _jsonService.DeserializeAsync<T>(stream, cancellationToken).ConfigureAwait(false);
-
                             return (true, result);
                         }
                     }

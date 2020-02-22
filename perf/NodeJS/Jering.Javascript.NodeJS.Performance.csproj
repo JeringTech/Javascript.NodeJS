@@ -13,7 +13,7 @@
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
         <PackageReference Include="Microsoft.AspNetCore.NodeServices" Version="3.0.0" />
-        <PackageReference Include="Yarn.MSBuild" Version="1.16.0" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.22.0" />
     </ItemGroup>
 
     <ItemGroup>

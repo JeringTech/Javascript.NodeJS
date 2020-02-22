@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.2...HEAD)
+
+## [5.3.2](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.1...5.3.2) - Feb 22, 2020
+### Fixes
+- `HttpNodeJSService` no longer disposes `Stream`s before returning them. ([#73](https://github.com/JeringTech/Javascript.NodeJS/pull/73)).
 
 ## [5.3.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.0...5.3.1) - Feb 12, 2020
 ### Fixes
