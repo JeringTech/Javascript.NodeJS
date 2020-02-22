@@ -36,7 +36,7 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
-        <PackageReference Include="Yarn.MSBuild" Version="1.16.0" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.22.0" />
     </ItemGroup>
 
     <ItemGroup>

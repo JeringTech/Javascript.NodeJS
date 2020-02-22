@@ -32,9 +32,9 @@
       },
       "Yarn.MSBuild": {
         "type": "Direct",
-        "requested": "[1.16.0, )",
-        "resolved": "1.16.0",
-        "contentHash": "JzrCeiEMGjkw+z4JvOeZMWmhJF7YI7KDPXglg7PRtFqqBarLFiwGXsMPmiJQ+tXxFNfdBX8KmfDX0KT8htZjZw=="
+        "requested": "[1.22.0, )",
+        "resolved": "1.22.0",
+        "contentHash": "+uECXuuZ+8kjNR8bF6Y8wyKiDbrI/MSX9VTuE0q1GcRm13vU7IZl4WUfXSb/3aHmxsDsWGZxktfEnwe2YWgugg=="
       },
       "BenchmarkDotNet.Annotations": {
         "type": "Transitive",
