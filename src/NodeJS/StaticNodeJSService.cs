@@ -89,7 +89,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="modulePath"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -109,7 +109,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="modulePath"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -134,7 +134,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleString"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -158,7 +158,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleString"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -184,7 +184,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -209,7 +209,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -234,7 +234,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleStream"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -258,7 +258,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleStream"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -284,7 +284,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -309,7 +309,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -330,7 +330,7 @@ namespace Jering.Javascript.NodeJS
         /// <returns>The <see cref="Task"/> representing the asynchronous operation. On completion, the task returns a (bool, T) with the bool set to true on 
         /// success and false otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleCacheIdentifier"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -349,7 +349,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation. On completion, the task returns true on success and false otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleCacheIdentifier"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>

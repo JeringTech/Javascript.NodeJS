@@ -24,6 +24,13 @@ namespace Jering.Javascript.NodeJS
         public int NumRetries { get; set; } = 1;
 
         /// <summary>
+        /// <para>The number of times a NodeJS connection attempt is retried.</para>
+        /// <para>If set to a negative value, connection attempts are retried indefinitely.</para>
+        /// <para>Defaults to 1.</para>
+        /// </summary>
+        public int NumConnectionRetries { get; set; } = 1;
+
+        /// <summary>
         /// <para>The concurrency mode for invocations.</para>
         /// <para>By default, this value is <see cref="Concurrency.None"/> and invocations are executed synchronously by a single NodeJS process; 
         /// mode pros: lower memory overhead and supports all modules, cons: less performant.</para>

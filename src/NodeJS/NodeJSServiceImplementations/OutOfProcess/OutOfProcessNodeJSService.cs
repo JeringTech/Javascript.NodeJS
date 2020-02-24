@@ -201,65 +201,31 @@ namespace Jering.Javascript.NodeJS
 
         internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
-            int numRetries = _options.NumRetries;
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
+            }
 
+            int numRetries = _options.NumRetries;
             while (true)
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
-                }
-
                 CancellationTokenSource cancellationTokenSource = null;
-                EventWaitHandle waitHandle = null;
                 try
                 {
-                    // If the the NodeJS process has not been instantiated or has been disconnected for some reason, attempt to create a 
-                    // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
-                    // is created successfully, all threads will be released by OutputDataReceivedHandler.
-                    if (_nodeJSProcess?.Connected != true) // Safe since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
-                    {
-                        lock (_connectingLock)
-                        {
-                            if (_nodeJSProcess?.Connected != true)
-                            {
-                                waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-                                CreateAndConnectToNodeJSProcess(waitHandle);
-
-                                if (_debugLoggingEnabled)
-                                {
-                                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
-                                }
-
-                                if (waitHandle.WaitOne(_options.TimeoutMS < 0 ? -1 : _options.TimeoutMS))
-                                {
-                                    _nodeJSProcess.SetConnected();
-                                }
-                                else
-                                {
-                                    // Kills and disposes
-                                    _nodeJSProcess.Dispose();
-
-                                    // Reset
-                                    _outputDataStringBuilder.Length = 0;
-                                    _errorDataStringBuilder.Length = 0;
-
-                                    // We're unlikely to get to this point. If we do we want the issue to be logged.
-                                    throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
-                                        _options.TimeoutMS,
-                                        _nodeJSProcess.HasExited,
-                                        _nodeJSProcess.ExitStatus));
-                                }
-                            }
-                        }
-                    }
+                    // If we haven't connected to a NodeJS process or we've been disconnected, connect to a new process.
+                    // We want this within the while loop so if we disconnect between tries, we connect before retrying.
+                    ConnectIfNotConnected();
 
                     // Create cancellation token
                     CancellationToken invokeCancellationToken;
                     (invokeCancellationToken, cancellationTokenSource) = CreateCts(cancellationToken);
 
                     return await TryInvokeAsync<T>(invocationRequest, invokeCancellationToken).ConfigureAwait(false);
+                }
+                catch (ConnectionException)
+                {
+                    // ConnectIfNotConnected has its own retry logic
+                    throw;
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -297,7 +263,6 @@ namespace Jering.Javascript.NodeJS
                 finally
                 {
                     cancellationTokenSource?.Dispose();
-                    waitHandle?.Dispose();
                 }
 
                 numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
@@ -323,25 +288,101 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void CreateAndConnectToNodeJSProcess(EventWaitHandle waitHandle)
+        internal virtual void ConnectIfNotConnected()
         {
-            if (_disposed)
+            // Connected calls Process.HasExited, which throws if the Process instance is not attached to a process. This won't occur since
+            // _nodeJSProcess is only ever assigned already-started Process instances (see CreateProcess). Process.HasExited also throws if
+            // it can't access the process's exit code. People encounter this when they create a Process instance for an existing process,
+            // and the existing process requires elevated privileges. This isn't an issue for us since we're creating the NodeJS
+            // process and always have necessary privileges.
+            //
+            //  This is also safe since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
+            if (_nodeJSProcess?.Connected == true)
             {
-                throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
+                return;
             }
 
-            // Avoid orphan processes
-            _nodeJSProcess?.Dispose();
+            // // Apart from the thread creating the process, all other threads will be blocked.
+            lock (_connectingLock)
+            {
+                if (_nodeJSProcess?.Connected == true)
+                {
+                    return;
+                }
 
+                int numConnectionRetries = _options.NumConnectionRetries;
+                EventWaitHandle waitHandle = null;
+
+                while (true)
+                {
+                    try
+                    {
+                        // Avoid orphan processes
+                        _nodeJSProcess?.Dispose();
+
+                        // If the new process is created successfully, the WaitHandle is released by OutputDataReceivedHandler.
+                        waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+                        _nodeJSProcess = CreateAndSetUpProcess(waitHandle); // Throws InvalidOperationException if it can't create the process
+
+                        if (_debugLoggingEnabled)
+                        {
+                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
+                        }
+
+                        if (waitHandle.WaitOne(_options.TimeoutMS < 0 ? -1 : _options.TimeoutMS))
+                        {
+                            _nodeJSProcess.SetConnected();
+
+                            return;
+                        }
+                        else
+                        {
+                            // Kills and disposes
+                            _nodeJSProcess.Dispose();
+
+                            // We're unlikely to get to this point. If we do we want the issue to be logged.
+                            throw new ConnectionException(string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
+                                _options.TimeoutMS,
+                                _nodeJSProcess.HasExited,
+                                _nodeJSProcess.ExitStatus));
+                        }
+                    }
+                    catch (Exception exception) when (numConnectionRetries != 0)
+                    {
+                        if (_warningLoggingEnabled)
+                        {
+                            Logger.LogWarning(string.Format(Strings.LogWarning_ConnectionAttemptFailed, numConnectionRetries < 0 ? "infinity" : numConnectionRetries.ToString(), exception.ToString()));
+                        }
+                    }
+                    catch (Exception exception) when(!(exception is ConnectionException))
+                    {
+                        // Wrap so users can easily identify connection issues
+                        throw new ConnectionException(Strings.ConnectionException_OutOfProcessNodeJSService_FailedToConnect, exception);
+                    }
+                    finally
+                    {
+                        waitHandle?.Dispose();
+                    }
+
+                    numConnectionRetries = numConnectionRetries > 0 ? numConnectionRetries - 1 : numConnectionRetries;
+                }
+            }
+        }
+
+        internal virtual INodeJSProcess CreateAndSetUpProcess(EventWaitHandle waitHandle)
+        {
             // Create new process
             string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
-            _nodeJSProcess = _nodeProcessFactory.Create(serverScript);
+            INodeJSProcess result = _nodeProcessFactory.Create(serverScript);
 
-            // Connect through stdout
-            _nodeJSProcess.AddOutputReceivedHandler((object sender, string message) => OutputReceivedHandler(sender, message, waitHandle));
-            _nodeJSProcess.AddErrorReceivedHandler(ErrorReceivedHandler);
-            _nodeJSProcess.BeginOutputReadLine();
-            _nodeJSProcess.BeginErrorReadLine();
+            // stdout and stderr
+            result.AddOutputReceivedHandler((object sender, string message) => OutputReceivedHandler(sender, message, waitHandle));
+            result.AddErrorReceivedHandler(ErrorReceivedHandler);
+            result.BeginOutputReadLine();
+            result.BeginErrorReadLine();
+
+            return result;
         }
 
         internal void OutputReceivedHandler(object _, string message, EventWaitHandle waitHandle)

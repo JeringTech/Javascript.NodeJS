@@ -531,10 +531,11 @@ Invokes a function exported by a NodeJS module on disk.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -591,10 +592,11 @@ Invokes a function exported by a NodeJS module in string form.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -647,10 +649,11 @@ Invokes a function exported by a NodeJS module in Stream form.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -708,10 +711,11 @@ Attempts to invoke a function exported by a NodeJS module cached by NodeJS.
 The task representing the asynchronous operation. On completion, the task returns a `(bool, T)` with the bool set to true on 
 success and false otherwise.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
