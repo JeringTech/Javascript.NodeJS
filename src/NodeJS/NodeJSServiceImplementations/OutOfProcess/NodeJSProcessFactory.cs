@@ -13,7 +13,7 @@ namespace Jering.Javascript.NodeJS
         private readonly NodeJSProcessOptions _nodeJSProcessOptions;
 
         /// <summary>
-        /// Creates a <see cref="NodeJSProcessFactory"/> instance.
+        /// Creates a <see cref="NodeJSProcessFactory"/>.
         /// </summary>
         /// <param name="optionsAccessor"></param>
         public NodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor)
@@ -31,7 +31,7 @@ namespace Jering.Javascript.NodeJS
 
         internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
         {
-            nodeServerScript = EscapeCommandLineArg(nodeServerScript);
+            nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding?
 
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")
@@ -76,9 +76,9 @@ namespace Jering.Javascript.NodeJS
 
                 return process;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                throw new InvalidOperationException(string.Format(Strings.InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess, Environment.GetEnvironmentVariable("PATH")), ex);
+                throw new InvalidOperationException(string.Format(Strings.InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess, Environment.GetEnvironmentVariable("PATH")), exception);
             }
         }
 

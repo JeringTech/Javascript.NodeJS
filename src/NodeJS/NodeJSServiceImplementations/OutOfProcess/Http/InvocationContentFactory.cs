@@ -10,7 +10,7 @@ namespace Jering.Javascript.NodeJS
         private readonly IJsonService _jsonService;
 
         /// <summary>
-        /// Creates an <see cref="InvocationContentFactory"/> instance.
+        /// Creates an <see cref="InvocationContentFactory"/>.
         /// </summary>
         /// <param name="jsonService"></param>
         public InvocationContentFactory(IJsonService jsonService)

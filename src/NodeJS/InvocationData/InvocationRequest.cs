@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS
         private readonly long _streamInitialPosition;
 
         /// <summary>
-        /// Creates an <see cref="InvocationRequest"/> instance.
+        /// Creates an <see cref="InvocationRequest"/>.
         /// </summary>
         /// <param name="moduleSourceType">The source type of the module.</param>
         /// <param name="moduleSource">

@@ -49,8 +49,8 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module string is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module string is compiled and cached.
-        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string to NodeJS.</para>
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module string is compiled and cached.
+        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
         /// <typeparam name="T">The type of value returned. This may be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
@@ -71,8 +71,8 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module string is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module string is compiled and cached.
-        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string to NodeJS.</para>
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module string is compiled and cached.
+        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
         /// <param name="moduleString">The module in string form. This value mustn't be <c>null</c>, whitespace or an empty string.</param>
@@ -91,7 +91,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -114,7 +114,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -137,7 +137,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module stream is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module stream is compiled and cached.
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module stream is compiled and cached.
         /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module stream to NodeJS.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -159,7 +159,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module stream is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module stream is compiled and cached.
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module stream is compiled and cached.
         /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module stream to NodeJS.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -179,7 +179,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -202,7 +202,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>

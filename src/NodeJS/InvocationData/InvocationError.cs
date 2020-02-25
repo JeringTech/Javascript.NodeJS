@@ -7,7 +7,7 @@ namespace Jering.Javascript.NodeJS
     public class InvocationError
     {
         /// <summary>
-        /// Creates an <see cref="InvocationError"/> instance.
+        /// Creates an <see cref="InvocationError"/>.
         /// </summary>
         /// <param name="errorMessage">The error's description.</param>
         /// <param name="errorStack">The error's NodeJS stack trace.</param>
@@ -18,7 +18,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Creates an <see cref="InvocationError"/> instance.
+        /// Creates an <see cref="InvocationError"/>.
         /// </summary>
         public InvocationError()
         {

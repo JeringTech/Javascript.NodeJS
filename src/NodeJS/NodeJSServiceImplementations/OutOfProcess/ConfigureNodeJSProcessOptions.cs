@@ -7,14 +7,14 @@ using Microsoft.Extensions.Options;
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>
-    /// A <see cref="IConfigureOptions{TOptions}"/> implementation for configuring the singleton <see cref="NodeJSProcessOptions"/> for an application.
+    /// An <see cref="IConfigureOptions{TOptions}"/> implementation for configuring <see cref="NodeJSProcessOptions"/>.
     /// </summary>
     public class ConfigureNodeJSProcessOptions : IConfigureOptions<NodeJSProcessOptions>
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
         /// <summary>
-        /// Creates a <see cref="ConfigureNodeJSProcessOptions"/> instance.
+        /// Creates a <see cref="ConfigureNodeJSProcessOptions"/>.
         /// </summary>
         /// <param name="serviceScopeFactory"></param>
         public ConfigureNodeJSProcessOptions(IServiceScopeFactory serviceScopeFactory)

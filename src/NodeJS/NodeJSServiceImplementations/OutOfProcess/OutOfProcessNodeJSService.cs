@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -218,7 +216,7 @@ namespace Jering.Javascript.NodeJS
 
                     // Create cancellation token
                     CancellationToken invokeCancellationToken;
-                    (invokeCancellationToken, cancellationTokenSource) = CreateCts(cancellationToken);
+                    (invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken);
 
                     return await TryInvokeAsync<T>(invocationRequest, invokeCancellationToken).ConfigureAwait(false);
                 }
@@ -269,7 +267,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual (CancellationToken, CancellationTokenSource) CreateCts(CancellationToken cancellationToken)
+        internal virtual (CancellationToken, CancellationTokenSource) CreateCancellationToken(CancellationToken cancellationToken)
         {
             if (_options.TimeoutMS >= 0)
             {

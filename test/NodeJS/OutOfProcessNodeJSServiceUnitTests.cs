@@ -480,7 +480,7 @@ namespace Jering.Javascript.NodeJS.Tests
                     As<IOutOfProcessNodeJSServiceProtectedMembers>().
                     Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                     ThrowsAsync(dummyException);
-                mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+                mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
                 dummyCancellationTokenSource.Cancel(); // Cancel token
 
                 // Act and assert
@@ -515,7 +515,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -556,7 +556,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -588,7 +588,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -625,7 +625,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -663,7 +663,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -678,25 +678,25 @@ namespace Jering.Javascript.NodeJS.Tests
             mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Never);
         }
 
-        // Note for the following (CreateCts) tests: CancellationToken1.Equal(CancellationToken2) returns CancellationToken1._source == CancellationToken2._source where source is 
+        // Note for the following (CreateCancellationToken) tests: CancellationToken1.Equal(CancellationToken2) returns CancellationToken1._source == CancellationToken2._source where source is 
         // the cancellation token's parent CancellationTokenSource. CancellationToken is a struct while CancellationTokenSource is a class.
         [Theory]
-        [MemberData(nameof(CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data))]
-        public void CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite(CancellationToken dummyCancellationToken)
+        [MemberData(nameof(CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data))]
+        public void CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite(CancellationToken dummyCancellationToken)
         {
             // Arrange
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
 
             // Act
-            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationToken);
+            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCancellationToken(dummyCancellationToken);
 
             // Assert
             Assert.NotNull(resultCancellationTokenSource);
             Assert.Equal(resultCancellationToken, resultCancellationTokenSource.Token);
         }
 
-        public static IEnumerable<object[]> CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data()
+        public static IEnumerable<object[]> CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data()
         {
             var dummyCancellationTokenSource = new CancellationTokenSource();
 
@@ -707,7 +707,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void CreateCts_ReturnsOriginalCancellationTokenIfTimeoutIsInfinite()
+        public void CreateCancellationToken_ReturnsOriginalCancellationTokenIfTimeoutIsInfinite()
         {
             // Arrange
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = -1 };
@@ -718,7 +718,7 @@ namespace Jering.Javascript.NodeJS.Tests
             using (var dummyCancellationTokenSource = new CancellationTokenSource())
             {
                 // Act
-                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationTokenSource.Token);
+                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCancellationToken(dummyCancellationTokenSource.Token);
 
                 // Assert
                 Assert.Null(resultCancellationTokenSource);

@@ -29,7 +29,7 @@ namespace Jering.Javascript.NodeJS
         internal Uri Endpoint;
 
         /// <summary>
-        /// Creates a <see cref="HttpNodeJSService"/> instance.
+        /// Creates a <see cref="HttpNodeJSService"/>.
         /// </summary>
         /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
         /// <param name="httpContentFactory"></param>
@@ -93,7 +93,7 @@ namespace Jering.Javascript.NodeJS
 
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
-                        if(typeof(T) == typeof(Void)) // Returned value doesn't matter
+                        if (typeof(T) == typeof(Void)) // Returned value doesn't matter
                         {
                             return (true, default);
                         }

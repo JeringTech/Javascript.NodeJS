@@ -8,9 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
@@ -883,18 +881,17 @@ module.exports = (callback) => {
             HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
 
             // Act
-            await testSubject.
-                InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
-            console.log({dummyLogArgument}); 
-            callback();
+            await testSubject.InvokeFromStringAsync<string>($@"module.exports = (callback) => {{ 
+    console.log({dummyLogArgument}); 
+    callback();
 
-            // Does not work
-            // process.stdout.end();
-            // process.on(finish, () => callback());
+    // Does not work
+    // process.stdout.end();
+    // process.on(finish, () => callback());
 
-            // Does not work
-            // process.stdout.write('', 'utf8', () => callback());
-        }}").ConfigureAwait(false);
+    // Does not work
+    // process.stdout.write('', 'utf8', () => callback());
+}}").ConfigureAwait(false);
             Thread.Sleep(1000);
             ((IDisposable)_serviceProvider).Dispose();
             string result = resultStringBuilder.ToString();

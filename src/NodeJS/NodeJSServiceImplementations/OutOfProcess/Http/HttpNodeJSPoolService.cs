@@ -23,7 +23,7 @@ namespace Jering.Javascript.NodeJS
         public int Size { get; }
 
         /// <summary>
-        /// Creates a <see cref="HttpNodeJSPoolService"/> instance.
+        /// Creates a <see cref="HttpNodeJSPoolService"/>.
         /// </summary>
         public HttpNodeJSPoolService(ReadOnlyCollection<HttpNodeJSService> httpNodeJSServices)
         {

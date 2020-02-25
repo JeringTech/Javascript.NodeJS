@@ -32,7 +32,7 @@ namespace Jering.Javascript.NodeJS
         private bool _internalErrorDataReceivedHandlerAdded;
 
         /// <summary>
-        /// Creates a <see cref="NodeJSProcess"/> instance.
+        /// Creates a <see cref="NodeJSProcess"/>.
         /// </summary>
         /// <param name="process">The NodeJS process.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="process"/> is null.</exception>
