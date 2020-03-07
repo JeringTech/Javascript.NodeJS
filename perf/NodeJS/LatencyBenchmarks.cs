@@ -42,6 +42,30 @@ namespace Jering.Javascript.NodeJS.Performance
             return await _nodeJSService.InvokeFromFileAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, args: new object[] { _counter++ });
         }
 
+        // If file watching is enabled but graceful shutdown is disabled, latency is the same as if file watching is disabled.
+        // We don't need a separate benchmark for that scenario. There is slightly higher latency when file watching and
+        // graceful shutdown are both enabled though.
+        [GlobalSetup(Target = nameof(INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled))]
+        public void INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled_Setup()
+        {
+            var services = new ServiceCollection();
+            services.AddNodeJS();
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = _projectPath);
+            services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.EnableFileWatching = true);
+            _serviceProvider = services.BuildServiceProvider();
+            _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
+            _counter = 0;
+
+            // Warmup. First run starts a Node.js process.
+            _nodeJSService.InvokeFromStringAsync(DUMMY_WARMUP_MODULE).GetAwaiter().GetResult();
+        }
+
+        [Benchmark]
+        public async Task<DummyResult> INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled()
+        {
+            return await _nodeJSService.InvokeFromFileAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, args: new object[] { _counter++ });
+        }
+
         [GlobalSetup(Target = nameof(INodeJSService_Latency_InvokeFromCache))]
         public void INodeJSService_Latency_InvokeFromCache_Setup()
         {
