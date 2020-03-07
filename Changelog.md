@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.2...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.0...HEAD)
+
+## [5.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.2...5.4.0) - Mar 7, 2020
+### Additions
+- Added file watching. Refer to [ReadMe](https://github.com/JeringTech/Javascript.NodeJS#outofprocessnodejsserviceoptions) for more information. ([#69](https://github.com/JeringTech/Javascript.NodeJS/pull/69)).
 
 ## [5.3.2](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.1...5.3.2) - Feb 22, 2020
 ### Fixes
