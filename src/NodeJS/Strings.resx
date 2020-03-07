@@ -173,4 +173,16 @@ Exception:
 Exception:
   {1}</value>
   </data>
+  <data name="LogInformation_ConnectedToNodeJSProcess" xml:space="preserve">
+    <value>Connected to NodeJS process: {0}.</value>
+  </data>
+  <data name="LogInformation_FileChangedMovingtoNewNodeJSProcess" xml:space="preserve">
+    <value>File changed: "{0}". Moving to new NodeJS process.</value>
+  </data>
+  <data name="LogInformation_KillingNodeJSProcess" xml:space="preserve">
+    <value>Killing NodeJS process: {0}.</value>
+  </data>
+  <data name="ArgumentException_Shared_ValueCannotBeEmpty" xml:space="preserve">
+    <value>Value cannot be empty.</value>
+  </data>
 </root>

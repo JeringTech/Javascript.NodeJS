@@ -67,6 +67,12 @@ namespace Jering.Javascript.NodeJS
         string ExitStatus { get; }
 
         /// <summary>
+        /// <para>Gets the NodeJS process's ID.</para>
+        /// <para>If the ID can't be retrieved, returns -1.</para>
+        /// </summary>
+        int SafeID { get; }
+
+        /// <summary>
         /// Sets the NodeJS process's connected state to true.
         /// </summary>
         void SetConnected();

@@ -86,18 +86,18 @@ namespace Jering.Javascript.NodeJS
         {
             var stringBuilder = new StringBuilder();
             int slashSequenceLength = 0;
-            for(int i = 0; i < arg.Length; i++)
+            for (int i = 0; i < arg.Length; i++)
             {
                 char currentChar = arg[i];
 
-                if(currentChar == '\\')
+                if (currentChar == '\\')
                 {
                     slashSequenceLength++;
 
                     // If the last character in the argument is \, it must be escaped, together with any \ that immediately preceed it.
                     // This prevents situations like: SomeExecutable.exe "SomeArg\", where the quote meant to demarcate the end of the
                     // argument gets escaped.
-                    if(i == arg.Length - 1)
+                    if (i == arg.Length - 1)
                     {
                         for (int j = 0; j < slashSequenceLength; j++)
                         {
@@ -107,10 +107,10 @@ namespace Jering.Javascript.NodeJS
                         }
                     }
                 }
-                else if(currentChar == '"')
+                else if (currentChar == '"')
                 {
                     // Every \ or sequence of \ that preceed a " must be escaped.
-                    for(int j = 0; j < slashSequenceLength; j++)
+                    for (int j = 0; j < slashSequenceLength; j++)
                     {
                         stringBuilder.
                             Append('\\').

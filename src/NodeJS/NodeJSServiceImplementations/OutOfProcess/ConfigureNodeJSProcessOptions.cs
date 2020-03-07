@@ -60,7 +60,7 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
-                if(!projectPathSpecified)
+                if (!projectPathSpecified)
                 {
                     options.ProjectPath = hostingEnvironment.ContentRootPath;
                 }

@@ -175,6 +175,22 @@ namespace Jering.Javascript.NodeJS
             _process?.Kill();
         }
 
+        /// <inheritdoc />
+        public int SafeID
+        {
+            get
+            {
+                try
+                {
+                    return _process.Id;
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
+
         internal virtual void InternalOutputDataReceivedHandler(object sender, DataReceivedEventArgs dataReceivedEventArgs)
         {
             DataReceivedHandler(_outputDataStringBuilder, _outputReceivedHandler, sender, dataReceivedEventArgs);

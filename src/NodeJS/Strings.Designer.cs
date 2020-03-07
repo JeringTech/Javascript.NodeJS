@@ -107,6 +107,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value cannot be empty..
+        /// </summary>
+        internal static string ArgumentException_Shared_ValueCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("ArgumentException_Shared_ValueCannotBeEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}..
         /// </summary>
         internal static string ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut {
@@ -188,6 +197,33 @@ namespace Jering.Javascript.NodeJS {
         internal static string LogDebug_OutOfProcessNodeJSService_BeforeWait {
             get {
                 return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeWait", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected to NodeJS process: {0}..
+        /// </summary>
+        internal static string LogInformation_ConnectedToNodeJSProcess {
+            get {
+                return ResourceManager.GetString("LogInformation_ConnectedToNodeJSProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File changed: &quot;{0}&quot;. Moving to new NodeJS process..
+        /// </summary>
+        internal static string LogInformation_FileChangedMovingtoNewNodeJSProcess {
+            get {
+                return ResourceManager.GetString("LogInformation_FileChangedMovingtoNewNodeJSProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Killing NodeJS process: {0}..
+        /// </summary>
+        internal static string LogInformation_KillingNodeJSProcess {
+            get {
+                return ResourceManager.GetString("LogInformation_KillingNodeJSProcess", resourceCulture);
             }
         }
         

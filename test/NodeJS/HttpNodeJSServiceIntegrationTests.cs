@@ -10,13 +10,14 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
     /// <summary>
-    /// These tests are de facto tests for HttpServer.ts. They serve the additional role of verifying that IPC works properly.
+    /// These tests are de facto tests for HttpServer.ts. They also verify <see cref="OutOfProcessNodeJSService"/> logic.
     /// </summary>
     public class HttpNodeJSServiceIntegrationTests : IDisposable
     {
@@ -24,13 +25,18 @@ namespace Jering.Javascript.NodeJS.Tests
         private const bool DEBUG_NODEJS = false;
         // Set to -1 when debugging in NodeJS
         private const int TIMEOUT_MS = 60000;
+
+        // Modules
         private const string DUMMY_RETURNS_ARG_MODULE_FILE = "dummyReturnsArgModule.js";
         private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
         private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
-
         private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
         private static readonly string _dummyReturnsArgModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_RETURNS_ARG_MODULE_FILE));
         private static readonly string _dummyExportsMultipleFunctionsModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE));
+
+        // File watching
+        private static readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
+        private Uri _tempWatchDirectoryUri;
 
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
@@ -961,7 +967,7 @@ module.exports = (callback) => {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
             await testSubject.InvokeFromStringAsync("module.exports = callback => callback();").ConfigureAwait(false); // Starts the Node.js process
-            Uri dummyEndpoint = testSubject.Endpoint;
+            Uri dummyEndpoint = testSubject._endpoint;
             var dummyJsonService = new JsonService();
 
             // Act
@@ -1005,13 +1011,116 @@ module.exports = (callback) => {{
             }
         }
 
+        // FileWatching integration tests aren't for specific HttpNodeJSService methods, rather they test how HttpNodeJSService reacts to 
+        // file events.
+
+        // When graceful shutdown is true, we kill the initial process only after invocations complete.
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsTrue()
+        {
+            // Arrange
+            RecreateWatchDirectory();
+            // Create initial module
+            string dummylongRunningTriggerPath = new Uri(_tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+            File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
+            string dummyInitialModule = $@"module.exports = {{
+    getPid: (callback) => callback(null, process.pid),
+    longRunning: (callback) => {{
+        fs.watch('{dummylongRunningTriggerPath}', 
+            null, 
+            () => {{
+                callback(null, process.pid);
+            }}
+        );
+    }}
+}}";
+            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+            var dummyServices = new ServiceCollection();
+            dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
+            {
+                options.EnableFileWatching = true;
+                options.WatchPath = _tempWatchDirectory;
+                // Graceful shutdown is true by default
+            });
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(services: dummyServices);
+
+            // Act
+            int initialProcessID1 = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
+            Process initialProcess = Process.GetProcessById(initialProcessID1); // Create Process instance for initial process so we can verify that it gets killed
+            Task<int> longRunningTask = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
+            File.WriteAllText(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }"); // Trigger shift to new process
+            int newProcessID;
+            do
+            {
+                newProcessID = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
+            }
+            while (newProcessID == initialProcessID1); // Poll until we've shifted to new process. If we don't successfully shift to a new process, test will timeout.
+            // Because graceful shutdown is enabled, last process should still be alive after we shift, waiting for longRunning to end
+            File.AppendAllText(dummylongRunningTriggerPath, "dummyContent"); // End long running invocation
+            int initialProcessID2 = await longRunningTask.ConfigureAwait(false);
+            initialProcess.WaitForExit(); // Should exit after the long running invocation completes
+
+            // Assert
+            Assert.Equal(initialProcessID1, initialProcessID2); // Long running invocation should complete in initial process
+        }
+
+        // When graceful shutdown is false, we kill the initial process immediately. Invocations retry in the new process.
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsFalse()
+        {
+            // Arrange
+            RecreateWatchDirectory();
+            // Create initial module
+            const string dummyInitialModule = @"module.exports = {
+    getPid: (callback) => callback(null, process.pid),
+    longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
+}";
+            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+            var resultStringBuilder = new StringBuilder();
+            var dummyServices = new ServiceCollection();
+            dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
+            {
+                options.EnableFileWatching = true;
+                options.WatchPath = _tempWatchDirectory;
+                options.WatchGracefulShutdown = false;
+            });
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, services: dummyServices);
+
+            // Act
+            int initialProcessID = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
+            Process initialProcess = Process.GetProcessById(initialProcessID); // Create Process instance for initial process so we can verify that it gets killed later on
+            Task<int> longRunningTask = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
+            const string dummyNewModule = @"module.exports = {
+    getPid: (callback) => callback(null, process.pid),
+    longRunning: (callback) => callback(null, process.pid)
+}";
+            File.WriteAllText(dummyModuleFilePath, dummyNewModule); // Trigger shift to new process
+            int newProcessID1;
+            do
+            {
+                newProcessID1 = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
+            }
+            while (newProcessID1 == initialProcessID); // Poll until we've shifted to new process. If we don't successfully shift to a new process, test will timeout.
+            initialProcess.WaitForExit(); // Exits before long running invocation completes
+            // Because graceful shutdown is disabled, long running invocation should fail in initial process and retry successfully in new process
+            int newProcessID2 = await longRunningTask.ConfigureAwait(false);
+
+            // Assert
+            string resultLog = resultStringBuilder.ToString();
+            Assert.Contains(nameof(IOException), resultLog); // IOException thrown when initial process is killed
+            Assert.Equal(newProcessID1, newProcessID2); // Long running invocation should complete in new process
+        }
+
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = null,
-            string projectPath = null)
+        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = default,
+            string projectPath = default,
+            ServiceCollection services = default)
         {
-            var services = new ServiceCollection();
+            services = services ?? new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
             if (projectPath != null)
             {
@@ -1063,6 +1172,30 @@ module.exports = (callback) => {{
         public void Dispose()
         {
             ((IDisposable)_serviceProvider).Dispose();
+
+            if (_tempWatchDirectoryUri != null)
+            {
+                TryDeleteWatchDirectory();
+            }
+        }
+
+        private void RecreateWatchDirectory()
+        {
+            TryDeleteWatchDirectory();
+            Directory.CreateDirectory(_tempWatchDirectory);
+            _tempWatchDirectoryUri = new Uri(_tempWatchDirectory);
+        }
+
+        private void TryDeleteWatchDirectory()
+        {
+            try
+            {
+                Directory.Delete(_tempWatchDirectory, true);
+            }
+            catch
+            {
+                // Do nothing
+            }
         }
     }
 }

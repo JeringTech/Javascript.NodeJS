@@ -233,7 +233,7 @@ namespace Jering.Javascript.NodeJS.Tests
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
             // Assert
-            Assert.Equal(expectedResult, testSubject.Endpoint.AbsoluteUri);
+            Assert.Equal(expectedResult, testSubject._endpoint.AbsoluteUri);
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
