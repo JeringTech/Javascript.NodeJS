@@ -358,6 +358,11 @@ The next two sections list all available options.
 | NumRetries | `int` | The number of times an invocation is retried. If set to a negative value, invocations are retried indefinitely. If the module source of an invocation is an unseekable stream, the invocation isn't retried. If you require retries for such streams, copy their contents to a `MemoryStream`.| `1` |
 | Concurrency | `Concurrency` | The concurrency mode for invocations.<br><br>By default, this value is `Concurrency.None` and invocations are executed synchronously by a single NodeJS process; mode pros: lower memory overhead and supports all modules, cons: less performant.<br><br>If this value is `Concurrency.MultiProcess`, `ConcurrencyDegree` NodeJS processes are created and invocations are distributed among them using round-robin load balancing; mode pros: more performant, cons: higher memory overhead and doesn't work with modules that have persistent state. | `Concurrency.None` |
 | ConcurrencyDegree | `int` | The concurrency degree. If `Concurrency` is `Concurrency.MultiProcess`, this value is the number of NodeJS processes. If this value is less than or equal to 0, concurrency degree is the number of logical processors the current machine has. This value does nothing if `Concurrency` is `Concurrency.None`. | `0` |
+| EnableFileWatching | `bool` | The value specifying whether file watching is enabled. If file watching is enabled, when a file in `WatchPath` with name matching a pattern in `WatchFileNamePatterns` changes, NodeJS is restarted. | `false` |
+| WatchPath | `string` | The path of the directory to watch for file changes. If this value is `null`, the path `NodeJSProcessOptions.ProjectPath` is watched. This value does nothing if `EnableFileWatching` is `false`. | `null` |
+| WatchSubdirectories | `bool` | The value specifying whether to watch subdirectories of `WatchPath`. This value does nothing if `EnableFileWatching` is `false`. | `true` |
+| WatchFileNamePatterns | `IEnumerable<string>` | The file name patterns to watch. In a pattern, "*" represents 0 or more of any character and "?" represents 0 or 1 of any character. For example, "TestFile1.js" matches the pattern "*File?.js". This value does nothing if `EnableFileWatching` is `false`. | `["*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.html"]` |
+| WatchGracefulShutdown | `bool` | The value specifying whether NodeJS processes shutdown gracefully when a file changes. If this value is true, NodeJS processes shutdown gracefully. Otherwise they're killed immediately. This value does nothing if `EnableFileWatching` is `false`.<br><br>What's a graceful shutdown? When a file changes, a new NodeJS process is created and subsequent invocations are sent to it. The old NodeJS process might still be handling earlier invocations. If graceful shutdown is enabled, the old NodeJS process is killed after its invocations complete. If graceful shutdown is disabled, the old NodeJS process is killed immediately and invocations are retried in the new NodeJS process if retries remain (see `NumRetries`).<br><br>Should I use graceful shutdown? Shutting down gracefully is safer: chances of an invocation exhausting retries and failing is lower, also, you won't face issues from an invocation terminating midway. However, graceful shutdown does incur a tiny performance cost and invocations complete using the outdated version of your script. Weigh these factors for your script and use-case to decide whether to use graceful shutdown. | `true` |
 
 ### Debugging Javascript
 These are the steps for debugging javascript invoked using INodeJSService:
@@ -531,10 +536,11 @@ Invokes a function exported by a NodeJS module on disk.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -591,10 +597,11 @@ Invokes a function exported by a NodeJS module in string form.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -647,10 +654,11 @@ Invokes a function exported by a NodeJS module in Stream form.
 #### Returns
 The task representing the asynchronous operation.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -708,10 +716,11 @@ Attempts to invoke a function exported by a NodeJS module cached by NodeJS.
 The task representing the asynchronous operation. On completion, the task returns a `(bool, T)` with the bool set to true on 
 success and false otherwise.
 #### Exceptions
+- `ConnectionException`
+  - Thrown if unable to connect to NodeJS.
 - `InvocationException`
   - Thrown if a NodeJS error occurs.
   - Thrown if the invocation request times out.
-  - Thrown if NodeJS cannot be initialized.
 - `ObjectDisposedException`
   - Thrown if this has been disposed or if it attempts to use one of its dependencies that has been disposed.
 - `OperationCanceledException`
@@ -784,15 +793,14 @@ This library is heavily inspired by [Microsoft.AspNetCore.NodeServices](https://
 additions to this library are ways to invoke in-memory javascript, this library also provides better performance. 
 
 ### Latency
-These benchmarks reflect inter-process communication latency:
+Inter-process communication latency benchmarks:
 
-<table>
-<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
-</tr>
-</thead><tbody><tr><td>INodeJSService_Latency_InvokeFromFile</td><td>106.3 us</td><td>1.40 us</td><td>1.31 us</td><td>1.2207</td><td>-</td><td>-</td><td>5.7 KB</td>
-</tr><tr><td>INodeJSService_Latency_InvokeFromCache</td><td>102.3 us</td><td>0.34 us</td><td>0.32 us</td><td>1.2207</td><td>-</td><td>-</td><td>5.54 KB</td>
-</tr><tr><td>INodeServices_Latency</td><td>116.0 us</td><td>0.93 us</td><td>0.82 us</td><td>2.4414</td><td>-</td><td>-</td><td>10.25 KB</td>
-</tr></tbody></table>
+|                                                        Method |     Mean |   Error |  StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
+|-------------------------------------------------------------- |---------:|--------:|--------:|-------:|------:|------:|----------:|
+|                         INodeJSService_Latency_InvokeFromFile | 104.0 us | 0.64 us | 0.56 us | 1.2207 |     - |     - |   5.69 KB |
+| INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled | 104.2 us | 0.65 us | 0.57 us | 1.2207 |     - |     - |   5.91 KB |
+|                        INodeJSService_Latency_InvokeFromCache | 100.7 us | 0.47 us | 0.44 us | 1.2207 |     - |     - |   5.76 KB |
+|                                         INodeServices_Latency | 114.8 us | 1.12 us | 0.99 us | 2.4414 |     - |     - |  10.25 KB |
 
 ```
 NodeJS v12.13.0
@@ -806,18 +814,14 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/LatencyBenchmarks.cs).
 
 ### Concurrency
-These benchmarks perform asynchronous invocations:
+<!-- TODO benchmark on how graceful shutdown (and thus invoke task tracking) affect concurrency -->
+Asynchronous invocations benchmarks:
 
-<table>
-<thead>
-<tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th></tr>
-</thead>
-<tbody>
-<tr><td>INodeJSService_Concurrency_MultiProcess</td><td>400.3 ms</td><td>0.62 ms</td><td>0.58 ms</td><td>-</td><td>-</td><td>-</td><td>134.95 KB</td>
-</tr><tr><td>INodeJSService_Concurrency_None</td><td>2,500.2 ms</td><td>0.51 ms</td><td>0.48 ms</td><td>-</td><td>-</td><td>-</td><td>135.13 KB</td>
-</tr><tr><td>INodeServices_Concurrency</td><td>2,500.2 ms</td><td>0.49 ms</td><td>0.46 ms</td><td>-</td><td>-</td><td>-</td><td>246.98 KB</td>
-</tr></tbody>
-</table>
+|                                  Method |       Mean |   Error |  StdDev | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|---------------------------------------- |-----------:|--------:|--------:|------:|------:|------:|----------:|
+| INodeJSService_Concurrency_MultiProcess |   400.2 ms | 0.44 ms | 0.42 ms |     - |     - |     - | 134.76 KB |
+|         INodeJSService_Concurrency_None | 2,500.4 ms | 0.45 ms | 0.42 ms |     - |     - |     - | 134.76 KB |
+|               INodeServices_Concurrency | 2,500.2 ms | 0.49 ms | 0.46 ms |     - |     - |     - | 245.78 KB |
 
 ```
 BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
@@ -830,14 +834,12 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/ConcurrencyBenchmarks.cs).
 
 ### Real Workload
-These benchmarks mimic real world use of this library. In particular, they use the syntax highlighter, Prism, to highlight some C#:
+Real world benchmarks. These use the syntax highlighter, Prism, to highlight C#:
 
-<table>
-<thead><tr><th>Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen 0</th><th>Gen 1</th><th>Gen 2</th><th>Allocated</th>
-</tr>
-</thead><tbody><tr><td>INodeJSService_RealWorkload</td><td>1.303 ms</td><td>0.0206 ms</td><td>0.0193 ms</td><td>54.6875</td><td>11.7188</td><td>-</td><td>222.99 KB</td>
-</tr><tr><td>INodeServices_RealWorkload</td><td>2.270 ms</td><td>0.0261 ms</td><td>0.0244 ms</td><td>70.3125</td><td>19.5313</td><td>-</td><td>283.94 KB</td>
-</tr></tbody></table>
+|                      Method |     Mean |     Error |    StdDev |   Gen 0 |   Gen 1 | Gen 2 | Allocated |
+|---------------------------- |---------:|----------:|----------:|--------:|--------:|------:|----------:|
+| INodeJSService_RealWorkload | 1.269 ms | 0.0150 ms | 0.0140 ms | 54.6875 | 11.7188 |     - | 224.55 KB |
+|  INodeServices_RealWorkload | 2.236 ms | 0.0148 ms | 0.0131 ms | 70.3125 |       - |     - | 283.93 KB |
 
 ```
 NodeJS v12.13.0
@@ -849,6 +851,26 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 ```
 
 View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/RealWorkloadBenchmarks.cs).
+
+### File Watching
+<!-- TODO these don't consider situations with in-progess invocations -->
+How long it takes for NodeJS to restart and begin processing invocations:
+
+|                                                                   Method |     Mean |    Error |   StdDev | Gen 0 | Gen 1 | Gen 2 | Allocated |
+|------------------------------------------------------------------------- |---------:|---------:|---------:|------:|------:|------:|----------:|
+|  HttpNodeJSService_FileWatching_GracefulShutdownEnabled_MoveToNewProcess | 48.64 ms | 0.943 ms | 0.882 ms |     - |     - |     - | 276.99 KB |
+| HttpNodeJSService_FileWatching_GracefulShutdownDisabled_MoveToNewProcess | 49.75 ms | 0.987 ms | 1.416 ms |     - |     - |     - | 276.62 KB |
+
+```
+NodeJS v12.13.0
+BenchmarkDotNet=v0.12.0, OS=Windows 10.0.18362
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+.NET Core SDK=3.0.100
+  [Host]     : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+  DefaultJob : .NET Core 3.0.0 (CoreCLR 4.700.19.46205, CoreFX 4.700.19.46214), X64 RyuJIT
+```
+
+View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/FileWatchingBenchmarks.cs).
 
 ## Building and Testing
 You can build and test this project in Visual Studio 2017/2019.

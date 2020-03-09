@@ -23,7 +23,7 @@ namespace Jering.Javascript.NodeJS
         private readonly InvocationRequest _invocationRequest;
 
         /// <summary>
-        /// Creates an <see cref="InvocationContent"/> instance.
+        /// Creates an <see cref="InvocationContent"/>.
         /// </summary>
         /// <param name="jsonService">The service for serializing data to JSON.</param>
         /// <param name="invocationRequest">The invocation request to transmit over Http.</param>

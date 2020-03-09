@@ -6,7 +6,6 @@ using Moq.Protected;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -22,7 +21,7 @@ namespace Jering.Javascript.NodeJS.Tests
     // To be safe, dispose OutOfProcessNodeJSService instances.
     public class OutOfProcessNodeJSServiceUnitTests : IDisposable
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private static MockRepository _mockRepository;
         private readonly ITestOutputHelper _testOutputHelper;
         private IServiceProvider _serviceProvider;
         private const int TIMEOUT_MS = 60000;
@@ -30,6 +29,21 @@ namespace Jering.Javascript.NodeJS.Tests
         public OutOfProcessNodeJSServiceUnitTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
+            _mockRepository = new MockRepository(MockBehavior.Default);
+        }
+
+        [Fact]
+        public void Constructor_InitializesFileWatching()
+        {
+            // Arrange
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.Setup(t => t.InitializeFileWatching());
+
+            // Act
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+
+            // Assert
+            mockTestSubject.VerifyAll();
         }
 
         [Fact]
@@ -448,582 +462,285 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal($"Cannot access a disposed object.\nObject name: '{nameof(OutOfProcessNodeJSService)}'.", result.Message, ignoreLineEndingDifferences: true);
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_FirstThreadLazilyCreatesNodeJSProcessBeforeInvoking()
+        [Fact]
+        public void TryInvokeCoreAsync_DoesNotRetryInvocationIfConnectionAttemptFailsAndThrowsConnectionException()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
-            bool dummyIsConnected = false;
-            var dummyCancellationToken = new CancellationToken();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            (bool, int) dummyReturnValue = (true, 1);
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName);
-            mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>()
-                .Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).
-                ReturnsAsync(dummyReturnValue);
-            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
-
-            // Act
-            var results = new ConcurrentQueue<(bool, int)>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
-            _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only creates and connects once
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads)); // Invokes javascript for each invocation request
-            foreach ((bool success, int value) in results)
-            {
-                Assert.Equal(success, dummyReturnValue.Item1);
-                Assert.Equal(value, dummyReturnValue.Item2);
-            }
-        }
-
-        [Fact(Timeout = TIMEOUT_MS)]
-        public async void TryInvokeCoreAsync_IfNodeJSProcessIsNotConnectedFirstThreadCreatesNodeJSProcessBeforeInvoking()
-        {
-            // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
-            bool dummyIsConnected = false;
-            var dummyCancellationToken = new CancellationToken();
-            (bool, int) dummyReturnValue = (true, 1);
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
-            mockNodeJSProcess.Setup(n => n.Dispose());
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName);
-            mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).ReturnsAsync(dummyReturnValue);
-            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
-
-            // Act
-            await testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).ConfigureAwait(false); // Set _nodeJSProcess
-            dummyIsConnected = false; // Set _nodeJSProcess.Connected to false
-            var results = new ConcurrentQueue<(bool, int)>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() => results.Enqueue(testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult()));
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
-            _mockRepository.VerifyAll();
-            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(2)); // Creates NodeJS process twice
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(null, dummyCancellationToken), Times.Exactly(numThreads + 1)); // Invokes javascript for each invocation request
-            foreach ((bool success, int value) in results)
-            {
-                Assert.Equal(success, dummyReturnValue.Item1);
-                Assert.Equal(value, dummyReturnValue.Item2);
-            }
-        }
-
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_RetriesConnectionIfConnectionAttemptTimesoutAndThrowsInvocationExceptionIfNoRetriesRemain()
-        {
-            // Arrange
-            const string dummyExitCode = "dummyExitCode";
-            const bool dummyHasExited = false;
-            const int dummyTimeoutMS = 200; // Arbitrary
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
-            var dummyCancellationToken = new CancellationToken();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
-            mockNodeJSProcess.Setup(n => n.HasExited).Returns(dummyHasExited);
-            mockNodeJSProcess.Setup(n => n.ExitStatus).Returns(dummyExitCode);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS };
-            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
-            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            var loggerStringBuilder = new StringBuilder();
+            var dummyException = new ConnectionException();
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                mockOptionsAccessor.Object,
-                mockEmbeddedResourcesService.Object,
-                dummyServerScriptAssembly,
-                dummyServerScriptName,
-                loggerStringBuilder);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected()).Throws(dummyException);
 
-            // Act
-            var results = new ConcurrentQueue<Exception>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() =>
-                {
-                    try
-                    {
-                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).GetAwaiter().GetResult();
-                    }
-                    catch (Exception exception)
-                    {
-                        results.Enqueue(exception);
-                    }
-                });
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
+            // Act and assert
+            Assert.ThrowsAsync<ConnectionException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false));
             _mockRepository.VerifyAll();
-            string logResult = loggerStringBuilder.ToString();
-            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-            mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(numThreads * 2)); // Each thread tries to create and connect to NodeJS process twice
-            Assert.Equal(numThreads, results.Count);
-            foreach (Exception exception in results)
-            {
-                // Each thread must throw a connection attempt timed out invocation exception
-                Assert.IsType<InvocationException>(exception);
-                Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut, dummyTimeoutMS, dummyHasExited, dummyExitCode), exception.Message);
-            }
+            mockTestSubject.Verify(t => t.ConnectIfNotConnected(), Times.Exactly(1)); // No retries
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
+        [Fact]
         public void TryInvokeCoreAsync_DoesNotRetryInvocationsThatAreCanceledAndThrowsOperationCanceledException()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            bool dummyIsConnected = false;
-            const string dummyServerScriptName = "dummyServerScriptName";
-            var dummyException = new OperationCanceledException();
             using (var dummyCancellationTokenSource = new CancellationTokenSource())
             {
+                var dummyException = new OperationCanceledException();
+                var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
                 CancellationToken dummyCancellationToken = dummyCancellationTokenSource.Token;
-                var dummyServerScriptAssembly = new DummyAssembly();
-                Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-                mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-                Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-                mockNodeJSProcess.
-                    Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                    Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-                mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-                mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-                mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-                mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
-                mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
-                Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-                mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
-                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                    embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                    serverScriptAssembly: dummyServerScriptAssembly,
-                    serverScriptName: dummyServerScriptName);
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
                 mockTestSubject.CallBase = true;
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Setup(t => t.TryInvokeAsync<int>(null, dummyCancellationToken)).ThrowsAsync(dummyException);
-                mockTestSubject.Setup(t => t.CreateCts(dummyCancellationToken)).Returns((dummyCancellationToken, null));
-                OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
-
-                // Act
+                mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+                mockTestSubject.
+                    Protected().
+                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                    Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                    ThrowsAsync(dummyException);
+                mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
                 dummyCancellationTokenSource.Cancel(); // Cancel token
-                var results = new ConcurrentQueue<Exception>();
-                const int numThreads = 5;
-                var threads = new List<Thread>();
-                for (int i = 0; i < numThreads; i++)
-                {
-                    var thread = new Thread(() =>
-                    {
-                        try
-                        {
-                            testSubject.TryInvokeCoreAsync<int>(null, dummyCancellationToken).GetAwaiter().GetResult();
-                        }
-                        catch (Exception exception)
-                        {
-                            results.Enqueue(exception);
-                        }
-                    });
-                    threads.Add(thread);
-                    thread.Start();
-                }
-                foreach (Thread thread in threads)
-                {
-                    thread.Join();
-                }
 
-                // Assert
+                // Act and assert
+                Assert.ThrowsAsync<OperationCanceledException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false));
                 _mockRepository.VerifyAll();
-                mockTestSubject.Verify(t => t.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only connects once
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                    Verify(t => t.TryInvokeAsync<int>(null, It.IsAny<CancellationToken>()), Times.Exactly(numThreads)); // No retries
-                Assert.Equal(numThreads, results.Count);
-                foreach (Exception exception in results)
-                {
-                    // Each thread must throw an OperationCanceledException
-                    Assert.Same(dummyException, exception);
-                }
+                mockTestSubject.
+                    Protected().
+                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                    Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(1)); // No retries
             }
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_RetriesInvocationsThatTimeoutAndThrowsInvocationExceptionIfNoRetriesRemain()
+        [Fact]
+        public async void TryInvokeCoreAsync_RetriesInvocationsThatTimeoutAndThrowsInvocationExceptionIfNoRetriesRemain()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            bool dummyIsConnected = false;
-            const string dummyServerScriptName = "dummyServerScriptName";
             var dummyException = new OperationCanceledException();
             const int dummyTimeoutMS = 100;
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS };
+            const int dummyNumRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
             var loggerStringBuilder = new StringBuilder();
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                mockOptionsAccessor.Object,
-                mockEmbeddedResourcesService.Object,
-                dummyServerScriptAssembly,
-                dummyServerScriptName,
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 loggerStringBuilder: loggerStringBuilder);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
-            // Act
-            var results = new ConcurrentQueue<Exception>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() =>
-                {
-                    try
-                    {
-                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
-                    }
-                    catch (Exception exception)
-                    {
-                        results.Enqueue(exception);
-                    }
-                });
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
+            // Act and assert
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
+                ConfigureAwait(false);
             _mockRepository.VerifyAll();
-            string logResult = loggerStringBuilder.ToString();
-            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
-            Assert.Equal(numThreads, results.Count);
-            foreach (Exception exception in results)
-            {
-                Assert.IsType<InvocationException>(exception);
-                Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
-                        dummyTimeoutMS,
-                        nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
-                        nameof(OutOfProcessNodeJSServiceOptions)),
-                    exception.Message);
-            }
+            Assert.Equal(dummyNumRetries, Regex.Matches(loggerStringBuilder.ToString(), $"{nameof(LogLevel.Warning)}: ").Count); // Must log before each retry
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(1 + dummyNumRetries));
+            Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
+                    dummyTimeoutMS,
+                    nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
+                    nameof(OutOfProcessNodeJSServiceOptions)),
+                result.Message);
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_RetriesInvocationsThatThrowExceptionsAndThrowsExceptionIfNoRetriesRemain()
+        [Fact]
+        public async void TryInvokeCoreAsync_RetriesInvocationsThatThrowExceptionsAndThrowsExceptionIfNoRetriesRemain()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            bool dummyIsConnected = false;
-            const string dummyServerScriptName = "dummyServerScriptName";
             var dummyException = new InvocationException();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
+            const int dummyTimeoutMS = 100;
+            const int dummyNumRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var loggerStringBuilder = new StringBuilder();
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName,
+            var dummyCancellationToken = new CancellationToken();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 loggerStringBuilder: loggerStringBuilder);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
-            // Act
-            var results = new ConcurrentQueue<Exception>();
-            const int numThreads = 5;
-            var threads = new List<Thread>();
-            for (int i = 0; i < numThreads; i++)
-            {
-                var thread = new Thread(() =>
-                {
-                    try
-                    {
-                        testSubject.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult();
-                    }
-                    catch (Exception exception)
-                    {
-                        results.Enqueue(exception);
-                    }
-                });
-                threads.Add(thread);
-                thread.Start();
-            }
-            foreach (Thread thread in threads)
-            {
-                thread.Join();
-            }
-
-            // Assert
+            // Act and assert
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
+                ConfigureAwait(false);
             _mockRepository.VerifyAll();
-            string logResult = loggerStringBuilder.ToString();
-            Assert.Equal(numThreads, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // Each thread must log a timed out connection attempt once
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(numThreads * 2)); // Each thread tries twice
-            Assert.Equal(numThreads, results.Count);
-            foreach (Exception exception in results)
-            {
-                Assert.Same(dummyException, exception);
-            }
+            Assert.Equal(dummyNumRetries, Regex.Matches(loggerStringBuilder.ToString(), $"{nameof(LogLevel.Warning)}: ").Count); // Must log before each retry
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(1 + dummyNumRetries));
+            Assert.Same(dummyException, result);
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_DoesNotRetryInvocationIfModuleSourceIsAnUnseekableStream()
+        [Fact]
+        public async void TryInvokeCoreAsync_DoesNotRetryInvocationIfModuleSourceIsAnUnseekableStream()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
+            var dummyCancellationToken = new CancellationToken();
             var dummyException = new InvocationException();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected());
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
             Mock<Stream> mockStream = _mockRepository.Create<Stream>();
             mockStream.Setup(s => s.CanSeek).Returns(false);
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Stream, moduleStreamSource: mockStream.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
-
-            // Act and assert
-            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-            Assert.Equal(dummyException, result);
-            _mockRepository.VerifyAll();
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected());
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Once()); // No retries
+                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+
+            // Act and assert
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
+                ConfigureAwait(false);
+            _mockRepository.VerifyAll();
+            Assert.Same(dummyException, result);
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Once()); // No retries
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_ResetsStreamPositionAndRetriesInvocationIfModuleSourceIsASeekableStreamThatIsNotAtItsInitialPosition()
+        [Fact]
+        public async void TryInvokeCoreAsync_ResetsStreamPositionAndRetriesInvocationIfModuleSourceIsASeekableStreamThatIsNotAtItsInitialPosition()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
+            var dummyCancellationToken = new CancellationToken();
+            const int dummyNumRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var dummyException = new InvocationException();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected());
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
             const int dummyStreamInitialPosition = 1;
             Mock<Stream> mockStream = _mockRepository.Create<Stream>();
             mockStream.Setup(s => s.CanSeek).Returns(true);
-            mockStream.SetupSequence(s => s.Position).Returns(dummyStreamInitialPosition).Returns(2); // Position changes after caching of initial position
+            mockStream.SetupSequence(s => s.Position).Returns(dummyStreamInitialPosition).Returns(2).Returns(2); // Position changes after caching of initial position
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Stream, moduleStreamSource: mockStream.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
-            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-            Assert.Equal(dummyException, result);
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
+                ConfigureAwait(false);
+            Assert.Same(dummyException, result);
             _mockRepository.VerifyAll();
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
-            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition);
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(1 + dummyNumRetries));
+            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Exactly(dummyNumRetries));
         }
 
-        [Fact(Timeout = TIMEOUT_MS)]
-        public void TryInvokeCoreAsync_RetriesInvocationIfModuleSourceIsASeekableStream()
+        [Fact]
+        public async void TryInvokeCoreAsync_RetriesInvocationIfModuleSourceIsASeekableStreamAtItsInitialPosition()
         {
             // Arrange
-            const string dummyServerScript = "dummyServerScript";
-            const string dummyServerScriptName = "dummyServerScriptName";
+            var dummyCancellationToken = new CancellationToken();
+            const int dummyNumRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var dummyException = new InvocationException();
-            var dummyServerScriptAssembly = new DummyAssembly();
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.
-                Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>())).
-                Callback<DataReceivedEventHandler>(dataReceivedEventHandler => dataReceivedEventHandler(null, CreateDataReceivedEventArgs(OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START)));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
-            mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
-            mockNodeJSProcess.Setup(n => n.SetConnected());
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(dummyServerScript)).Returns(mockNodeJSProcess.Object);
+            const int dummyStreamInitialPosition = 1;
             Mock<Stream> mockStream = _mockRepository.Create<Stream>();
             mockStream.Setup(s => s.CanSeek).Returns(true);
-            mockStream.SetupSequence(s => s.Position).Returns(1).Returns(1); // Stays at initial position
+            mockStream.SetupSequence(s => s.Position).Returns(dummyStreamInitialPosition).Returns(dummyStreamInitialPosition).Returns(dummyStreamInitialPosition); // Stay at initial position
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Stream, moduleStreamSource: mockStream.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                serverScriptAssembly: dummyServerScriptAssembly,
-                serverScriptName: dummyServerScriptName);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>())).ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+            mockTestSubject.
+                Protected().
+                As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                ThrowsAsync(dummyException);
+            mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
 
             // Act and assert
-            InvocationException result = Assert.Throws<InvocationException>(() => mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, CancellationToken.None).GetAwaiter().GetResult());
-            Assert.Equal(dummyException, result);
+            InvocationException result = await Assert.
+                ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
+                ConfigureAwait(false);
+            Assert.Same(dummyException, result);
             _mockRepository.VerifyAll();
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Retries
-            mockStream.VerifySet(s => s.Position = It.IsAny<int>(), Times.Never);
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(1 + dummyNumRetries));
+            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Never);
         }
 
-        // Note for the following (CreateCts) tests: CancellationToken1.Equal(CancellationToken2) returns CancellationToken1._source == CancellationToken2._source where source is 
+        [Fact]
+        public async void TryInvokeCoreAsync_TracksInvokeTaskIfInvokeTaskTrackingIsEnabled()
+        {
+            // Arrange
+            (bool, int) expectedResult = (true, 4);
+            var dummyTrackedInvokeTasks = new ConcurrentDictionary<Task, object>();
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
+            var dummyCancellationToken = new CancellationToken();
+            using (var dummyInvokeTaskCreationCountdown = new CountdownEvent(1))
+            {
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: _mockRepository.Create<IMonitorService>().Object,
+                    taskService: _mockRepository.Create<ITaskService>().Object);
+                mockTestSubject.CallBase = true;
+                mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((true, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown)); // track invoke tasks
+                mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+                mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+                mockTestSubject.
+                    Setup(t => t.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown)).
+                    ReturnsAsync(expectedResult);
+
+                // Act
+                (bool, int) result = await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false);
+
+                // Assert
+                _mockRepository.VerifyAll();
+                Assert.Equal(expectedResult, result);
+            }
+        }
+
+        // Note for the following (CreateCancellationToken) tests: CancellationToken1.Equal(CancellationToken2) returns CancellationToken1._source == CancellationToken2._source where source is 
         // the cancellation token's parent CancellationTokenSource. CancellationToken is a struct while CancellationTokenSource is a class.
         [Theory]
-        [MemberData(nameof(CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data))]
-        public void CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite(CancellationToken dummyCancellationToken)
+        [MemberData(nameof(CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data))]
+        public void CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite(CancellationToken dummyCancellationToken)
         {
             // Arrange
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
 
             // Act
-            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationToken);
+            (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCancellationToken(dummyCancellationToken);
 
             // Assert
             Assert.NotNull(resultCancellationTokenSource);
             Assert.Equal(resultCancellationToken, resultCancellationTokenSource.Token);
         }
 
-        public static IEnumerable<object[]> CreateCts_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data()
+        public static IEnumerable<object[]> CreateCancellationToken_ReturnsCancellationTokenAndCancellationTokenSourceIfTimeoutIsNotInfinite_Data()
         {
             var dummyCancellationTokenSource = new CancellationTokenSource();
 
@@ -1034,7 +751,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void CreateCts_ReturnsOriginalCancellationTokenIfTimeoutIsInfinite()
+        public void CreateCancellationToken_ReturnsOriginalCancellationTokenIfTimeoutIsInfinite()
         {
             // Arrange
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = -1 };
@@ -1045,7 +762,7 @@ namespace Jering.Javascript.NodeJS.Tests
             using (var dummyCancellationTokenSource = new CancellationTokenSource())
             {
                 // Act
-                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCts(dummyCancellationTokenSource.Token);
+                (CancellationToken resultCancellationToken, CancellationTokenSource resultCancellationTokenSource) = mockTestSubject.Object.CreateCancellationToken(dummyCancellationTokenSource.Token);
 
                 // Assert
                 Assert.Null(resultCancellationTokenSource);
@@ -1053,20 +770,346 @@ namespace Jering.Javascript.NodeJS.Tests
             }
         }
 
-        [Fact]
-        public void CreateAndConnectNodeJSProcess_ThrowsObjectDisposedExceptionIfObjectHasBeenDisposed()
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void ConnectIfNotConnected_IfNodeJSProcessIsNullFirstThreadCreatesAndConnectsToNodeJSProcess()
         {
             // Arrange
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected());
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(true);
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
-            // Act and assert
-            mockTestSubject.Object.Dispose();
-            Assert.Throws<ObjectDisposedException>(() => mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()));
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.ConnectIfNotConnected());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only creates and connects once
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void ConnectIfNotConnected_StopsAndStartsFileWatcher()
+        {
+            // Arrange
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected());
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(true);
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = true };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            // So _fileWatcher is set
+            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
+            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
+            mockFileWatcherFactory.
+                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
+                Returns(mockFileWatcher.Object);
+
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: mockFileWatcherFactory.Object,
+                monitorService: _mockRepository.Create<IMonitorService>().Object,
+                taskService: _mockRepository.Create<ITaskService>().Object);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.ConnectIfNotConnected());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>()), Times.Once); // Only creates and connects once
+            // File watcher stopped while connecting
+            mockFileWatcher.Verify(f => f.Stop(), Times.Once);
+            mockFileWatcher.Verify(f => f.Start(), Times.Once);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void ConnectIfNotConnected_IfNodeJSProcessIsNotConnectedFirstThreadCreatesNodeJSProcessBeforeInvoking()
+        {
+            // Arrange
+            bool dummyIsConnected = false;
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected()).Callback(() => dummyIsConnected = true);
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected); // Use an anonymous method so we have excess to parent scope's variables
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+            testSubject.ConnectIfNotConnected(); // Creates _nodeJSProcess
+            dummyIsConnected = false; // Disconnect _nodeJSProcess
+
+            // Act
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() => testSubject.ConnectIfNotConnected());
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(2)); // Once when we're arranging, once when we're acting
+            mockNodeJSProcess.Verify(n => n.Dispose(), Times.Once); // Initial process gets disposed
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public void ConnectIfNotConnected_RetriesConnectionIfConnectionAttemptTimesoutAndThrowsConnectionExceptionIfNoRetriesRemain()
+        {
+            // Arrange
+            const string dummyExitCode = "dummyExitCode";
+            const bool dummyHasExited = false;
+            const int dummyTimeoutMS = 100; // Arbitrary, we never signal the wait handle, so timeout is always triggered
+            const int dummyNumConnectionRetries = 2;
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
+            mockNodeJSProcess.Setup(n => n.HasExited).Returns(dummyHasExited);
+            mockNodeJSProcess.Setup(n => n.ExitStatus).Returns(dummyExitCode);
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumConnectionRetries = dummyNumConnectionRetries };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                loggerStringBuilder: loggerStringBuilder);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).Returns(mockNodeJSProcess.Object);
+            OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+
+            // Act
+            var results = new ConcurrentQueue<Exception>();
+            const int numThreads = 5;
+            var threads = new List<Thread>();
+            for (int i = 0; i < numThreads; i++)
+            {
+                var thread = new Thread(() =>
+                {
+                    try
+                    {
+                        testSubject.ConnectIfNotConnected();
+                    }
+                    catch (Exception exception)
+                    {
+                        results.Enqueue(exception);
+                    }
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Equal(numThreads * dummyNumConnectionRetries, Regex.Matches(logResult, $"{nameof(LogLevel.Warning)}: ").Count); // We don't log on the last failed attempt since we throw then
+            mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>()), Times.Exactly(numThreads * (1 + dummyNumConnectionRetries))); // Each thread tries to create and connect to NodeJS process 1 + dummyNumConnectionRetries times
+            Assert.Equal(numThreads, results.Count);
+            foreach (Exception exception in results)
+            {
+                // Each thread must throw a connection exception
+                Assert.IsType<ConnectionException>(exception);
+                Assert.Equal(string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut, dummyTimeoutMS, dummyHasExited, dummyExitCode),
+                    exception.Message);
+            }
+            mockNodeJSProcess.Verify(n => n.Dispose(), Times.Exactly(numThreads * (1 + dummyNumConnectionRetries) * 2 - 1)); // We call dispose twice for each attempt other than the first, for which we call dispose only once
+        }
+
+        [Theory]
+        [MemberData(nameof(InitializeFileWatching_DoesNothingIfFileWatchingIsDisabledOrARequiredServiceIsNotAvailable_Data))]
+        public void InitializeFileWatching_DoesNothingIfFileWatchingIsDisabledOrARequiredServiceIsNotAvailable(bool dummyEnableFileWatching,
+            IFileWatcherFactory dummyFileWatcherFactory,
+            IMonitorService dummyMonitorService,
+            ITaskService dummyTaskService)
+        {
+            // Arrange
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = dummyEnableFileWatching };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: dummyFileWatcherFactory,
+                monitorService: dummyMonitorService,
+                taskService: dummyTaskService);
+            mockTestSubject.CallBase = true;
+
+            // Act
+            (bool resultTrackInvokeTasks, ConcurrentDictionary<Task, object> resultTrackedInvokeTasks, CountdownEvent resultInvokeTaskCreationCountdown) = mockTestSubject.Object.InitializeFileWatching();
+
+            // Assert
+            Assert.False(resultTrackInvokeTasks);
+            Assert.Null(resultTrackedInvokeTasks);
+            Assert.Null(resultInvokeTaskCreationCountdown);
+        }
+
+        public static IEnumerable<object[]> InitializeFileWatching_DoesNothingIfFileWatchingIsDisabledOrARequiredServiceIsNotAvailable_Data()
+        {
+            IFileWatcherFactory dummyFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>().Object;
+            IMonitorService dummyMonitorService = _mockRepository.Create<IMonitorService>().Object;
+            ITaskService dummyTaskService = _mockRepository.Create<ITaskService>().Object;
+
+            return new object[][]
+            {
+                new object[]{false, dummyFileWatcherFactory, dummyMonitorService, dummyTaskService},
+                new object[]{true, null, dummyMonitorService, dummyTaskService},
+                new object[]{true, dummyFileWatcherFactory, null, dummyTaskService},
+                new object[]{true, dummyFileWatcherFactory, dummyMonitorService, null}
+            };
         }
 
         [Fact]
-        public void CreateAndConnectNodeJSProcess_DisposesOfExistingNodeJSProcess()
+        public void InitializeFileWatching_CreatesFileWatcherAndReturnsNothingIfFileWatchingIsEnabledButGracefulShutdownIsNot()
+        {
+            // Arrange
+            const string dummyWatchPath = "dummyWatchPath";
+            const bool dummyWatchSubdirectories = false;
+            string[] dummyWatchFileNames = new[] { "*.dummy" };
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions()
+            {
+                EnableFileWatching = true,
+                WatchGracefulShutdown = false,
+                WatchPath = dummyWatchPath,
+                WatchSubdirectories = dummyWatchSubdirectories
+            };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
+            mockFileWatcherFactory.Setup(f => f.Create(dummyWatchPath, dummyWatchSubdirectories, dummyWatchFileNames, It.IsAny<FileChangedEventHandler>())); // Assigned directly to instance variable
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: mockFileWatcherFactory.Object,
+                monitorService: _mockRepository.Create<IMonitorService>().Object,
+                taskService: _mockRepository.Create<ITaskService>().Object);
+            mockTestSubject.CallBase = true;
+
+            // Act
+            (bool resultTrackInvokeTasks, ConcurrentDictionary<Task, object> resultTrackedInvokeTasks, CountdownEvent resultInvokeTaskCreationCountdown) = mockTestSubject.Object.InitializeFileWatching();
+
+            // Assert
+            Assert.False(resultTrackInvokeTasks);
+            Assert.Null(resultTrackedInvokeTasks);
+            Assert.Null(resultInvokeTaskCreationCountdown);
+        }
+
+        [Fact]
+        public void InitializeFileWatching_CreatesFileWatcherAndReturnsInvokeTaskTrackingVariablesIfBothFileWatchingAndGracefulShutdownAreEnabled()
+        {
+            // Arrange
+            const string dummyWatchPath = "dummyWatchPath";
+            const bool dummyWatchSubdirectories = false;
+            string[] dummyWatchFileNames = new[] { "*.dummy" };
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions()
+            {
+                EnableFileWatching = true,
+                WatchGracefulShutdown = true,
+                WatchPath = dummyWatchPath,
+                WatchSubdirectories = dummyWatchSubdirectories
+            };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
+            mockFileWatcherFactory.Setup(f => f.Create(dummyWatchPath, dummyWatchSubdirectories, dummyWatchFileNames, It.IsAny<FileChangedEventHandler>())); // Assigned directly to instance variable
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: mockFileWatcherFactory.Object,
+                monitorService: _mockRepository.Create<IMonitorService>().Object,
+                taskService: _mockRepository.Create<ITaskService>().Object);
+            mockTestSubject.CallBase = true;
+
+            // Act
+            (bool resultTrackInvokeTasks, ConcurrentDictionary<Task, object> resultTrackedInvokeTasks, CountdownEvent resultInvokeTaskCreationCountdown) = mockTestSubject.Object.InitializeFileWatching();
+            using (resultInvokeTaskCreationCountdown)
+            {
+                // Assert
+                Assert.True(resultTrackInvokeTasks);
+                Assert.NotNull(resultTrackedInvokeTasks);
+                Assert.NotNull(resultInvokeTaskCreationCountdown);
+                Assert.Equal(1, resultInvokeTaskCreationCountdown.CurrentCount);
+            }
+        }
+
+        // Doesn't verify that countdown isn't signaled till after tracked task is added to trackedInvokeTasks.
+        // This is verified in MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe.
+        [Fact]
+        public async void TryTrackedInvokeAsync_TriesTrackedInvoke()
+        {
+            // Arrange
+            const int initialCountdownCount = 1;
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
+            var dummyTrackedInvokeTasks = new ConcurrentDictionary<Task, object>();
+            (bool, int) expectedResult = (true, 4);
+            int midwayCountdownCount = 0;
+            using (var dummyWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset))
+            using (var dummyInvokeTaskCreationCountdown = new CountdownEvent(initialCountdownCount))
+            {
+                var dummyCancellationToken = new CancellationToken();
+                Task<(bool, int)> dummyTask = Task.Run(() =>
+                {
+                    dummyWaitHandle.WaitOne();
+                    return expectedResult;
+                });
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+                mockTestSubject.CallBase = true;
+                mockTestSubject.
+                    Protected().
+                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                    Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                    Callback(() => midwayCountdownCount = dummyInvokeTaskCreationCountdown.CurrentCount).
+                    Returns(dummyTask);
+
+                // Act and assert
+                Task<(bool, int)> resultTask = mockTestSubject.Object.
+                    TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown);
+                Assert.Equal(initialCountdownCount + 1, midwayCountdownCount);
+                Assert.Equal(initialCountdownCount, dummyInvokeTaskCreationCountdown.CurrentCount); // Once task is created, countdown should be signaled
+                Assert.Single(dummyTrackedInvokeTasks); // While task hasn't completed, it should be tracked
+                Assert.True(dummyTrackedInvokeTasks.ContainsKey(dummyTask)); // While task hasn't completed, it should be tracked
+                dummyWaitHandle.Set(); // Allow task to complete
+                (bool, int) result = await resultTask.ConfigureAwait(false);
+                Assert.Empty(dummyTrackedInvokeTasks); // No longer tracked after completion
+                Assert.Equal(expectedResult, result);
+            }
+        }
+
+        [Fact]
+        public void CreateAndSetUpProcess_CreatesAndSetsUpNodeJSProcess()
         {
             // Arrange
             const string dummyServerScript = "dummyServerScript";
@@ -1075,8 +1118,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             mockEmbeddedResourcesService.Setup(e => e.ReadAsString(dummyServerScriptAssembly, dummyServerScriptName)).Returns(dummyServerScript);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.Setup(n => n.AddOutputDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
-            mockNodeJSProcess.Setup(n => n.AddErrorDataReceivedHandler(It.IsAny<DataReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddOutputReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
+            mockNodeJSProcess.Setup(n => n.AddErrorReceivedHandler(It.IsAny<MessageReceivedEventHandler>()));
             mockNodeJSProcess.Setup(n => n.BeginOutputReadLine());
             mockNodeJSProcess.Setup(n => n.BeginErrorReadLine());
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
@@ -1088,170 +1131,465 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
 
             // Act
-            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Create NodeJSProcess
-            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // This should dispose of original NodeJSProcess
+            INodeJSProcess result = mockTestSubject.Object.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>());
 
             // Assert
-            _mockRepository.VerifyAll();
-            mockNodeJSProcess.Verify(n => n.Dispose(), Times.Once());
+            Assert.Same(mockNodeJSProcess.Object, result);
         }
 
-        [Fact]
-        public void OutputDataReceivedHandler_DoesNothingIfEventDataIsNull()
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected and EventWaitHandle.WaitOne so threading involved
+        public void OutputReceivedHandler_IfNodeJSProcessIsNotConnectedAndMessageIsConnectionEstablishedMessageEstablishesConnection()
         {
             // Arrange
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
+            const string dummyMessage = OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START;
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(null)).Returns(mockNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object);
-            mockTestSubject.CallBase = true;
-            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
-
-            // Act
-            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(null), null);
-
-            // Assert
-            _mockRepository.VerifyAll();
-            mockNodeJSProcess.Verify(n => n.Connected, Times.Never());
-        }
-
-        [Fact]
-        public void OutputDataReceivedHandler_IfNodeJSProcessIsNotConnectedAndEventDataIsConnectionEstablishedMessageEstablishesConnection()
-        {
-            // Arrange
-            const string dummyData = OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START;
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected());
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(null)).Returns(mockNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set()).
+                Returns(mockNodeJSProcess.Object);
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.OnConnectionEstablishedMessageReceived(dummyMessage));
+            mockTestSubject.Object.ConnectIfNotConnected(); // Set _nodeJSProcess
             using (var dummyWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset))
             {
-                mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
-
                 // Act
-                mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), dummyWaitHandle);
+                mockTestSubject.Object.OutputReceivedHandler(null, dummyMessage, dummyWaitHandle);
 
                 // Assert
                 _mockRepository.VerifyAll();
                 Assert.True(dummyWaitHandle.WaitOne(0)); // Ensure that it gets signaled
-                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(dummyData), Times.Once());
+                mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(dummyMessage), Times.Once());
             }
         }
 
-        [Theory]
-        [MemberData(nameof(OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages_Data))]
-        public void OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages(bool dummyConnected, string dummyData)
+        [Fact]
+        public void OutputReceivedHandler_IfNodeJSProcessIsNullLogsMessages()
         {
             // Arrange
-            Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
-            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(dummyConnected);
-            Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
-            mockNodeJSProcessFactory.Setup(n => n.Create(null)).Returns(mockNodeJSProcess.Object);
+            const string dummyMessage = "dummyMessage";
             var loggerStringBuilder = new StringBuilder();
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(mockNodeJSProcessFactory.Object,
-                embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                loggerStringBuilder: loggerStringBuilder,
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder,
                 logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
-            string dummyOutMessage = "dummyOutMessage";
-            mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
-            mockTestSubject.Object.CreateAndConnectToNodeJSProcess(It.IsAny<EventWaitHandle>()); // Set _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.OutputDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData), null);
+            mockTestSubject.Object.OutputReceivedHandler(null, dummyMessage, null);
 
             // Assert
             _mockRepository.VerifyAll();
             string logResult = loggerStringBuilder.ToString();
-            Assert.Contains(dummyOutMessage, logResult);
+            Assert.Contains(dummyMessage, logResult);
         }
 
-        public static IEnumerable<object[]> OutputDataReceivedHandler_IfNodeJSProcessIsConnectedOrDataIsNotConnectionEstablishedMessageAccumulatesAndLogsMessages_Data()
+        [Theory(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        [MemberData(nameof(OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data))]
+        public void OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages(bool dummyConnected, string dummyMessage)
+        {
+            // Arrange
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected());
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(dummyConnected);
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder,
+                logLevel: LogLevel.Information);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set()).
+                Returns(mockNodeJSProcess.Object);
+            mockTestSubject.Object.ConnectIfNotConnected(); // Set _nodeJSProcess
+
+            // Act
+            mockTestSubject.Object.OutputReceivedHandler(null, dummyMessage, null);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Contains(dummyMessage, logResult);
+        }
+
+        public static IEnumerable<object[]> OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data()
         {
             return new object[][]
             {
                 new object[]{true, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START},
-                new object[]{false, "dummyData"},
+                new object[]{false, "dummyMessage"},
             };
         }
 
         [Fact]
-        public void ErrorDataReceivedHandler_DoesNothingIfEventDataIsNull()
+        public void ErrorReceivedHandler_LogsMessages()
         {
             // Arrange
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
-            mockTestSubject.CallBase = true;
-
-            // Act
-            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(null));
-
-            // Assert
-            string dummyOutMessage = null;
-            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), null, out dummyOutMessage), Times.Never());
-        }
-
-        [Fact]
-        public void ErrorDataReceivedHandler_IfDataIsNotNullLogsMessages()
-        {
-            // Arrange
-            const string dummyData = "dummyData";
+            const string dummyMessage = "dummyMessage";
             var loggerStringBuilder = new StringBuilder();
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder, logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
-            string dummyOutMessage = null;
-            mockTestSubject.Setup(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), dummyData, out dummyOutMessage)).Returns(true);
 
             // Act
-            mockTestSubject.Object.ErrorDataReceivedHandler(null, CreateDataReceivedEventArgs(dummyData));
+            mockTestSubject.Object.ErrorReceivedHandler(null, dummyMessage);
 
             // Assert
             _mockRepository.VerifyAll();
             string logResult = loggerStringBuilder.ToString();
-            Assert.Single(Regex.Matches(logResult, $"{nameof(LogLevel.Error)}: "));
+            Assert.Equal(logResult, $"{nameof(LogLevel.Error)}: {dummyMessage}\n", ignoreLineEndingDifferences: true);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void FileChangedHandler_DoesNothingIfConnectingLockNotAquiredAndConnecting()
+        {
+            // Arrange
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            bool dummyAquiredConnectingLock = false;
+            mockMonitorService.Setup(m => m.TryEnter(It.IsAny<object>(), ref dummyAquiredConnectingLock));
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
+
+            // Act
+            mockTestSubject.Object.FileChangedHandler(null);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockMonitorService.Verify(m => m.Enter(It.IsAny<object>(), ref dummyAquiredConnectingLock), Times.Never); // Verifies that we return immediately, nothing else called
         }
 
         [Fact]
-        public void TryCreateMessage_AppendsDataToStringBuilderAndReturnsFalseIfTheDataDoesNotEndWithANullTerminatingCharacter()
+        public void FileChangedHandler_MovesToNewProcessIfConnectingLockAcquired()
         {
             // Arrange
-            var dummyStringBuilder = new StringBuilder();
-            const string dummyData = "dummyData";
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            const string dummyPath = "dummyPath";
+            bool dummyInitialAquiredConnectingLock = false;
+            const bool dummyFinalAquiredConnectingLock = true;
+            object dummyConnectingLock = null;
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            // Mocking function with ref parameter - https://github.com/moq/moq4/issues/105
+            mockMonitorService.
+                Setup(m => m.TryEnter(It.IsAny<object>(), ref dummyInitialAquiredConnectingLock)).
+                Callback(new TryEnterCallback((object connectingLock, ref bool aquiredConnectingLock) =>
+                {
+                    aquiredConnectingLock = dummyFinalAquiredConnectingLock;
+                    dummyConnectingLock = connectingLock;
+                }));
+            mockMonitorService.Setup(m => m.Exit(It.Is<object>(connectingLock => connectingLock == dummyConnectingLock)));
+            // So _fileWatcher is set
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = true };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
+            mockFileWatcher.Setup(f => f.Stop());
+            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
+            mockFileWatcherFactory.
+                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
+                Returns(mockFileWatcher.Object);
+
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: mockFileWatcherFactory.Object,
+                monitorService: mockMonitorService.Object,
+                taskService: _mockRepository.Create<ITaskService>().Object,
+                loggerStringBuilder: loggerStringBuilder,
+                logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.MoveToNewProcess());
 
             // Act
-            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyData, out string resultMessage);
+            mockTestSubject.Object.FileChangedHandler(dummyPath);
 
             // Assert
-            Assert.False(result);
-            Assert.Null(resultMessage);
-            Assert.Equal(dummyData + "\n", dummyStringBuilder.ToString(), ignoreLineEndingDifferences: true);
+            _mockRepository.VerifyAll();
+            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
         }
 
-        [Fact]
-        public void TryCreate_ResetsStringBuilderReturnsTrueAndAMessageIfTheDataEndsWithANullTerminatingCharacter()
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void FileChangedHandler_MovesToNewProcessIfConnectingLockNotAquiredButAlreadyConnected()
         {
             // Arrange
-            var dummyStringBuilder = new StringBuilder();
-            const string dummyData = "dummyData";
-            string dummyDataWithNullTerminatingCharacter = $"{dummyData}\0";
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
+            const string dummyPath = "dummyPath";
+            bool dummyInitialAquiredConnectingLock = false;
+            const bool dummyFinalAquiredConnectingLock = true;
+            object dummyConnectingLock = null;
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            // Mocking function with ref parameter - https://github.com/moq/moq4/issues/105
+            mockMonitorService.
+                Setup(m => m.TryEnter(It.IsAny<object>(), ref dummyInitialAquiredConnectingLock)).
+                Callback(new TryEnterCallback((object connectingLock, ref bool _) => dummyConnectingLock = connectingLock));
+            mockMonitorService.
+                Setup(m => m.Enter(It.Is<object>(connectingLock => connectingLock == dummyConnectingLock), ref dummyInitialAquiredConnectingLock)).
+                Callback(new TryEnterCallback((object _, ref bool aquiredConnectingLock) => aquiredConnectingLock = dummyFinalAquiredConnectingLock));
+            mockMonitorService.Setup(m => m.Exit(It.Is<object>(connectingLock => connectingLock == dummyConnectingLock)));
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(true);
+            // So _fileWatcher is set
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = true };
+            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
+            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
+            mockFileWatcher.Setup(f => f.Stop());
+            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
+            mockFileWatcherFactory.
+                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
+                Returns(mockFileWatcher.Object);
+
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
+                fileWatcherFactory: mockFileWatcherFactory.Object,
+                monitorService: mockMonitorService.Object,
+                taskService: _mockRepository.Create<ITaskService>().Object,
+                loggerStringBuilder: loggerStringBuilder,
+                logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.MoveToNewProcess());
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            bool result = mockTestSubject.Object.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string resultMessage);
+            mockTestSubject.Object.FileChangedHandler(dummyPath);
 
             // Assert
-            Assert.True(result);
-            Assert.Equal(dummyData, resultMessage);
-            Assert.Equal(0, dummyStringBuilder.Length);
+            _mockRepository.VerifyAll();
+            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void MoveToNewProcess_MovesToNewProcess()
+        {
+            // Arrange
+            const int dummySafeID = 12345;
+            Action dummyKillProcessAction = null;
+            Mock<ITaskService> mockTaskService = _mockRepository.Create<ITaskService>();
+            mockTaskService.
+                Setup(t => t.Run(It.IsAny<Action>())).
+                Callback<Action>((action) => dummyKillProcessAction = action);
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SafeID).Returns(dummySafeID);
+            mockNodeJSProcess.Setup(n => n.Dispose());
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(taskService: mockTaskService.Object,
+                loggerStringBuilder: loggerStringBuilder,
+                logLevel: LogLevel.Information);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Returns(mockNodeJSProcess.Object).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+            mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
+
+            // Act
+            mockTestSubject.Object.MoveToNewProcess();
+            dummyKillProcessAction();
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockTestSubject.Verify(t => t.ConnectIfNotConnected(), Times.Exactly(2)); // Once when arranging
+            Assert.Contains(string.Format(Strings.LogInformation_KillingNodeJSProcess, dummySafeID), loggerStringBuilder.ToString());
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereArePendingInvokeTasksStoresTasksAndWaitsForThemToCompleteBeforeDisposingOfLastProcess()
+        {
+            // Arrange
+            const int dummySafeID = 12345;
+            object dummyInvokeTaskTrackingLock = null;
+            var dummyInvokeTask = new Task(() => { });
+            Action dummyKillProcessAction = null;
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            mockMonitorService.
+                Setup(m => m.Enter(It.IsAny<object>())).
+                Callback<object>((invokeTaskTrackingLock) => dummyInvokeTaskTrackingLock = invokeTaskTrackingLock);
+            mockMonitorService.Setup(m => m.Exit(It.Is<object>(connectingLock => connectingLock == dummyInvokeTaskTrackingLock)));
+            Mock<ITaskService> mockTaskService = _mockRepository.Create<ITaskService>();
+            mockTaskService.
+                Setup(t => t.Run(It.IsAny<Action>())).
+                Callback<Action>((action) => dummyKillProcessAction = action);
+            mockTaskService.Setup(t => t.WaitAll(new[] { dummyInvokeTask }));
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SafeID).Returns(dummySafeID);
+            mockNodeJSProcess.Setup(n => n.Dispose());
+            var loggerStringBuilder = new StringBuilder();
+            var dummyTrackedInvokeTasks = new ConcurrentDictionary<Task, object>();
+            dummyTrackedInvokeTasks.TryAdd(dummyInvokeTask, null);
+            using (var dummyInvokeTaskCreationCountdown = new CountdownEvent(1))
+            {
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object,
+                    taskService: mockTaskService.Object,
+                    loggerStringBuilder: loggerStringBuilder,
+                    logLevel: LogLevel.Information);
+                mockTestSubject.CallBase = true;
+                mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((true, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
+                mockTestSubject.
+                    Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                    Returns(mockNodeJSProcess.Object).
+                    Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+                mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
+
+                // Act
+                mockTestSubject.Object.MoveToNewProcess();
+                dummyKillProcessAction();
+
+                // Assert
+                _mockRepository.VerifyAll();
+                mockTestSubject.Verify(t => t.ConnectIfNotConnected(), Times.Exactly(2)); // Once when arranging
+                Assert.Contains(string.Format(Strings.LogInformation_KillingNodeJSProcess, dummySafeID), loggerStringBuilder.ToString());
+                Assert.Empty(dummyTrackedInvokeTasks); // Emptied
+                Assert.Equal(1, dummyInvokeTaskCreationCountdown.CurrentCount); // Gets reset
+            }
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereAreNoPendingInvokeTasksDoesNotWaitBeforeDisposingOfLastProcess()
+        {
+            // Arrange
+            const int dummySafeID = 12345;
+            object dummyInvokeTaskTrackingLock = null;
+            Action dummyKillProcessAction = null;
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            mockMonitorService.
+                Setup(m => m.Enter(It.IsAny<object>())).
+                Callback<object>((invokeTaskTrackingLock) => dummyInvokeTaskTrackingLock = invokeTaskTrackingLock);
+            mockMonitorService.Setup(m => m.Exit(It.Is<object>(connectingLock => connectingLock == dummyInvokeTaskTrackingLock)));
+            Mock<ITaskService> mockTaskService = _mockRepository.Create<ITaskService>();
+            mockTaskService.
+                Setup(t => t.Run(It.IsAny<Action>())).
+                Callback<Action>((action) => dummyKillProcessAction = action);
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SafeID).Returns(dummySafeID);
+            mockNodeJSProcess.Setup(n => n.Dispose());
+            var loggerStringBuilder = new StringBuilder();
+            var dummyTrackedInvokeTasks = new ConcurrentDictionary<Task, object>();
+            using (var dummyInvokeTaskCreationCountdown = new CountdownEvent(1))
+            {
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object,
+                    taskService: mockTaskService.Object,
+                    loggerStringBuilder: loggerStringBuilder,
+                    logLevel: LogLevel.Information);
+                mockTestSubject.CallBase = true;
+                mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((true, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
+                mockTestSubject.
+                    Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                    Returns(mockNodeJSProcess.Object).
+                    Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set());
+                mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
+
+                // Act
+                mockTestSubject.Object.MoveToNewProcess();
+                dummyKillProcessAction();
+
+                // Assert
+                _mockRepository.VerifyAll();
+                mockTestSubject.Verify(t => t.ConnectIfNotConnected(), Times.Exactly(2)); // Once when arranging
+                mockTaskService.VerifyNoOtherCalls();
+                Assert.Contains(string.Format(Strings.LogInformation_KillingNodeJSProcess, dummySafeID), loggerStringBuilder.ToString());
+                Assert.Equal(1, dummyInvokeTaskCreationCountdown.CurrentCount); // Gets reset
+            }
+        }
+
+        // Verifies that the "lock and countdown" system drains threads creating tasks while blocking subsequent threads from creating tasks.
+        //
+        // To step through the lock and countdown system, set breakpoints in TryTrackedInvokeAsync and MoveToNewProcess and run this test in debug mode.
+        // Use VS's parallel windows to keep track of threads.
+        [Fact]
+        public async void MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe()
+        {
+            // Arrange
+            (bool, int) expectedResult1 = (true, 5);
+            (bool, int) expectedResult2 = (false, 10);
+            var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.String, "dummyModuleSource");
+            var dummyCancellationToken = new CancellationToken();
+            var dummyTrackedInvokeTasks = new ConcurrentDictionary<Task, object>();
+            Mock<ITaskService> mockTaskService = _mockRepository.Create<ITaskService>();
+            mockTaskService.Setup(t => t.Run(It.IsAny<Action>())); // TODO could run the action to ensure we capture the right task to wait on
+            using (var dummyInvokeTaskCreationCountdown = new CountdownEvent(1))
+            using (var dummyEventWaitHandle1 = new EventWaitHandle(false, EventResetMode.ManualReset))
+            using (var dummyEventWaitHandle2 = new EventWaitHandle(false, EventResetMode.ManualReset))
+            using (var dummyEventWaitHandle3 = new EventWaitHandle(false, EventResetMode.ManualReset))
+            using (var dummyEventWaitHandle4 = new EventWaitHandle(false, EventResetMode.ManualReset))
+            {
+                Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+                mockMonitorService.Setup(m => m.Enter(It.IsAny<object>())).Callback<object>((invokeTaskTrackingLock) =>
+                {
+                    Monitor.Enter(invokeTaskTrackingLock);
+                    dummyEventWaitHandle3.Set();
+                });
+                mockMonitorService.Setup(m => m.Exit(It.IsAny<object>())).Callback<object>(Monitor.Exit);
+                bool firstTryInvokeAsync = true;
+                Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object,
+                    taskService: mockTaskService.Object);
+                mockTestSubject.CallBase = true;
+                mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((true, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
+                mockTestSubject.Setup(t => t.ConnectIfNotConnected());
+                mockTestSubject.
+                    Protected().
+                    As<IOutOfProcessNodeJSServiceProtectedMembers>().
+                    Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
+                    Callback(() =>
+                    {
+                        dummyEventWaitHandle2.Set();
+                        dummyEventWaitHandle1.WaitOne();
+                    }).
+                    Returns(() =>
+                    {
+                        (bool, int) result = firstTryInvokeAsync ? expectedResult1 : expectedResult2;
+                        firstTryInvokeAsync = false;
+                        return Task.Run(() =>
+                        {
+                            dummyEventWaitHandle4.WaitOne();
+                            return result;
+                        });
+                    });
+                OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
+
+                // Act and assert
+                // Simulates a thread creating a task when a file event occurs. Blocked at TryInvokeAsync by dummyEventWaitHandle1.
+                Task<(bool, int)> task1 = Task.Run(() => testSubject.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
+                // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in MoveToNewProcess.
+                Task task2 = Task.Run(() =>
+                 {
+                     dummyEventWaitHandle2.WaitOne();
+                     testSubject.MoveToNewProcess();
+                 });
+                // Simulates a thread for an invocation that occurs while a file event is processing. Block at _invokeTaskTrackingLock in TryTrackedInvokeAsync.
+                Task<(bool, int)> task3 = Task.Run(() =>
+                {
+                    dummyEventWaitHandle3.WaitOne();
+                    return testSubject.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown);
+                });
+                // Wait for thread 1 to increment countdown count
+                dummyEventWaitHandle2.WaitOne();
+                // Wait for thread 2 to signal countdown
+                while (dummyInvokeTaskCreationCountdown.CurrentCount != 1)
+                {
+                    await Task.Delay(100).ConfigureAwait(false);
+                }
+                // At this point, all three threads are blocked.
+                //
+                // Release thread 1, allowing it to "drain" out of task creation block. This should set _invokeTaskCreationCountdown, releasing thread 2, which in turn, should exit
+                // _invokeTaskTrackingLock, releasing thread 3.
+                dummyEventWaitHandle1.Set();
+                // Thread 2 should end first
+                await task2.ConfigureAwait(false);
+                // Allow threads 1 and 3 to end
+                dummyEventWaitHandle4.Set();
+                (bool, int) result1 = await task1.ConfigureAwait(false);
+                (bool, int) result2 = await task3.ConfigureAwait(false);
+                Assert.Equal(expectedResult1, result1);
+                Assert.Equal(expectedResult2, result2);
+                Assert.Empty(dummyTrackedInvokeTasks);
+                Assert.Equal(1, dummyInvokeTaskCreationCountdown.CurrentCount);
+                _mockRepository.VerifyAll();
+            }
         }
 
         // Mocking protected members: https://github.com/Moq/moq4/wiki/Quickstart#miscellaneous
@@ -1270,10 +1608,13 @@ namespace Jering.Javascript.NodeJS.Tests
         private Mock<OutOfProcessNodeJSService> CreateMockOutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory = null,
             IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor = null,
             IEmbeddedResourcesService embeddedResourcesService = null,
+            IFileWatcherFactory fileWatcherFactory = null,
+            IMonitorService monitorService = null,
+            ITaskService taskService = null,
             Assembly serverScriptAssembly = null,
             string serverScriptName = null,
             StringBuilder loggerStringBuilder = null,
-            LogLevel logLevel = LogLevel.Warning)
+            LogLevel logLevel = LogLevel.Information)
         {
             // Log output from all tests
             var services = new ServiceCollection();
@@ -1298,29 +1639,16 @@ namespace Jering.Javascript.NodeJS.Tests
                 logger,
                 optionsAccessor,
                 embeddedResourcesService,
+                fileWatcherFactory,
+                monitorService,
+                taskService,
                 serverScriptAssembly,
                 serverScriptName);
         }
 
         private class DummyAssembly : Assembly { }
 
-        // https://stackoverflow.com/questions/1354308/how-to-instantiate-datareceivedeventargs-or-be-able-to-fill-it-with-data
-        private DataReceivedEventArgs CreateDataReceivedEventArgs(string TestData)
-        {
-            var MockEventArgs =
-                (DataReceivedEventArgs)System.Runtime.Serialization.FormatterServices
-                 .GetUninitializedObject(typeof(DataReceivedEventArgs));
-
-            FieldInfo[] EventFields = typeof(DataReceivedEventArgs)
-                .GetFields(
-                    BindingFlags.NonPublic |
-                    BindingFlags.Instance |
-                    BindingFlags.DeclaredOnly);
-
-            EventFields[0].SetValue(MockEventArgs, TestData);
-
-            return MockEventArgs;
-        }
+        public delegate void TryEnterCallback(object obj, ref bool lockTaken);
 
         public void Dispose()
         {

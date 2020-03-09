@@ -10,24 +10,24 @@ namespace Jering.Javascript.NodeJS
     public class InvocationException : Exception
     {
         /// <summary>
-        /// Creates an <see cref="InvocationException"/> instance.
+        /// Creates an <see cref="InvocationException"/>.
         /// </summary>
         public InvocationException()
         {
         }
 
         /// <summary>
-        /// Creates an <see cref="InvocationException"/> instance.
+        /// Creates an <see cref="InvocationException"/>.
         /// </summary>
-        /// <param name="message">A description of the NodeJS error.</param>
+        /// <param name="message">The NodeJS error's description.</param>
         public InvocationException(string message) : base(message)
         {
         }
 
         /// <summary>
-        /// Creates an <see cref="InvocationException"/> instance.
+        /// Creates an <see cref="InvocationException"/>.
         /// </summary>
-        /// <param name="message">A description of the NodeJS error.</param>
+        /// <param name="message">The NodeJS error's description.</param>
         /// <param name="stack">The NodeJS error's stack trace.</param>
         public InvocationException(string message, string stack)
             : base(message + Environment.NewLine + stack)
@@ -35,10 +35,10 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Creates a <see cref="InvocationException"/> instance.
+        /// Creates a <see cref="InvocationException"/>.
         /// </summary>
-        /// <param name="info"></param>
-        /// <param name="context"></param>
+        /// <param name="info">The data store for serialization/deserialization.</param>
+        /// <param name="context">The struct representing the source and destination of a serialized stream.</param>
         protected InvocationException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }

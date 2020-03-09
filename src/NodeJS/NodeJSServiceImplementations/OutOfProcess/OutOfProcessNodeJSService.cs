@@ -1,10 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,19 +33,62 @@ namespace Jering.Javascript.NodeJS
 
         private readonly bool _debugLoggingEnabled;
         private readonly bool _warningLoggingEnabled;
+        private readonly bool _infoLoggingEnabled;
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
+        private readonly IMonitorService _monitorService;
+        private readonly ITaskService _taskService;
+        private readonly IFileWatcherFactory _fileWatcherFactory;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _serverScriptName;
         private readonly Assembly _serverScriptAssembly;
         private readonly OutOfProcessNodeJSServiceOptions _options;
         private readonly object _connectingLock = new object();
+        private readonly object _invokeTaskTrackingLock = new object();
+        private readonly int _numRetries;
+        private readonly int _numConnectionRetries;
+        private readonly int _timeoutMS;
+        private readonly ConcurrentDictionary<Task, object> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
+        private readonly CountdownEvent _invokeTaskCreationCountdown;
+        private readonly bool _trackInvokeTasks;
+
         private bool _disposed;
-        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it is null)
-        private readonly StringBuilder _outputDataStringBuilder = new StringBuilder();
-        private readonly StringBuilder _errorDataStringBuilder = new StringBuilder();
+        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it's null)
+        private IFileWatcher _fileWatcher;
 
         /// <summary>
-        /// Creates an<see cref="OutOfProcessNodeJSService"/> instance.
+        /// Creates an <see cref="OutOfProcessNodeJSService"/> instance.
+        /// </summary>
+        /// <param name="nodeProcessFactory"></param>
+        /// <param name="logger"></param>
+        /// <param name="optionsAccessor"></param>
+        /// <param name="embeddedResourcesService"></param>
+        /// <param name="fileWatcherFactory"></param>
+        /// <param name="monitorService"></param>
+        /// <param name="taskService"></param>
+        /// <param name="serverScriptAssembly"></param>
+        /// <param name="serverScriptName"></param>
+        protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
+            ILogger logger,
+            IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
+            IEmbeddedResourcesService embeddedResourcesService,
+            IFileWatcherFactory fileWatcherFactory,
+            IMonitorService monitorService,
+            ITaskService taskService,
+            Assembly serverScriptAssembly,
+            string serverScriptName) :
+            this(nodeProcessFactory, logger, optionsAccessor, embeddedResourcesService, serverScriptAssembly, serverScriptName)
+        {
+            _fileWatcherFactory = fileWatcherFactory;
+            _monitorService = monitorService;
+            _taskService = taskService;
+
+            (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
+        }
+
+        // DO NOT DELETE - keep for backward compatibility.
+        /// <summary>
+        /// <para>Creates an <see cref="OutOfProcessNodeJSService"/> instance.</para>
+        /// <para>If this constructor is used, file watching is disabled.</para>
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
         /// <param name="logger"></param>
@@ -68,6 +112,11 @@ namespace Jering.Javascript.NodeJS
 
             _debugLoggingEnabled = Logger.IsEnabled(LogLevel.Debug);
             _warningLoggingEnabled = Logger.IsEnabled(LogLevel.Warning);
+            _infoLoggingEnabled = Logger.IsEnabled(LogLevel.Information);
+
+            _numRetries = _options.NumRetries;
+            _numConnectionRetries = _options.NumConnectionRetries;
+            _timeoutMS = _options.TimeoutMS;
         }
 
         /// <summary>
@@ -203,65 +252,33 @@ namespace Jering.Javascript.NodeJS
 
         internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
-            int numRetries = _options.NumRetries;
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
+            }
 
+            int numRetries = _numRetries;
             while (true)
             {
-                if (_disposed)
-                {
-                    throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
-                }
-
                 CancellationTokenSource cancellationTokenSource = null;
-                EventWaitHandle waitHandle = null;
                 try
                 {
-                    // If the the NodeJS process has not been instantiated or has been disconnected for some reason, attempt to create a 
-                    // new process. Apart from the thread creating the process, all other threads will be blocked. If the new process 
-                    // is created successfully, all threads will be released by OutputDataReceivedHandler.
-                    if (_nodeJSProcess?.Connected != true) // Safe since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
-                    {
-                        lock (_connectingLock)
-                        {
-                            if (_nodeJSProcess?.Connected != true)
-                            {
-                                waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-                                CreateAndConnectToNodeJSProcess(waitHandle);
-
-                                if (_debugLoggingEnabled)
-                                {
-                                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
-                                }
-
-                                if (waitHandle.WaitOne(_options.TimeoutMS < 0 ? -1 : _options.TimeoutMS))
-                                {
-                                    _nodeJSProcess.SetConnected();
-                                }
-                                else
-                                {
-                                    // Kills and disposes
-                                    _nodeJSProcess.Dispose();
-
-                                    // Reset
-                                    _outputDataStringBuilder.Length = 0;
-                                    _errorDataStringBuilder.Length = 0;
-
-                                    // We're unlikely to get to this point. If we do we want the issue to be logged.
-                                    throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
-                                        _options.TimeoutMS,
-                                        _nodeJSProcess.HasExited,
-                                        _nodeJSProcess.ExitStatus));
-                                }
-                            }
-                        }
-                    }
+                    // If we haven't connected to a NodeJS process or we've been disconnected, connect to a new process.
+                    // We want this within the while loop so if we disconnect between tries, we connect before retrying.
+                    ConnectIfNotConnected();
 
                     // Create cancellation token
                     CancellationToken invokeCancellationToken;
-                    (invokeCancellationToken, cancellationTokenSource) = CreateCts(cancellationToken);
+                    (invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken); // We need CTS so we can dispose of it
 
-                    return await TryInvokeAsync<T>(invocationRequest, invokeCancellationToken).ConfigureAwait(false);
+                    return await (_trackInvokeTasks ?
+                        TryTrackedInvokeAsync<T>(invocationRequest, invokeCancellationToken, _trackedInvokeTasks, _invokeTaskCreationCountdown) :
+                        TryInvokeAsync<T>(invocationRequest, invokeCancellationToken)).ConfigureAwait(false);
+                }
+                catch (ConnectionException)
+                {
+                    // ConnectIfNotConnected has its own retry logic
+                    throw;
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -272,7 +289,7 @@ namespace Jering.Javascript.NodeJS
                 {
                     // Invocation timed out and no more retries
                     throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
-                        _options.TimeoutMS,
+                        _timeoutMS,
                         nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
                         nameof(OutOfProcessNodeJSServiceOptions)));
                 }
@@ -299,18 +316,17 @@ namespace Jering.Javascript.NodeJS
                 finally
                 {
                     cancellationTokenSource?.Dispose();
-                    waitHandle?.Dispose();
                 }
 
                 numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
             }
         }
 
-        internal virtual (CancellationToken, CancellationTokenSource) CreateCts(CancellationToken cancellationToken)
+        internal virtual (CancellationToken, CancellationTokenSource) CreateCancellationToken(CancellationToken cancellationToken)
         {
-            if (_options.TimeoutMS >= 0)
+            if (_timeoutMS >= 0)
             {
-                var cancellationTokenSource = new CancellationTokenSource(_options.TimeoutMS);
+                var cancellationTokenSource = new CancellationTokenSource(_timeoutMS);
 
                 if (cancellationToken != CancellationToken.None)
                 {
@@ -325,38 +341,319 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void CreateAndConnectToNodeJSProcess(EventWaitHandle waitHandle)
+        internal virtual void ConnectIfNotConnected()
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(OutOfProcessNodeJSService));
-            }
-
-            // Avoid orphan processes
-            _nodeJSProcess?.Dispose();
-
-            // Create new process
-            string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
-            _nodeJSProcess = _nodeProcessFactory.Create(serverScript);
-
-            // Connect through stdout
-            _nodeJSProcess.AddOutputDataReceivedHandler((object sender, DataReceivedEventArgs evt) => OutputDataReceivedHandler(sender, evt, waitHandle));
-            _nodeJSProcess.AddErrorDataReceivedHandler(ErrorDataReceivedHandler);
-            _nodeJSProcess.BeginOutputReadLine();
-            _nodeJSProcess.BeginErrorReadLine();
-        }
-
-        internal void OutputDataReceivedHandler(object _, DataReceivedEventArgs evt, EventWaitHandle waitHandle)
-        {
-            string data = evt.Data;
-            if (data == null)
+            // Connected calls Process.HasExited, which throws if the Process instance is not attached to a process. This won't occur since
+            // _nodeJSProcess is only ever assigned already-started Process instances (see CreateProcess). Process.HasExited also throws if
+            // it can't access the process's exit code. People encounter this when they create a Process instance for an existing process,
+            // and the existing process requires elevated privileges. This isn't an issue for us since we're creating the NodeJS
+            // process and always have necessary privileges.
+            //
+            //  This is safe threading-wise since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
+            if (_nodeJSProcess?.Connected == true)
             {
                 return;
             }
 
-            if (!_nodeJSProcess.Connected && evt.Data.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
+            // // Apart from the thread creating the process, all other threads will be blocked.
+            lock (_connectingLock)
             {
-                OnConnectionEstablishedMessageReceived(evt.Data);
+                if (_nodeJSProcess?.Connected == true)
+                {
+                    return;
+                }
+
+                // No need to listen for file events while connecting - the new NodeJS process will reload all files.
+                // Stopping _fileWatcher prevents its underlying FileSystemWatcher's buffer from overflowing. 
+                // 
+                // Note that we don't need to worry about file events filling up the buffer between entering this _connectingLock block 
+                // and the following line because FileChangedHandler returns immediately if we're connecting.
+                _fileWatcher?.Stop();
+
+                int numConnectionRetries = _numConnectionRetries;
+                EventWaitHandle waitHandle = null;
+
+                while (true)
+                {
+                    try
+                    {
+                        // If an exception is thrown below, between CreateAndSetUpProcess and returning, we might retry despite having
+                        // started a process. Dispose to avoid orphan processes.
+                        _nodeJSProcess?.Dispose();
+
+                        // If the new process is created successfully, the WaitHandle is set by OutputDataReceivedHandler.
+                        waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+                        _nodeJSProcess = CreateAndSetUpProcess(waitHandle); // Throws InvalidOperationException if it can't create the process
+
+                        if (_debugLoggingEnabled)
+                        {
+                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
+                        }
+
+                        if (waitHandle.WaitOne(_timeoutMS < 0 ? -1 : _timeoutMS))
+                        {
+                            // Start listening for file events before unblocking all threads.
+                            //
+                            // If we don't connect successfully, there's no point starting the file watcher since there's nothing to restart if a file changes.
+                            // For that reason, this doesn't need to be in a finally block.
+                            _fileWatcher?.Start();
+
+                            _nodeJSProcess.SetConnected();
+
+                            return;
+                        }
+                        else
+                        {
+                            // Kills and disposes
+                            _nodeJSProcess.Dispose();
+
+                            // We're unlikely to get to this point. If we do we want the issue to be logged.
+                            throw new ConnectionException(string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
+                                _timeoutMS,
+                                _nodeJSProcess.HasExited,
+                                _nodeJSProcess.ExitStatus));
+                        }
+                    }
+                    catch (Exception exception) when (numConnectionRetries != 0)
+                    {
+                        if (_warningLoggingEnabled)
+                        {
+                            Logger.LogWarning(string.Format(Strings.LogWarning_ConnectionAttemptFailed, numConnectionRetries < 0 ? "infinity" : numConnectionRetries.ToString(), exception.ToString()));
+                        }
+                    }
+                    catch (Exception exception) when (!(exception is ConnectionException))
+                    {
+                        // Wrap so users can easily identify connection issues
+                        throw new ConnectionException(Strings.ConnectionException_OutOfProcessNodeJSService_FailedToConnect, exception);
+                    }
+                    finally
+                    {
+                        waitHandle?.Dispose();
+                    }
+
+                    numConnectionRetries = numConnectionRetries > 0 ? numConnectionRetries - 1 : numConnectionRetries;
+                }
+            }
+        }
+
+        // File watching graceful shutdown overview:
+        //
+        // If graceful shutdown is enabled, we wait till all of the current process's invocations complete before we kill it.
+        // To do this, we store invoke tasks and call Task.WaitAll on them before killing processes.
+        //
+        // We store invoke tasks in an air-tight manner.
+        // When a file event occurs, we enter _connectionLock and ditch the current process (see FileChangedHandler). 
+        // Subsequent invocations get blocked in ConnectIfNotConnected. However, there may be in-flight invocations that have gotten past 
+        // ConnectIfNotConnected. These invocations could be sent to the ditched process.
+        // Therefore we allow their threads to "drain" past the task creation block (see TryTrackedInvokeAsync) before we store
+        // invoke tasks (see MoveToNewProcess). 
+        //
+        // With this sytem in place, we're guaranteed to get every invoke task sent to the process we're ditching.
+
+        // Don't directly assign newed objects to instance variables. This way:
+        // - they can be readonly,
+        // - we can test if they were initialized correctly,
+        // - and we can mock this method to return custom objects.
+        //
+        // Perfect dependency inversion would entail creating factories for these types. This internal virtual method does the job for now.
+        internal virtual (bool trackInvokeTasks, ConcurrentDictionary<Task, object> trackedInvokeTasks, CountdownEvent invokeTaskCreationCountdown) InitializeFileWatching()
+        {
+            if (!_options.EnableFileWatching ||
+                _fileWatcherFactory == null ||
+                _monitorService == null ||
+                _taskService == null)
+            {
+                return default;
+            }
+
+            _fileWatcher = _fileWatcherFactory.Create(_options.WatchPath, _options.WatchSubdirectories, _options.WatchFileNamePatterns, FileChangedHandler);
+
+            if (!_options.WatchGracefulShutdown)
+            {
+                return default;
+            }
+
+            // Note that we don't start file watching in this method. It's started when we actually have a process to restart.
+
+            return (true, new ConcurrentDictionary<Task, object>(), new CountdownEvent(1));
+        }
+
+        internal virtual async Task<(bool, T)> TryTrackedInvokeAsync<T>(InvocationRequest invocationRequest,
+            CancellationToken cancellationToken,
+            // Instance variables newed in this class must be passed as arguments so we can mock them for testability.
+            ConcurrentDictionary<Task, object> trackedInvokeTasks,
+            CountdownEvent invokeTaskCreationCountdown)
+        {
+            // Create tracked task
+            lock (_invokeTaskTrackingLock)
+            {
+                invokeTaskCreationCountdown.AddCount();
+            }
+            Task<(bool, T)> trackedInvokeTask = null;
+            try
+            {
+                trackedInvokeTask = TryInvokeAsync<T>(invocationRequest, cancellationToken);
+                trackedInvokeTasks.TryAdd(trackedInvokeTask, null);
+            }
+            finally
+            {
+                // Signal if we fail to create task or once task has been created and added to tracked tasks.
+                invokeTaskCreationCountdown.Signal();
+            }
+
+            // Await tracked task
+            try
+            {
+                return await trackedInvokeTask.ConfigureAwait(false);
+            }
+            finally
+            {
+                // Remove completed task, note that it might already have been removed in MoveToNewProcess
+                trackedInvokeTasks.TryRemove(trackedInvokeTask, out object _);
+            }
+        }
+
+        // FileSystemWatcher handles file events synchronously, storing pending events in a buffer - https://github.com/dotnet/runtime/blob/master/src/libraries/System.IO.FileSystem.Watcher/src/System/IO/FileSystemWatcher.Win32.cs.
+        // We don't need to worry about this method being called simultaneously by multiple threads.
+        internal virtual void FileChangedHandler(string path)
+        {
+            bool acquiredConnectingLock = false;
+            try
+            {
+                _monitorService.TryEnter(_connectingLock, ref acquiredConnectingLock);
+
+                if (!acquiredConnectingLock)
+                {
+                    if (_nodeJSProcess?.Connected != true) // If we're connecting, do nothing.
+                    {
+                        return;
+                    }
+
+                    // If we get here, _nodeJSProcess.SetConnected() has been called in ConnectIfNotConnected, but ConnectIfNotConnected hasn't exited _connectingLock.
+                    // Once _nodeJSProcess.SetConnected() is called, invocations aren't blocked in ConnectIfNotConnected. This means the NodeJS process may have already
+                    // received invocations and loaded user modules, so we must create a new process again.
+                    _monitorService.Enter(_connectingLock, ref acquiredConnectingLock);
+                }
+
+                // Immediately stop file watching to avoid FileSystemWatcher buffer overflows. Restarted in ConnectIfNotConnected.
+                _fileWatcher.Stop();
+
+                if (_infoLoggingEnabled)
+                {
+                    Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
+                }
+
+                MoveToNewProcess();
+            }
+            finally
+            {
+                if (acquiredConnectingLock)
+                {
+                    _monitorService.Exit(_connectingLock);
+                }
+            }
+        }
+
+        internal virtual void MoveToNewProcess()
+        {
+            INodeJSProcess lastNodeJSProcess = null;
+            ICollection<Task> lastProcessInvokeTasks = null;
+
+            try
+            {
+                // Ditch current process, subsequent invocations get blocked in ConnectIfNotConnected
+                lastNodeJSProcess = _nodeJSProcess;
+                _nodeJSProcess = null;
+
+                // Get last-process invoke tasks if we're tracking invoke tasks
+                if (_trackInvokeTasks)
+                {
+                    // Wait for all threads invoking in last process to start tasks (see TryTrackedInvokeAsync<T>)
+                    _monitorService.Enter(_invokeTaskTrackingLock);
+                    _invokeTaskCreationCountdown.Signal(); // So countdown can reach 0
+                    _invokeTaskCreationCountdown.Wait(); // Wait for countdown to hit 0
+
+                    // Store last-process-tasks. Note that ConcurrentDictionary.Keys returns a static ReadOnlyCollection 
+                    // - https://github.com/dotnet/runtime/blob/master/src/libraries/System.Collections.Concurrent/src/System/Collections/Concurrent/ConcurrentDictionary.cs#L1977.
+                    // Also note that trackedInvokeTasks may empty between calling Count and Keys, but it doesn't matter since _taskService.WaitAll doesn't throw if 
+                    // its argument is empty.
+                    lastProcessInvokeTasks = _trackedInvokeTasks.Count == 0 ? null : _trackedInvokeTasks.Keys;
+
+                    // TODO if a user invokes, changes a file, invokes more and changes a file again, and so on,
+                    // we could end up with multiple NodeJS processes shutting down simultaneously. This is not a pressing issue:
+                    // most machines run hundreds of processes at any one time, invocations tend not to be long running, and file changes (made by humans)
+                    // are likely to be spaced apart. Nonetheless, consider tracking process killing tasks (created in the 
+                    // finally block below) and calling Task.WaitAny here if such tasks accumulate.
+
+                    // Reset
+                    _trackedInvokeTasks.Clear();
+                    _invokeTaskCreationCountdown.Reset(1);
+                }
+
+                // Connect to new process
+                ConnectIfNotConnected();
+            }
+            finally
+            {
+                if (_trackInvokeTasks)
+                {
+                    _monitorService.Exit(_invokeTaskTrackingLock); // Exit will never throw since we're guaranteed to have entered the lock if we get here
+                }
+
+                // Kill last process. At this point, we've started _fileWatcher, so we want to offload this to another thread to avoid
+                // blocking file events.
+                _taskService.Run(() =>
+                {
+                    if (lastProcessInvokeTasks != null)
+                    {
+                        try
+                        {
+                            // Wait for last process invocations to complete
+                            _taskService.WaitAll(lastProcessInvokeTasks.ToArray());
+                        }
+                        catch { /* Do nothing, invocation exceptions are handled by TryInvokeAsyncCore<T> */ }
+                    }
+
+                    // Kill process
+                    if (_infoLoggingEnabled)
+                    {
+                        Logger.LogInformation(string.Format(Strings.LogInformation_KillingNodeJSProcess, lastNodeJSProcess.SafeID));
+                    }
+                    lastNodeJSProcess.Dispose();
+                });
+            }
+        }
+
+        internal virtual INodeJSProcess CreateAndSetUpProcess(EventWaitHandle waitHandle)
+        {
+            // Create new process
+            string serverScript = _embeddedResourcesService.ReadAsString(_serverScriptAssembly, _serverScriptName);
+            INodeJSProcess result = _nodeProcessFactory.Create(serverScript);
+
+            // stdout and stderr
+            result.AddOutputReceivedHandler((object sender, string message) => OutputReceivedHandler(sender, message, waitHandle));
+            result.AddErrorReceivedHandler(ErrorReceivedHandler);
+            result.BeginOutputReadLine();
+            result.BeginErrorReadLine();
+
+            return result;
+        }
+
+        internal void OutputReceivedHandler(object _, string message, EventWaitHandle waitHandle)
+        {
+            // _nodeJSProcess could be null if we receive a message from a ditched process.
+            //
+            // Note that we should not get a connection message for any process other than the current _nodeJSProcess
+            // because ConnectIfNotConnected is synchronous.
+            if (_nodeJSProcess?.Connected == false && message.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
+            {
+                OnConnectionEstablishedMessageReceived(message);
+
+                if (_infoLoggingEnabled)
+                {
+                    Logger.LogInformation(string.Format(Strings.LogInformation_ConnectedToNodeJSProcess, _nodeJSProcess.SafeID));
+                }
 
                 if (_debugLoggingEnabled)
                 {
@@ -365,54 +662,15 @@ namespace Jering.Javascript.NodeJS
 
                 waitHandle.Set();
             }
-            else if (TryCreateMessage(_outputDataStringBuilder, data, out string message))
+            else if(_infoLoggingEnabled)
             {
-                // Process output is received line by line. The last line of a message ends with a \0 (null character),
-                // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
                 Logger.LogInformation(message);
             }
         }
 
-        internal void ErrorDataReceivedHandler(object sender, DataReceivedEventArgs evt)
+        internal void ErrorReceivedHandler(object _, string message)
         {
-            string data = evt.Data;
-            if (data == null)
-            {
-                return;
-            }
-
-            if (TryCreateMessage(_errorDataStringBuilder, data, out string message))
-            {
-                Logger.LogError(message);
-            }
-        }
-
-        // OutputDataReceivedHandler and ErrorDataReceivedHandler are called every time a newline character is read in the stdout and stderr streams respectively.
-        // The event data supplied to the callback is a string containing all the characters between the previous newline character and the most recent one.
-        // In other words, the stream is read line by line. The last line in each message ends with a null terminating character (see HttpServer.ts).
-        internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
-        {
-            message = null;
-            int dataLength = data.Length;
-
-            if (dataLength == 0) // Empty line
-            {
-                stringBuilder.AppendLine();
-                return false;
-            }
-
-            if (data[dataLength - 1] != '\0')
-            {
-                stringBuilder.AppendLine(data);
-                return false;
-            }
-
-            stringBuilder.Append(data);
-            stringBuilder.Length--; // Remove null terminating character
-            message = stringBuilder.ToString();
-            stringBuilder.Length = 0;
-
-            return true;
+            Logger.LogError(message);
         }
 
         /// <summary>
@@ -421,6 +679,7 @@ namespace Jering.Javascript.NodeJS
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this); // In case a sub class overrides Object.Finalize - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-overload
         }
 
         /// <summary>
@@ -437,6 +696,8 @@ namespace Jering.Javascript.NodeJS
             if (disposing)
             {
                 _nodeJSProcess?.Dispose();
+                _fileWatcher?.Dispose();
+                _invokeTaskCreationCountdown?.Dispose();
             }
 
             _disposed = true;

@@ -26,10 +26,52 @@ namespace Jering.Javascript.NodeJS
         private readonly IHttpClientService _httpClientService;
 
         private bool _disposed;
-        internal Uri Endpoint;
+        // Volatile since it may be updated by different threads and we always
+        // want to use the most recent instance
+        internal volatile Uri _endpoint;
 
         /// <summary>
-        /// Creates a <see cref="HttpNodeJSService"/> instance.
+        /// Creates a <see cref="HttpNodeJSService"/>.
+        /// </summary>
+        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
+        /// <param name="httpContentFactory"></param>
+        /// <param name="embeddedResourcesService"></param>
+        /// <param name="fileWatcherFactory"></param>
+        /// <param name="monitorService"></param>
+        /// <param name="taskService"></param>
+        /// <param name="httpClientService"></param>
+        /// <param name="jsonService"></param>
+        /// <param name="nodeJSProcessFactory"></param>
+        /// <param name="loggerFactory"></param>
+        public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
+            IHttpContentFactory httpContentFactory,
+            IEmbeddedResourcesService embeddedResourcesService,
+            IFileWatcherFactory fileWatcherFactory,
+            IMonitorService monitorService,
+            ITaskService taskService,
+            IHttpClientService httpClientService,
+            IJsonService jsonService,
+            INodeJSProcessFactory nodeJSProcessFactory,
+            ILoggerFactory loggerFactory) :
+            base(nodeJSProcessFactory,
+                loggerFactory.CreateLogger(typeof(HttpNodeJSService)),
+                outOfProcessNodeJSServiceOptionsAccessor,
+                embeddedResourcesService,
+                fileWatcherFactory,
+                monitorService,
+                taskService,
+                typeof(HttpNodeJSService).GetTypeInfo().Assembly,
+                SERVER_SCRIPT_NAME)
+        {
+            _httpClientService = httpClientService;
+            _jsonService = jsonService;
+            _httpContentFactory = httpContentFactory;
+        }
+
+        // DO NOT DELETE - keep for backward compatibility.
+        /// <summary>
+        /// <para>Creates a <see cref="HttpNodeJSService"/>.</para> 
+        /// <para>If this constructor is used, file watching is disabled.</para>
         /// </summary>
         /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
         /// <param name="httpContentFactory"></param>
@@ -45,23 +87,24 @@ namespace Jering.Javascript.NodeJS
             IJsonService jsonService,
             INodeJSProcessFactory nodeJSProcessFactory,
             ILoggerFactory loggerFactory) :
-            base(nodeJSProcessFactory,
-                loggerFactory.CreateLogger(typeof(HttpNodeJSService)),
-                outOfProcessNodeJSServiceOptionsAccessor,
+            this(outOfProcessNodeJSServiceOptionsAccessor,
+                httpContentFactory,
                 embeddedResourcesService,
-                typeof(HttpNodeJSService).GetTypeInfo().Assembly,
-                SERVER_SCRIPT_NAME)
+                null,
+                null,
+                null,
+                httpClientService,
+                jsonService,
+                nodeJSProcessFactory,
+                loggerFactory)
         {
-            _httpClientService = httpClientService;
-            _jsonService = jsonService;
-            _httpContentFactory = httpContentFactory;
         }
 
         /// <inheritdoc />
         protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             using (HttpContent httpContent = _httpContentFactory.Create(invocationRequest))
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, Endpoint))
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint))
             {
                 httpRequestMessage.Content = httpContent;
 
@@ -93,7 +136,7 @@ namespace Jering.Javascript.NodeJS
 
                     if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
                     {
-                        if(typeof(T) == typeof(Void)) // Returned value doesn't matter
+                        if (typeof(T) == typeof(Void)) // Returned value doesn't matter
                         {
                             return (true, default);
                         }
@@ -154,7 +197,7 @@ namespace Jering.Javascript.NodeJS
                 }
                 else if (currentChar == ']')
                 {
-                    Endpoint = new Uri(stringBuilder.ToString());
+                    _endpoint = new Uri(stringBuilder.ToString());
                     return;
                 }
                 else

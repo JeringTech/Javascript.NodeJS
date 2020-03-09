@@ -33,13 +33,17 @@ namespace Jering.Javascript.NodeJS
                 AddSingleton<INodeJSProcessFactory, NodeJSProcessFactory>().
                 AddSingleton(typeof(INodeJSService), INodeJSServiceFactory).
                 AddSingleton<IJsonService, JsonService>().
-                AddSingleton<IEnvironmentService, EnvironmentService>();
+                AddSingleton<IEnvironmentService, EnvironmentService>().
+                AddSingleton<IFileWatcherFactory, FileWatcherFactory>().
+                AddSingleton<IMonitorService, MonitorService>().
+                AddSingleton<ITaskService, TaskService>();
         }
 
         internal static IHttpClientService IHttpClientServiceFactory(IServiceProvider serviceProvider)
         {
             OutOfProcessNodeJSServiceOptions outOfProcessNodeJSServiceOptions = serviceProvider.GetRequiredService<IOptions<OutOfProcessNodeJSServiceOptions>>().Value;
 
+            // TODO consider making PooledConnectionIdleTimeout infinite - https://www.stevejgordon.co.uk/httpclient-connection-pooling-in-dotnet-core
             return new HttpClientService
             {
                 Timeout = outOfProcessNodeJSServiceOptions.TimeoutMS == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(outOfProcessNodeJSServiceOptions.TimeoutMS + 1000)

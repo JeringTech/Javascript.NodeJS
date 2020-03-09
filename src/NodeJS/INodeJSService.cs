@@ -22,7 +22,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="modulePath"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -39,7 +39,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="modulePath"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -49,8 +49,8 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module string is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module string is compiled and cached.
-        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string to NodeJS.</para>
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module string is compiled and cached.
+        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
         /// <typeparam name="T">The type of value returned. This may be a JSON-serializable type, <see cref="string"/>, or <see cref="Stream"/>.</typeparam>
@@ -61,7 +61,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleString"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -71,8 +71,8 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module string is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module string is compiled and cached.
-        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string to NodeJS.</para>
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module string and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module string is compiled and cached.
+        /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module string.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
         /// <param name="moduleString">The module in string form. This value mustn't be <c>null</c>, whitespace or an empty string.</param>
@@ -82,7 +82,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleString"/> is <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -91,7 +91,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -105,7 +105,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -114,7 +114,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in string form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module string using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -127,7 +127,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>, whitespace or an empty string.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -137,7 +137,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module stream is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module stream is compiled and cached.
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module stream is compiled and cached.
         /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module stream to NodeJS.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -149,7 +149,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleStream"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -159,7 +159,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
         /// <para>If <paramref name="newCacheIdentifier"/> is <c>null</c>, the module stream is sent to NodeJS and compiled for one time use.</para>
-        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, its reused. Otherwise, the module stream is compiled and cached.
+        /// <para>If <paramref name="newCacheIdentifier"/> isn't <c>null</c>, the module stream and the cache identifier are both sent to NodeJS. If the module exists in NodeJS's cache, it's reused Otherwise, the module stream is compiled and cached.
         /// On subsequent invocations, you may use <see cref="TryInvokeFromCacheAsync{T}"/> to invoke directly from the cache, avoiding the overhead of sending the module stream to NodeJS.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -170,7 +170,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleStream"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -179,7 +179,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -193,7 +193,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -202,7 +202,7 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>
         /// <para>Invokes a function from a NodeJS module in stream form.</para>
-        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, its reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
+        /// <para>Initially, only sends the module's cache identifier to NodeJS. If the module exists in NodeJS's cache, it's reused. If the module doesn't exist in NodeJS's cache, creates the module stream using 
         /// <paramref name="moduleFactory"/> and sends it, together with the module's cache identifier, to NodeJS for compilation and caching.</para>
         /// <para>If <paramref name="exportName"/> is <c>null</c>, the module's exports is assumed to be a function and is invoked. Otherwise, invokes the function named <paramref name="exportName"/> in the module's exports.</para>
         /// </summary>
@@ -215,7 +215,7 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentNullException">Thrown if module is not cached but <paramref name="moduleFactory"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cacheIdentifier"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleFactory"/> returns <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -233,7 +233,7 @@ namespace Jering.Javascript.NodeJS
         /// <returns>The <see cref="Task"/> representing the asynchronous operation. On completion, the task returns a (bool, T) with the bool set to true on 
         /// success and false otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleCacheIdentifier"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
@@ -249,7 +249,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="cancellationToken">The cancellation token for the asynchronous operation.</param>
         /// <returns>The <see cref="Task"/> representing the asynchronous operation. On completion, the task returns true on success and false otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleCacheIdentifier"/> is <c>null</c>.</exception>
-        /// <exception cref="InvocationException">Thrown if NodeJS cannot be initialized.</exception>
+        /// <exception cref="ConnectionException">Thrown if unable to connect to NodeJS.</exception>
         /// <exception cref="InvocationException">Thrown if the invocation request times out.</exception>
         /// <exception cref="InvocationException">Thrown if a NodeJS error occurs.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
