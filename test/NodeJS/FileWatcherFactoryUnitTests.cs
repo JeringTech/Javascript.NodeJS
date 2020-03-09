@@ -2,7 +2,6 @@
 using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -29,7 +28,6 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(f => f.ResolveDirectoryPath(dummyDirectoryPath, dummyNodeJSProcessOptions)).
                 Returns(dummyResolvedDirectoryPath);
             mockFileWatcherFactory.Setup(f => f.ResolveFilters(dummyFileNamePatterns)).Returns(new ReadOnlyCollection<Regex>(new[] { new Regex("dummy") }));
-            mockFileWatcherFactory.Setup(f => f.CreateFileSystemWatcher(dummyResolvedDirectoryPath, dummyIncludeSubdirectories)).Returns(new FileSystemWatcher());
 
             // Act
             IFileWatcher result = mockFileWatcherFactory.Object.Create(dummyDirectoryPath, dummyIncludeSubdirectories, dummyFileNamePatterns, (_) => { });
@@ -164,23 +162,6 @@ namespace Jering.Javascript.NodeJS.Tests
                     new string[]{}
                 }
             };
-        }
-
-        [Fact]
-        public void CreateFileSystemWatcher_CreatesFileSystemWatcher()
-        {
-            // Arrange
-            string dummyDirectoryPath = Directory.GetCurrentDirectory(); // FileSystemWatcher constructor requires an existing path
-            const bool dummyIncludeSubdirectories = true;
-            FileWatcherFactory testSubject = CreateFileWatcherFactory();
-
-            // Act
-            FileSystemWatcher result = testSubject.CreateFileSystemWatcher(dummyDirectoryPath, dummyIncludeSubdirectories);
-
-            // Assert
-            Assert.Equal(dummyDirectoryPath, result.Path);
-            Assert.Equal(dummyIncludeSubdirectories, result.IncludeSubdirectories);
-            Assert.Equal(NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName, result.NotifyFilter);
         }
 
         private Mock<FileWatcherFactory> CreateMockFileWatcherFactory(IOptions<NodeJSProcessOptions> nodeJSProcessOptionsAccessor = null)

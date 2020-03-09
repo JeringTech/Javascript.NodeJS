@@ -12,66 +12,62 @@ namespace Jering.Javascript.NodeJS.Tests
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
         private string _tempWatchDirectory;
 
-        [Fact]
-        public void Constructor_ThrowsArgumentNullExceptionIfFileSystemWatcherIsNull()
+        [Theory]
+        [MemberData(nameof(Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString_Data))]
+        public void Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString(string dummyDirectoryPath)
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new FileWatcher(null, new[] { new Regex(".") }, DummyFileChangedHandler));
+            Assert.Throws<ArgumentException>(() => new FileWatcher(dummyDirectoryPath, false, new[] { new Regex(".") }, DummyFileChangedHandler));
+        }
+
+        public static IEnumerable<object[]> Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString_Data()
+        {
+            return new object[][]
+            {
+                new object[]{null},
+                new object[]{" "},
+                new object[]{string.Empty}
+            };
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentNullExceptionIfFiltersIsNull()
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new FileWatcher(new FileSystemWatcher(), null, DummyFileChangedHandler));
+            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, null, DummyFileChangedHandler));
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentExceptionIfFiltersIsEmpty()
         {
             // Act and assert
-            Assert.Throws<ArgumentException>(() => new FileWatcher(new FileSystemWatcher(), new Regex[0], DummyFileChangedHandler));
+            Assert.Throws<ArgumentException>(() => new FileWatcher("dummyDirectoryPath", false, new Regex[0], DummyFileChangedHandler));
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentNullExceptionIfFileChangedEventHandlerIsNull()
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new FileWatcher(new FileSystemWatcher(), new[] { new Regex(".") }, null));
+            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, new[] { new Regex(".") }, null));
         }
 
+        // TODO verify that events are registered
         [Fact]
-        public void Start_StartsFileWatching()
+        public void Start_CreatesNewFileSystemWatcher()
         {
             // Arrange
             RecreateWatchDirectory();
-            using (var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory)) // Must provide an existing directory or it throws
+            using (var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory))
             {
-                FileWatcher testSubject = CreateFileWatcher(dummyFileSystemWatcher);
+                Mock<FileWatcher> mockTestSubject = CreateMockFileWatcher();
+                mockTestSubject.CallBase = true;
+                mockTestSubject.Setup(t => t.CreateFileSystemWatcher()).Returns(dummyFileSystemWatcher);
 
                 // Act
-                testSubject.Start(); // Stopped initially
+                mockTestSubject.Object.Start();
 
                 // Assert
-                Assert.True(dummyFileSystemWatcher.EnableRaisingEvents);
-            }
-        }
-
-        [Fact]
-        public void Stop_StopsFileWatching()
-        {
-            // Arrange
-            RecreateWatchDirectory();
-            using (var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory)) // Must provide an existing directory or it throws
-            {
-                FileWatcher testSubject = CreateFileWatcher(dummyFileSystemWatcher);
-                testSubject.Start();
-
-                // Act
-                testSubject.Stop();
-
-                // Assert
-                Assert.False(dummyFileSystemWatcher.EnableRaisingEvents);
+                _mockRepository.VerifyAll();
             }
         }
 
@@ -241,20 +237,41 @@ namespace Jering.Javascript.NodeJS.Tests
             };
         }
 
-        private Mock<FileWatcher> CreateMockFileWatcher(FileSystemWatcher fileSystemWatcher = null,
+        [Fact]
+        public void CreateFileSystemWatcher_CreatesFileSystemWatcher()
+        {
+            // Arrange
+            string dummyDirectoryPath = Directory.GetCurrentDirectory(); // FileSystemWatcher constructor requires an existing path
+            const bool dummyIncludeSubdirectories = true;
+            FileWatcher testSubject = CreateFileWatcher(dummyDirectoryPath, dummyIncludeSubdirectories);
+
+            // Act
+            FileSystemWatcher result = testSubject.CreateFileSystemWatcher();
+
+            // Assert
+            Assert.Equal(dummyDirectoryPath, result.Path);
+            Assert.Equal(dummyIncludeSubdirectories, result.IncludeSubdirectories);
+            Assert.Equal(NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName, result.NotifyFilter);
+        }
+
+        private Mock<FileWatcher> CreateMockFileWatcher(string directoryPath = null,
+            bool includeSubdirectories = false,
             IEnumerable<Regex> filters = null,
             FileChangedEventHandler fileChangedEventHandler = null)
         {
-            return _mockRepository.Create<FileWatcher>(fileSystemWatcher ?? new FileSystemWatcher(),
+            return _mockRepository.Create<FileWatcher>(directoryPath ?? "dummyDirectoryPath",
+                includeSubdirectories,
                 filters ?? new[] { new Regex(".") },
                 fileChangedEventHandler ?? DummyFileChangedHandler);
         }
 
-        private FileWatcher CreateFileWatcher(FileSystemWatcher fileSystemWatcher = null,
+        private FileWatcher CreateFileWatcher(string directoryPath = null,
+            bool includeSubdirectories = false,
             IEnumerable<Regex> filters = null,
             FileChangedEventHandler fileChangedEventHandler = null)
         {
-            return new FileWatcher(fileSystemWatcher ?? new FileSystemWatcher(),
+            return new FileWatcher(directoryPath ?? "dummyDirectoryPath",
+                includeSubdirectories,
                 filters ?? new[] { new Regex(".") },
                 fileChangedEventHandler ?? DummyFileChangedHandler);
         }

@@ -116,6 +116,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value cannot be null, whitespace or an empty string..
+        /// </summary>
+        internal static string ArgumentException_Shared_ValueCannotBeNullWhitespaceOrAnEmptyString {
+            get {
+                return ResourceManager.GetString("ArgumentException_Shared_ValueCannotBeNullWhitespaceOrAnEmptyString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}..
         /// </summary>
         internal static string ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut {

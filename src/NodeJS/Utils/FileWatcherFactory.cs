@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -33,9 +32,8 @@ namespace Jering.Javascript.NodeJS
         {
             directoryPath = ResolveDirectoryPath(directoryPath, _nodeJSProcessOptions);
             ReadOnlyCollection<Regex> filters = ResolveFilters(fileNamePatterns);
-            FileSystemWatcher fileSystemWatcher = CreateFileSystemWatcher(directoryPath, includeSubdirectories);
 
-            return new FileWatcher(fileSystemWatcher, filters, fileChangedEventHandler);
+            return new FileWatcher(directoryPath, includeSubdirectories, filters, fileChangedEventHandler);
         }
 
         // TODO validate options using https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-3.1#options-validation
@@ -66,15 +64,6 @@ namespace Jering.Javascript.NodeJS
             string regexPattern = "^" + Regex.Escape(fileNamePattern).Replace("\\*", ".*").Replace("\\?", ".?") + "$";
 
             return new Regex(regexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        }
-
-        internal virtual FileSystemWatcher CreateFileSystemWatcher(string directoryPath, bool includeSubdirectories)
-        {
-            return new FileSystemWatcher(directoryPath)
-            {
-                IncludeSubdirectories = includeSubdirectories,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
-            };
         }
     }
 }
