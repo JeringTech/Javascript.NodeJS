@@ -5,7 +5,7 @@ for an overview of semantic versioning.
 
 ## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.0...HEAD)
 
-## [5.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.2...5.4.0) - Mar 7, 2020
+## [5.4.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.3.2...5.4.0) - Mar 9, 2020
 ### Additions
 - Added file watching. Refer to [ReadMe](https://github.com/JeringTech/Javascript.NodeJS#outofprocessnodejsserviceoptions) for more information. ([#69](https://github.com/JeringTech/Javascript.NodeJS/pull/69)).
 

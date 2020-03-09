@@ -249,7 +249,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Kills and disposes of the NodeJS <see cref="Process"/>.
+        /// Kills and disposes of the NodeJS process.
         /// </summary>
         public void Dispose()
         {
@@ -258,7 +258,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <summary>
-        /// Kills and disposes of the NodeJS <see cref="Process"/>.
+        /// Kills and disposes of the NodeJS process.
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {

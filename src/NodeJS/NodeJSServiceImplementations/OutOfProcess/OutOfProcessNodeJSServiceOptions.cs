@@ -87,7 +87,7 @@ namespace Jering.Javascript.NodeJS
         /// <para>The value specifying whether NodeJS processes shutdown gracefully when a file changes.</para>
         /// <para>If this value is true, NodeJS processes shutdown gracefully. Otherwise they're killed immediately.</para>
         /// <para>This value does nothing if <see cref="EnableFileWatching"/> is <c>false</c>.</para>
-        /// <para>What is a graceful shutdown? When a file changes, a new NodeJS process is created and subsequent invocations are sent to it. The old NodeJS process
+        /// <para>What's a graceful shutdown? When a file changes, a new NodeJS process is created and subsequent invocations are sent to it. The old NodeJS process
         /// might still be handling earlier invocations. If graceful shutdown is enabled, the old NodeJS process is killed after its
         /// invocations complete. If graceful shutdown is disabled, the old NodeJS process is killed immediately and
         /// invocations are retried in the new NodeJS process if retries remain (see <see cref="NumRetries"/>).</para>

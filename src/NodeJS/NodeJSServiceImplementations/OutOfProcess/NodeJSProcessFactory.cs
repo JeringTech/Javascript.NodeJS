@@ -31,7 +31,7 @@ namespace Jering.Javascript.NodeJS
 
         internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
         {
-            nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding?
+            nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding? Would avoid an allocation every time we start a NodeJS process.
 
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")

@@ -349,7 +349,7 @@ namespace Jering.Javascript.NodeJS
             // and the existing process requires elevated privileges. This isn't an issue for us since we're creating the NodeJS
             // process and always have necessary privileges.
             //
-            //  This is also safe since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
+            //  This is safe threading-wise since _nodeJSProcess is volatile and its property getters enclose logic in lock blocks
             if (_nodeJSProcess?.Connected == true)
             {
                 return;
@@ -381,7 +381,7 @@ namespace Jering.Javascript.NodeJS
                         // started a process. Dispose to avoid orphan processes.
                         _nodeJSProcess?.Dispose();
 
-                        // If the new process is created successfully, the WaitHandle is released by OutputDataReceivedHandler.
+                        // If the new process is created successfully, the WaitHandle is set by OutputDataReceivedHandler.
                         waitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
 
                         _nodeJSProcess = CreateAndSetUpProcess(waitHandle); // Throws InvalidOperationException if it can't create the process

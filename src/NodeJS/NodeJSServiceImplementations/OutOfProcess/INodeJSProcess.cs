@@ -49,17 +49,17 @@ namespace Jering.Javascript.NodeJS
         void AddErrorDataReceivedHandler(DataReceivedEventHandler dataReceivedEventHandler);
 
         /// <summary>
-        /// Gets a boolean value indicating whether or not the NodeJS process is connected.
+        /// Gets the value indicating whether the NodeJS process is connected.
         /// </summary>
         bool Connected { get; }
 
         /// <summary>
-        /// Gets a boolean value indicating whether or not the NodeJS process has been exited.
+        /// Gets the value indicating whether the NodeJS process has exited.
         /// </summary>
         bool HasExited { get; }
 
         /// <summary>
-        /// <para>Gets a string describing the NodeJS process's exit status.</para>
+        /// <para>Gets the string describing the NodeJS process's exit status.</para>
         /// <para>If the process has not exited, returns "Process has not exited".</para>
         /// <para>If the process has been disposed, returns "Process has been disposed".</para>
         /// <para>If the process has exit but has not been disposed, returns its exit code.</para>

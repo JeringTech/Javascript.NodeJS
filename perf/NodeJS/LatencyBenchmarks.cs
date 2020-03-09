@@ -42,8 +42,8 @@ namespace Jering.Javascript.NodeJS.Performance
             return await _nodeJSService.InvokeFromFileAsync<DummyResult>(DUMMY_LATENCY_MODULE_FILE, args: new object[] { _counter++ });
         }
 
-        // If file watching is enabled but graceful shutdown is disabled, latency is the same as if file watching is disabled.
-        // We don't need a separate benchmark for that scenario. There is slightly higher latency when file watching and
+        // If file watching is enabled but graceful shutdown is disabled, latency is the same as if file watching is disabled,
+        // so don't need a separate benchmark for that scenario. There is slightly higher latency when file watching and
         // graceful shutdown are both enabled though.
         [GlobalSetup(Target = nameof(INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled))]
         public void INodeJSService_Latency_InvokeFromFile_GracefulShutdownEnabled_Setup()
