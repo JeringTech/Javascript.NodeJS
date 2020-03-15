@@ -66,11 +66,11 @@ Assert.Equal(8, result);
 ```
 
 ## Target Frameworks
-- .NET Standard 2.0
+- .NET Standard 2.0 (supports Windows, OS X, and Linux on .NET Core)
 - .NET Framework 4.6.1
  
 ## Prerequisites
-You'll need to install [NodeJS](https://nodejs.org/en/) and add node.exe's directory to the `Path` environment variable (automatically done by the official installer). We've tested this library with
+You'll need to install [NodeJS](https://nodejs.org/en/) and add node's directory to the `Path` environment variable (automatically done by the official installer). We've tested this library with
 NodeJS 10.5.2 - 12.13.0.
 
 ## Installation
