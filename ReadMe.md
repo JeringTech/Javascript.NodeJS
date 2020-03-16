@@ -6,7 +6,8 @@
 
 ## Table of Contents
 [Overview](#overview)  
-[Target Frameworks](#target-frameworks)  
+[Target Frameworks](#target-frameworks)
+[Platforms](#platforms)  
 [Prerequisites](#prerequisites)  
 [Installation](#installation)  
 [Usage](#usage)  
@@ -68,10 +69,12 @@ Assert.Equal(8, result);
 ## Target Frameworks
 - .NET Standard 2.0
 - .NET Framework 4.6.1
+
+## Platforms
+Works on Windows, macOS, and Linux systems.
  
 ## Prerequisites
-You'll need to install [NodeJS](https://nodejs.org/en/) and add node.exe's directory to the `Path` environment variable (automatically done by the official installer). We've tested this library with
-NodeJS 10.5.2 - 12.13.0.
+You'll need to install [NodeJS](https://nodejs.org/en/) and add the NodeJS executable's directory to the `Path` environment variable (automatically done by the official installer).
 
 ## Installation
 Using Package Manager:
