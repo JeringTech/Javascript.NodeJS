@@ -240,18 +240,40 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void DataReceivedHandler_DoesNothingIfEventDataIsNull()
+        public void DataReceivedHandler_DoesNothingIfEventDataIsNullAndThereIsNoBufferedData()
         {
             // Arrange
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
 
             // Act
-            mockTestSubject.Object.DataReceivedHandler(null, null, null, CreateDataReceivedEventArgs());
+            var sb = new StringBuilder();
+            string capturedMessage = "__NOTCALLED__";
+            mockTestSubject.Object.DataReceivedHandler(sb, (object sender, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
 
             // Assert
             string dummyOutMessage = null;
-            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), It.IsAny<string>(), out dummyOutMessage), Times.Never());
+            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), It.IsAny<string>(), out dummyOutMessage), Times.Once());
+            Assert.Equal("__NOTCALLED__", capturedMessage);
+        }
+
+        [Fact]
+        public void DataReceivedHandler_SendsBufferedDataIfEventDataIsNull()
+        {
+            // Arrange
+            Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
+            mockTestSubject.CallBase = true;
+
+            // Act
+            var sb = new StringBuilder();
+            sb.Append("test message");
+            string capturedMessage = null;
+            mockTestSubject.Object.DataReceivedHandler(sb, (object sender, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
+
+            // Assert
+            string dummyOutMessage = null;
+            mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), It.IsAny<string>(), out dummyOutMessage), Times.Once());
+            Assert.Equal("test message", capturedMessage);
         }
 
         [Fact]
