@@ -207,10 +207,6 @@ namespace Jering.Javascript.NodeJS
             DataReceivedEventArgs dataReceivedEventArgs)
         {
             string data = dataReceivedEventArgs.Data;
-            if (data == null) // When the stream is closed, an event with data = null is received - https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.datareceivedeventargs.data?view=netframework-4.8#remarks
-            {
-                return;
-            }
 
             // Process output is received line by line. The last line of a message ends with a \0 (null character),
             // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
@@ -226,22 +222,32 @@ namespace Jering.Javascript.NodeJS
         internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
         {
             message = null;
-            int dataLength = data.Length;
 
-            if (dataLength == 0) // Empty line
+            // When the stream is closed, an event with data = null is received - https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.datareceivedeventargs.data?view=netframework-4.8#remarks
+            if (data != null)
             {
-                stringBuilder.AppendLine();
+                int dataLength = data.Length;
+
+                if (dataLength == 0) // Empty line
+                {
+                    stringBuilder.AppendLine();
+                    return false;
+                }
+
+                if (data[dataLength - 1] != '\0')
+                {
+                    stringBuilder.AppendLine(data);
+                    return false;
+                }
+
+                stringBuilder.Append(data);
+                stringBuilder.Length--; // Remove null terminating character
+            }
+            else if (stringBuilder.Length == 0)
+            {
                 return false;
             }
 
-            if (data[dataLength - 1] != '\0')
-            {
-                stringBuilder.AppendLine(data);
-                return false;
-            }
-
-            stringBuilder.Append(data);
-            stringBuilder.Length--; // Remove null terminating character
             message = stringBuilder.ToString();
             stringBuilder.Length = 0;
 

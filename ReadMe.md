@@ -1029,6 +1029,7 @@ Contributions are welcome!
 - [JeremyTCD](https://github.com/JeremyTCD)
 - [Daniil Sokolyuk](https://github.com/DaniilSokolyuk)
 - [dustinsoftware](https://github.com/dustinsoftware)
+- [blushingpenguin](https://github.com/blushingpenguin)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
