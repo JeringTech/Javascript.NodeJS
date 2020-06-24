@@ -3,7 +3,7 @@ var Module = require('module');
 import * as path from 'path';
 import * as http from 'http';
 import * as stream from 'stream';
-import { AddressInfo } from 'net';
+import { AddressInfo, Socket } from 'net';
 import InvocationRequest from '../../../InvocationData/InvocationRequest';
 import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
 
@@ -28,6 +28,12 @@ const server = http.createServer(serverOnRequestListener);
 
 // In Node.js v13+ this is the default, however for earlier versions it is 120 seconds.
 server.setTimeout(0);
+server.keepAliveTimeout = 0;
+// This is fixed so that 0 disables the timeout in node 12.17+ -- for earlier versions 0 times out immediately, so set it to 10 years
+server.headersTimeout = 10 * 365 * 24 * 60 * 60 * 1000;
+
+// Log timed out connections for debugging
+server.on('timeout', serverOnTimeout);
 
 // Send client error details to client for debugging
 server.on('clientError', serverOnClientError);
@@ -180,6 +186,12 @@ function serverOnClientError(error: Error, socket: stream.Duplex) {
 
     let httpResponseMessage = `HTTP/1.1 500 Internal Server Error\r\nContent-Length: ${Buffer.byteLength(errorJson, 'utf8')}\r\nContent-Type: text/html\r\n\r\n${errorJson}`;
     socket.end(httpResponseMessage);
+}
+
+// Send timeout details to client for debugging - this shouldn't fire but there have been various node http server timeout issues in the past
+// The socket won't actually get closed (the timeout function needs to do that manually)
+function serverOnTimeout(socket: Socket) {
+    console.error(`Ignoring unexpected socket timeout for address ${socket.remoteAddress}, port ${socket.remotePort}`);
 }
 
 function serverOnListeningListener() {
