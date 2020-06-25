@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.2...HEAD)
+
+## [5.4.2](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.1...5.4.2) - Jun 25, 2020
+### Fixes
+- Disabled unecessary Node.js HTTP timeouts, added logging for timeouts. ([#85](https://github.com/JeringTech/Javascript.NodeJS/pull/85)).
 
 ## [5.4.1](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.0...5.4.1) - Jun 23, 2020
 ### Fixes
