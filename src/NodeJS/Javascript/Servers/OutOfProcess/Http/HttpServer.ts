@@ -26,10 +26,24 @@ let projectDir = process.cwd();
 // Create server
 const server = http.createServer(serverOnRequestListener);
 
-// In Node.js v13+ this is the default, however for earlier versions it is 120 seconds.
+// The timeouts below are designed to manage network instability. Since we're using the HTTP protocol on a local machine, we can disable them
+// to avoid their overhead and stability issues.
+
+// By default, on older versions of Node.js, request handling times out after 120 seconds.
+// This timeout is disabled by default on Node.js v13+. 
+// Becuase of the older versions, we explicitly disable it.
 server.setTimeout(0);
+
+// By default, a socket is destroyed if it receives no incoming data for 5 seconds: https://nodejs.org/api/http.html#http_server_keepalivetimeout. 
+// This is good practice when making external requests because DNS records may change: https://github.com/dotnet/runtime/issues/18348.
+// Since we're using the HTTP protocol on a local machine, it's safe and more efficient to keep sockets alive indefinitely.
 server.keepAliveTimeout = 0;
-// This is fixed so that 0 disables the timeout in node 12.17+ -- for earlier versions 0 times out immediately, so set it to 10 years
+
+// By default, a socket is destroyed if its incoming headers take longer than 60 seconds: https://nodejs.org/api/http.html#http_server_headerstimeout.
+// In early versions of Node.js, even if setTimeout() was specified with a non-zero value, the server would wait indefinitely for headers. 
+// This timeout was added to deal with that issue. We specify setTimeout(0), so this timeout is of no use to us.
+//
+// Note that while 0 disables this timeout in node 12.17+, in earlier versions it causes requests to time out immediately, so set to 10 years.
 server.headersTimeout = 10 * 365 * 24 * 60 * 60 * 1000;
 
 // Log timed out connections for debugging
@@ -188,8 +202,8 @@ function serverOnClientError(error: Error, socket: stream.Duplex) {
     socket.end(httpResponseMessage);
 }
 
-// Send timeout details to client for debugging - this shouldn't fire but there have been various node http server timeout issues in the past
-// The socket won't actually get closed (the timeout function needs to do that manually)
+// Send timeout details to client for debugging - this shouldn't fire but there have been various node http server timeout issues in the past.
+// The socket won't actually get closed (the timeout function needs to do that manually).
 function serverOnTimeout(socket: Socket) {
     console.error(`Ignoring unexpected socket timeout for address ${socket.remoteAddress}, port ${socket.remotePort}`);
 }
