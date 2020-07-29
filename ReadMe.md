@@ -296,7 +296,7 @@ Result result = await nodeJSService.InvokeFromStringAsync<Result>(moduleFactory,
 Assert.Equal("success", result.Message);
 ```
 
-Like when [invoking javascript form a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, you can invoke a specific function by specifying
+Like when [invoking javascript from a file](#invoking-javascript-from-a-file), if the module exports an object containing functions, you can invoke a specific function by specifying
 its name.  
 
 #### Invoking Javascript in Stream Form
@@ -972,7 +972,7 @@ sea salt
 ```
 
 #### Why do NodeJS Modules exist?
-To answer this question, lets consider the impetus for the creation of javascript modules in general. Web pages used to include scripts like so:
+To answer this question, let us consider the impetus for the creation of javascript modules in general. Web pages used to include scripts like so:
 ``` html
 <html>
     ...
