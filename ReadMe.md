@@ -1030,6 +1030,7 @@ Contributions are welcome!
 - [Daniil Sokolyuk](https://github.com/DaniilSokolyuk)
 - [dustinsoftware](https://github.com/dustinsoftware)
 - [blushingpenguin](https://github.com/blushingpenguin)
+- [flcdrg](https://github.com/flcdrg)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
