@@ -14,6 +14,9 @@ const args: { [key: string]: string } = parseArgs(process.argv);
 demarcateMessageEndings(process.stdout);
 demarcateMessageEndings(process.stderr);
 
+// Whether or not to catch uncaught user errors
+const catchUncaughtUserErrors = args.catchUncaughtUserErrors.toLowerCase() === 'true';
+
 // Start auto-termination loop
 exitWhenParentExits(parseInt(args.parentPid), true, 1000);
 
@@ -60,10 +63,13 @@ function serverOnRequestListener(req, res) {
     req.
         on('data', chunk => bodyChunks.push(chunk)).
         on('end', async () => {
+            let invocationRequest: InvocationRequest;
+            let functionToInvoke: Function;
+            let callback: (error: Error | string, result: any) => void;
+
             try {
                 // Create InvocationRequest
                 let body: string = Buffer.concat(bodyChunks).toString();
-                let invocationRequest: InvocationRequest;
                 if (req.headers['content-type'] == 'multipart/mixed') {
                     let parts: string[] = body.split('--Uiw6+hXl3k+5ia0cUYGhjA==');
                     invocationRequest = JSON.parse(parts[0]);
@@ -130,7 +136,6 @@ function serverOnRequestListener(req, res) {
                 }
 
                 // Get function to invoke
-                let functionToInvoke: Function;
                 if (invocationRequest.exportName != null) {
                     functionToInvoke = exports[invocationRequest.exportName];
                     if (functionToInvoke == null) {
@@ -150,7 +155,7 @@ function serverOnRequestListener(req, res) {
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any) => {
+                callback = (error: Error | string, result: any) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -177,18 +182,30 @@ function serverOnRequestListener(req, res) {
                         res.end(responseJson);
                     }
                 }
-
-                // Invoke function 
-                if (functionToInvoke.constructor.name === "AsyncFunction") {
-                    callback(null, await functionToInvoke.apply(null, invocationRequest.args));
-                } else {
-                    let args: object[] = [callback];
-                    functionToInvoke.apply(null, args.concat(invocationRequest.args));
-                }
             } catch (error) {
                 respondWithError(res, error);
             }
+
+            if (catchUncaughtUserErrors) {
+                try {
+                    await invokeFunction(invocationRequest, functionToInvoke, callback);
+                } catch (error) {
+                    respondWithError(res, error);
+                }
+            } else {
+                await invokeFunction(invocationRequest, functionToInvoke, callback);
+            }
         });
+}
+
+async function invokeFunction(invocationRequest: InvocationRequest, functionToInvoke: Function, callback: (error: Error | string, result: any) => void) {
+    // Invoke function 
+    if (functionToInvoke.constructor.name === "AsyncFunction") {
+        callback(null, await functionToInvoke.apply(null, invocationRequest.args));
+    } else {
+        let args: object[] = [callback];
+        functionToInvoke.apply(null, args.concat(invocationRequest.args));
+    }
 }
 
 // Send error details to client for debugging - https://nodejs.org/api/http.html#http_event_clienterror

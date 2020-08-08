@@ -36,7 +36,7 @@ namespace Jering.Javascript.NodeJS
             int currentProcessPid = Process.GetCurrentProcess().Id;
             var startInfo = new ProcessStartInfo("node")
             {
-                Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
+                Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port} --catchUncaughtUserErrors {_nodeJSProcessOptions.CatchUncaughtUserErrors}",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,

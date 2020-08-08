@@ -36,5 +36,17 @@ namespace Jering.Javascript.NodeJS
         /// and "production" otherwise.</para>
         /// </summary>
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// <para>The value specifying whether errors thrown in but uncaught by your javascript modules (user errors uncaught by user code) are caught by this library.</para>
+        /// <para>This flag is meant to facilitate debugging.</para>
+        /// <para>By default, user errors uncaught by user code are caught by this library in a catchall try-catch block. This means there is no way to have your debugger break only on
+        /// user errors uncaught by user code: 
+        /// If you set your debugger to "break on all errors" you'd break on caught and uncaught errors, if you set your debugger to "break only on uncaught errors", 
+        /// you'd never break.</para>
+        /// <para>Setting this value to false and your debugger to "break only on uncaught errors" allows you to break on user errors uncaught by user code.</para>
+        /// <para>Defaults to <c>true</c>.</para>
+        /// </summary>
+        public bool CatchUncaughtUserErrors { get; set; } = true;
     }
 }

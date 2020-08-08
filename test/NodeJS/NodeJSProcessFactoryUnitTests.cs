@@ -14,6 +14,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public void CreateStartInfo_CreatesStartInfo()
         {
             // Arrange
+            const bool dummyCatchUncaughtUserErrors = false;
             const string dummyNodeServerScript = "dummyNodeServerScript";
             const string dummyNodeAndV8Options = "dummyNodeAndV8Options";
             const int dummyPort = 123; // Arbitrary
@@ -26,7 +27,8 @@ namespace Jering.Javascript.NodeJS.Tests
                 NodeAndV8Options = dummyNodeAndV8Options,
                 Port = dummyPort,
                 ProjectPath = dummyProjectPath,
-                EnvironmentVariables = dummyEnvironmentVariables
+                EnvironmentVariables = dummyEnvironmentVariables,
+                CatchUncaughtUserErrors = dummyCatchUncaughtUserErrors
             };
             Mock<IOptions<NodeJSProcessOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<NodeJSProcessOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyNodeJSProcessOptions);
@@ -37,7 +39,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             int currentProcessPid = Process.GetCurrentProcess().Id;
-            Assert.Equal($"{dummyNodeAndV8Options} -e \"{dummyNodeServerScript}\" -- --parentPid {currentProcessPid} --port {dummyPort}", result.Arguments);
+            Assert.Equal($"{dummyNodeAndV8Options} -e \"{dummyNodeServerScript}\" -- --parentPid {currentProcessPid} --port {dummyPort} --catchUncaughtUserErrors {dummyCatchUncaughtUserErrors}", result.Arguments);
             Assert.False(result.UseShellExecute);
             Assert.True(result.RedirectStandardInput);
             Assert.True(result.RedirectStandardOutput);
