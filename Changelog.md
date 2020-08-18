@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.2...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.3...HEAD)
+
+## [5.4.3](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.2...5.4.3) - Aug 18, 2020
+### Fixes
+- Fixed incompatibilities with newer node versions. ([#90](https://github.com/JeringTech/Javascript.NodeJS/pull/90)).
 
 ## [5.4.2](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.1...5.4.2) - Jun 25, 2020
 ### Fixes

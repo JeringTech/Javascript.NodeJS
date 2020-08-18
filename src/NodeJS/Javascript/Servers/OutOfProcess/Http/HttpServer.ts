@@ -1,5 +1,5 @@
 // The typings for module are incomplete and can't be augmented, so import as any.
-var Module = require('module');
+const Module = require('module');
 import * as path from 'path';
 import * as http from 'http';
 import * as stream from 'stream';
@@ -21,7 +21,8 @@ exitWhenParentExits(parseInt(args.parentPid), true, 1000);
 patchLStat();
 
 // Set by NodeJSProcessFactory
-let projectDir = process.cwd();
+const projectDir = process.cwd();
+const moduleResolutionPaths = generateModuleResolutionPaths(projectDir);
 
 // Create server
 const server = http.createServer(serverOnRequestListener);
@@ -43,8 +44,8 @@ server.keepAliveTimeout = 0;
 // In early versions of Node.js, even if setTimeout() was specified with a non-zero value, the server would wait indefinitely for headers. 
 // This timeout was added to deal with that issue. We specify setTimeout(0), so this timeout is of no use to us.
 //
-// Note that while 0 disables this timeout in node 12.17+, in earlier versions it causes requests to time out immediately, so set to 10 years.
-server.headersTimeout = 10 * 365 * 24 * 60 * 60 * 1000;
+// Note that while 0 disables this timeout in node 12.17+, in earlier versions it causes requests to time out immediately, so set to max positive int 32.
+server.headersTimeout = 2147483647;
 
 // Log timed out connections for debugging
 server.on('timeout', serverOnTimeout);
@@ -56,16 +57,16 @@ server.on('clientError', serverOnClientError);
 server.listen(parseInt(args.port), 'localhost', serverOnListeningListener);
 
 function serverOnRequestListener(req, res) {
-    let bodyChunks = [];
+    const bodyChunks = [];
     req.
         on('data', chunk => bodyChunks.push(chunk)).
         on('end', async () => {
             try {
                 // Create InvocationRequest
-                let body: string = Buffer.concat(bodyChunks).toString();
+                const body: string = Buffer.concat(bodyChunks).toString();
                 let invocationRequest: InvocationRequest;
-                if (req.headers['content-type'] == 'multipart/mixed') {
-                    let parts: string[] = body.split('--Uiw6+hXl3k+5ia0cUYGhjA==');
+                if (req.headers['content-type'] === 'multipart/mixed') {
+                    const parts: string[] = body.split('--Uiw6+hXl3k+5ia0cUYGhjA==');
                     invocationRequest = JSON.parse(parts[0]);
                     invocationRequest.moduleSource = parts[1];
                 } else {
@@ -75,7 +76,7 @@ function serverOnRequestListener(req, res) {
                 // Get exports of module specified by InvocationRequest.moduleSource
                 let exports: any;
                 if (invocationRequest.moduleSourceType === ModuleSourceType.Cache) {
-                    var cachedModule = Module._cache[invocationRequest.moduleSource];
+                    const cachedModule = Module._cache[invocationRequest.moduleSource];
 
                     // Cache miss
                     if (cachedModule == null) {
@@ -89,7 +90,7 @@ function serverOnRequestListener(req, res) {
                     invocationRequest.moduleSourceType === ModuleSourceType.String) {
                     // Check if already cached
                     if (invocationRequest.newCacheIdentifier != null) {
-                        cachedModule = Module._cache[invocationRequest.newCacheIdentifier];
+                        const cachedModule = Module._cache[invocationRequest.newCacheIdentifier];
                         if (cachedModule != null) {
                             exports = cachedModule.exports;
                         }
@@ -97,14 +98,15 @@ function serverOnRequestListener(req, res) {
 
                     // Not cached
                     if (exports == null) {
-                        // global is analagous to window in browsers (the global namespace) - https://nodejs.org/api/globals.html#globals_global
-                        // module is a reference to the current module - https://nodejs.org/api/modules.html#modules_module
-                        let parent = global.module;
-                        let module = new Module('', parent);
-                        // This is typically done by Module._resolveLookupPaths which is called by Module._resolveFilename which in turn is called by Module._load.
-                        // Since we're loading a module in string form - not an actual file with a filename - we can't use Module._load. So we do this manually.
-                        module.paths = parent.paths;
-                        module._compile(invocationRequest.moduleSource, 'anonymous');
+                        const newModule = new Module('', null);
+
+                        // Specify paths where child modules may be.
+                        newModule.paths = moduleResolutionPaths;
+
+                        // Node.js exposes a method for loading a module from a file: Module.load - https://github.com/nodejs/node/blob/6726246dbb83e3251f080fc4729154d492f7e340/lib/internal/modules/cjs/loader.js#L942.
+                        // Since we're loading a module in string form, we can't use it. Instead we call Module._compile - https://github.com/nodejs/node/blob/6726246dbb83e3251f080fc4729154d492f7e340/lib/internal/modules/cjs/loader.js#L1043,
+                        // which Module.load calls internally.
+                        newModule._compile(invocationRequest.moduleSource, 'anonymous');
 
                         if (invocationRequest.newCacheIdentifier != null) {
                             // Notes on module caching:
@@ -112,10 +114,10 @@ function serverOnRequestListener(req, res) {
                             // When Module._load tries to load the same module again, it first resolves the absolute file path of the module, then it 
                             // checks if the module exists in the cache. Custom keys for in memory modules cause an error at the file resolution step.
                             // To make modules with custom keys requirable by other modules, require must be monkey patched.
-                            Module._cache[invocationRequest.newCacheIdentifier] = module;
+                            Module._cache[invocationRequest.newCacheIdentifier] = newModule;
                         }
 
-                        exports = module.exports;
+                        exports = newModule.exports;
                     }
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
@@ -182,13 +184,26 @@ function serverOnRequestListener(req, res) {
                 if (functionToInvoke.constructor.name === "AsyncFunction") {
                     callback(null, await functionToInvoke.apply(null, invocationRequest.args));
                 } else {
-                    let args: object[] = [callback];
+                    const args: object[] = [callback];
                     functionToInvoke.apply(null, args.concat(invocationRequest.args));
                 }
             } catch (error) {
                 respondWithError(res, error);
             }
         });
+}
+
+function generateModuleResolutionPaths(projectDirectory: string): string[] {
+    const result: string[] = [path.join(projectDirectory, 'node_modules')];
+    let directory: string = projectDirectory;
+    let lastDirectory: string;
+
+    while ((directory = path.dirname(directory)) !== lastDirectory) { // Once we reach root directory, path.dirname(root directory) returns root directory. E.g. path.dirname('C:/') returns 'C:/'
+        result.push(path.join(directory, 'node_modules'));
+        lastDirectory = directory;
+    }
+
+    return result;
 }
 
 // Send error details to client for debugging - https://nodejs.org/api/http.html#http_event_clienterror
@@ -224,7 +239,7 @@ function getTempIdentifier(invocationRequest: InvocationRequest): string {
 }
 
 function respondWithError(res: http.ServerResponse, error: Error | string) {
-    let errorIsString: boolean = typeof error === 'string';
+    const errorIsString: boolean = typeof error === 'string';
 
     res.statusCode = 500;
     res.end(JSON.stringify({
