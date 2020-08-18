@@ -43,8 +43,8 @@ server.keepAliveTimeout = 0;
 // In early versions of Node.js, even if setTimeout() was specified with a non-zero value, the server would wait indefinitely for headers. 
 // This timeout was added to deal with that issue. We specify setTimeout(0), so this timeout is of no use to us.
 //
-// Note that while 0 disables this timeout in node 12.17+, in earlier versions it causes requests to time out immediately, so set to 10 years.
-server.headersTimeout = 10 * 365 * 24 * 60 * 60 * 1000;
+// Note that while 0 disables this timeout in node 12.17+, in earlier versions it causes requests to time out immediately, so set to max positive int 32.
+server.headersTimeout = 2147483647;
 
 // Log timed out connections for debugging
 server.on('timeout', serverOnTimeout);
