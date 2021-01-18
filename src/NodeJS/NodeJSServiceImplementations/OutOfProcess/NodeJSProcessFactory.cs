@@ -41,7 +41,9 @@ namespace Jering.Javascript.NodeJS
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                WorkingDirectory = _nodeJSProcessOptions.ProjectPath
+                WorkingDirectory = _nodeJSProcessOptions.ProjectPath,
+                // If this option isn't set to true, in certain situations, e.g. in windows forms projects, a Node.js console window pops up when scripts are invoked.
+                CreateNoWindow = true
             };
 
             // Append environment Variables
