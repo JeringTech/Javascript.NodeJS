@@ -1,4 +1,4 @@
-﻿enum ModuleSourceType {
+﻿const enum ModuleSourceType {
     Cache,
     File,
     String,
