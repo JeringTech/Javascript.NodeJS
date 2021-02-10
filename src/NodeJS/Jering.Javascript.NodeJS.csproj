@@ -53,6 +53,8 @@
         <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
+		<!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
         <PackageReference Include="Yarn.MSBuild" Version="1.22.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
