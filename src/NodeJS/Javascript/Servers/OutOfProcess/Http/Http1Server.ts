@@ -56,7 +56,7 @@ server.on('clientError', serverOnClientError);
 // Start server
 server.listen(parseInt(args.port), 'localhost', serverOnListeningListener);
 
-function serverOnRequestListener(req, res) {
+function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResponse) {
     const bodyChunks = [];
     req.
         on('data', chunk => bodyChunks.push(chunk)).
@@ -220,7 +220,7 @@ function serverOnClientError(error: Error, socket: stream.Duplex) {
 // Send timeout details to client for debugging - this shouldn't fire but there have been various node http server timeout issues in the past.
 // The socket won't actually get closed (the timeout function needs to do that manually).
 function serverOnTimeout(socket: Socket) {
-    console.error(`Ignoring unexpected socket timeout for address ${socket.remoteAddress}, port ${socket.remotePort}`);
+    console.log(`[Node.js HTTP server] Ignoring unexpected socket timeout for address ${socket.remoteAddress}, port ${socket.remotePort}`);
 }
 
 function serverOnListeningListener() {
@@ -270,14 +270,14 @@ function parseArgs(args: string[]) {
 function exitWhenParentExits(parentPid: number, ignoreSigint: boolean, pollIntervalMS: number) {
     setInterval(() => {
         if (!processExists(parentPid)) {
-            console.log(`Parent process (pid: ${parentPid}) exited. Exiting this process...`);
+            console.log(`[Node.js HTTP server] Parent process (pid: ${parentPid}) exited. Exiting this process...`);
             process.exit();
         }
     }, pollIntervalMS);
 
     if (ignoreSigint) {
         process.on('SIGINT', () => {
-            console.log('Received SIGINT. Waiting for .NET process to exit...');
+            console.log('[Node.js HTTP server] Received SIGINT. Waiting for .NET process to exit...');
         });
     }
 }
