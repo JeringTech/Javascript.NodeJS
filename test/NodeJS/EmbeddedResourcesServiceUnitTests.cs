@@ -44,10 +44,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests).Assembly, _dummyEmbeddedResourceName);
 
             // Assert
-            using (var streamReader = new StreamReader(result))
-            {
-                Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
-            }
+            using var streamReader = new StreamReader(result);
+            Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
         }
 
         [Fact]
@@ -60,10 +58,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests), _dummyEmbeddedResourceName);
 
             // Assert
-            using (var streamReader = new StreamReader(result))
-            {
-                Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
-            }
+            using var streamReader = new StreamReader(result);
+            Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
         }
     }
 }

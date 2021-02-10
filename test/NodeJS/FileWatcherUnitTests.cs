@@ -57,18 +57,16 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             RecreateWatchDirectory();
-            using (var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory))
-            {
-                Mock<FileWatcher> mockTestSubject = CreateMockFileWatcher();
-                mockTestSubject.CallBase = true;
-                mockTestSubject.Setup(t => t.CreateFileSystemWatcher()).Returns(dummyFileSystemWatcher);
+            using var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory);
+            Mock<FileWatcher> mockTestSubject = CreateMockFileWatcher();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.CreateFileSystemWatcher()).Returns(dummyFileSystemWatcher);
 
-                // Act
-                mockTestSubject.Object.Start();
+            // Act
+            mockTestSubject.Object.Start();
 
-                // Assert
-                _mockRepository.VerifyAll();
-            }
+            // Assert
+            _mockRepository.VerifyAll();
         }
 
         [Fact]

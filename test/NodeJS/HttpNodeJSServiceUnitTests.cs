@@ -1,5 +1,4 @@
-﻿using Jering.IocServices.System.Net.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
@@ -32,9 +31,7 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
-#pragma warning disable IDE0067
 
             // Act
             (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
@@ -62,11 +59,9 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyInvocationError = new InvocationError("dummyErrorMessage", "dummyErrorStack");
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.DeserializeAsync<InvocationError>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyInvocationError);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
                 jsonService: mockJsonService.Object);
-#pragma warning disable IDE0067
 
             // Act and assert
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
@@ -88,10 +83,8 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object);
-#pragma warning disable IDE0067
 
             // Act
             (bool success, Void value) = await testSubject.ExposedTryInvokeAsync<Void>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
@@ -116,10 +109,8 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object);
-#pragma warning disable IDE0067
 
             // Act
             (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
@@ -146,10 +137,8 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object);
-#pragma warning disable IDE0067
 
             // Act
             (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
@@ -177,11 +166,9 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyObject = new DummyClass();
             Mock<IJsonService> mockJsonService = _mockRepository.Create<IJsonService>();
             mockJsonService.Setup(j => j.DeserializeAsync<DummyClass>(It.IsAny<Stream>(), CancellationToken.None)).ReturnsAsync(dummyObject);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object,
                 httpClientService: mockHttpClientService.Object,
                 jsonService: mockJsonService.Object);
-#pragma warning disable IDE0067
 
             // Act
             (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
@@ -207,9 +194,7 @@ namespace Jering.Javascript.NodeJS.Tests
                     HttpCompletionOption.ResponseHeadersRead,
                     CancellationToken.None)).
                 ReturnsAsync(dummyHttpResponseMessage);
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
-#pragma warning disable IDE0067
 
             // Act and assert
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None)).ConfigureAwait(false);
@@ -225,9 +210,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
-#pragma warning disable IDE0067
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
-#pragma warning disable IDE0067
 
             // Act
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);

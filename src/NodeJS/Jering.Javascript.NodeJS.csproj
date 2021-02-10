@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netcoreapp3.0;net461</TargetFrameworks>
         <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard2.0</TargetFrameworks>
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
         <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can use javascript libraries and scripts from your C# projects.</Description>
-        <Copyright>© 2018-2020 Jering. All rights reserved.</Copyright>
+        <Copyright>© 2018-2021 Jering. All rights reserved.</Copyright>
         <PackageProjectUrl>https://www.jering.tech/utilities/jering.javascript.nodejs/index</PackageProjectUrl>
         <RepositoryUrl>https://github.com/JeringTech/Javascript.NodeJS</RepositoryUrl>
         <PackageLicenseUrl>$(RepositoryUrl)/blob/master/License.md</PackageLicenseUrl>
@@ -17,11 +17,13 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <RepositoryType>git</RepositoryType>
-        <LangVersion>7.3</LangVersion>
+        <LangVersion>8.0</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-        <HttpServerBundleName>HttpServer.js</HttpServerBundleName>
+		<HttpServerSourceName Condition="'$(TargetFramework)' == 'netcoreapp3.0'">Http20Server.js</HttpServerSourceName>
+		<HttpServerSourceName Condition="'$(TargetFramework)' != 'netcoreapp3.0'">Http11Server.js</HttpServerSourceName>
+		<HttpServerBundleName>HttpServer.js</HttpServerBundleName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -33,16 +35,14 @@
 
     <ItemGroup>
         <JavascriptInputs Include="Javascript\**" Exclude="$(DefaultItemExcludes)" />
-        <!-- TODO if there are multiple outputs, e.g tcp server -->
         <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(HttpServerBundleName)" />
         <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
         <UpToDateCheckInput Include="@(JavascriptInputs)" />
-        <!-- TODO if there are multiple outputs, e.g tcp server -->
-        <EmbeddedResource Include="@(JavascriptOutputs)" LogicalName="$(HttpServerBundleName)" />
+		<EmbeddedResource Include="Javascript\bin\$(Configuration)\$(HttpServerSourceName)" LogicalName="$(HttpServerBundleName)" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Jering.IocServices.System.Net.Http" Version="0.4.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -53,14 +53,16 @@
         <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
+		<!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
         <PackageReference Include="Yarn.MSBuild" Version="1.22.0" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.Text.Json" Version="4.6.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0" />
+        <PackageReference Include="System.Text.Json" Version="5.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -87,11 +89,13 @@
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
     <Target Name="JavascriptBuildNonWindows" BeforeTargets="PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' != 'Windows_NT'">
-        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
     </Target>
 
     <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' == 'Windows_NT'">
-        <Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\HttpServer.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
     </Target>
 
 </Project>

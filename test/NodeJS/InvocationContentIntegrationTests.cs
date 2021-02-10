@@ -17,21 +17,17 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleSource = "dummyModuleSource";
             var dummyInvocationRequest = new InvocationRequest(dummyModuleSourceType, dummyModuleSource);
             var dummyJsonService = new JsonService();
-            using (ExposedInvocationContent testSubject = CreateInvocationContent(dummyJsonService, dummyInvocationRequest))
-            {
-                var resultMemoryStream = new MemoryStream();
+            using ExposedInvocationContent testSubject = CreateInvocationContent(dummyJsonService, dummyInvocationRequest);
+            var resultMemoryStream = new MemoryStream();
 
-                // Act
-                await testSubject.ExposedSerializeToStreamAsync(resultMemoryStream, null).ConfigureAwait(false);
+            // Act
+            await testSubject.ExposedSerializeToStreamAsync(resultMemoryStream, null).ConfigureAwait(false);
 
-                // Assert
-                resultMemoryStream.Position = 0;
-                using (var resultReader = new StreamReader(resultMemoryStream))
-                {
-                    string result = resultReader.ReadToEnd();
-                    Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType},\"moduleSource\":\"{dummyModuleSource}\"}}", result);
-                }
-            }
+            // Assert
+            resultMemoryStream.Position = 0;
+            using var resultReader = new StreamReader(resultMemoryStream);
+            string result = resultReader.ReadToEnd();
+            Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType},\"moduleSource\":\"{dummyModuleSource}\"}}", result);
         }
 
         public static IEnumerable<object[]> SerializeToStreamAsync_SerializesNonModuleSourceTypeStreamInvocationRequestsAsync_Data()
@@ -53,21 +49,17 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStreamSource = new MemoryStream(Encoding.UTF8.GetBytes(dummyModuleSource));
             var dummyInvocationRequest = new InvocationRequest(dummyModuleSourceType, moduleStreamSource: dummyModuleStreamSource);
             var dummyJsonService = new JsonService();
-            using (ExposedInvocationContent testSubject = CreateInvocationContent(dummyJsonService, dummyInvocationRequest))
-            {
-                var resultMemoryStream = new MemoryStream();
+            using ExposedInvocationContent testSubject = CreateInvocationContent(dummyJsonService, dummyInvocationRequest);
+            var resultMemoryStream = new MemoryStream();
 
-                // Act
-                await testSubject.ExposedSerializeToStreamAsync(resultMemoryStream, null).ConfigureAwait(false);
+            // Act
+            await testSubject.ExposedSerializeToStreamAsync(resultMemoryStream, null).ConfigureAwait(false);
 
-                // Assert
-                resultMemoryStream.Position = 0;
-                using (var resultReader = new StreamReader(resultMemoryStream))
-                {
-                    string result = resultReader.ReadToEnd();
-                    Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent.BOUNDARY_BYTES)}{dummyModuleSource}", result);
-                }
-            }
+            // Assert
+            resultMemoryStream.Position = 0;
+            using var resultReader = new StreamReader(resultMemoryStream);
+            string result = resultReader.ReadToEnd();
+            Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent.BOUNDARY_BYTES)}{dummyModuleSource}", result);
         }
 
         [Theory]
@@ -75,11 +67,9 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_SetsContentTypeDependingOnModuleSourceType(InvocationRequest dummyInvocationRequest, string expectedMediaType)
         {
             // Act
-            using (var result = new InvocationContent(null, dummyInvocationRequest))
-            {
-                // Assert
-                Assert.Equal(expectedMediaType, result.Headers.ContentType?.MediaType);
-            }
+            using var result = new InvocationContent(null, dummyInvocationRequest);
+            // Assert
+            Assert.Equal(expectedMediaType, result.Headers.ContentType?.MediaType);
         }
 
         public static IEnumerable<object[]> Constructor_SetsContentTypeDependingOnModuleSourceType_Data()

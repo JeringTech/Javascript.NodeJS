@@ -15,7 +15,7 @@ namespace Jering.Javascript.NodeJS.Performance
         private LockFreeMethod _lockFree;
         private LockMethod _lock;
 
-        private IEnumerable<int> _source = Enumerable.Range(0, 2000);
+        private readonly IEnumerable<int> _source = Enumerable.Range(0, 2000);
 
         [GlobalSetup]
         public void Setup()

@@ -3,7 +3,15 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.4...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.0...HEAD)
+
+## [6.0.0-beta.0](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.4...6.0.0-beta.0) - Feb 10, 2021
+### Additions
+- Added NetCoreApp3.0 as a target.
+- Library uses HTTP/2 to communicate with Node.js when using NetCoreApp3.0 binaries.
+### Changes
+- **Breaking**: Simplified the surface area of `IHttpClientService`. Users can use DI to register a custom implementation of this service
+to customize their `HttpClient`.
 
 ## [5.4.4](https://github.com/JeringTech/Javascript.NodeJS/compare/5.4.3...5.4.4) - Jan 18, 2021
 ### Fixes

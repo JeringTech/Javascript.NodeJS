@@ -31,51 +31,42 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_ThrowsArgumentExceptionIfProcessHasNotBeenStarted()
         {
             // Arrange
-            using (var dummyProcess = new Process())
-            {
-                // Act and assert
-                ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
-                Assert.IsType<InvalidOperationException>(result.InnerException);
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
-            }
+            using var dummyProcess = new Process();
+            // Act and assert
+            ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
+            Assert.IsType<InvalidOperationException>(result.InnerException);
+            Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed,
+                result.Message);
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentExceptionIfProcessHasExited()
         {
             // Arrange
-            using (Process dummyProcess = CreateProcess())
-            {
-                dummyProcess.Kill();
-                dummyProcess.WaitForExit();
+            using Process dummyProcess = CreateProcess();
+            dummyProcess.Kill();
+            dummyProcess.WaitForExit();
 
-                // Act and assert
-                ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasExited + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
-            }
+            // Act and assert
+            ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
+            Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasExited,
+                result.Message);
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentExceptionIfProcessHasBeenDisposed()
         {
             // Arrange
-            using (Process dummyProcess = CreateProcess())
-            {
-                dummyProcess.Kill();
-                dummyProcess.WaitForExit();
-                dummyProcess.Dispose();
+            using Process dummyProcess = CreateProcess();
+            dummyProcess.Kill();
+            dummyProcess.WaitForExit();
+            dummyProcess.Dispose();
 
-                // Act and assert
-                ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
-                Assert.IsType<InvalidOperationException>(result.InnerException);
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
-            }
+            // Act and assert
+            ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
+            Assert.IsType<InvalidOperationException>(result.InnerException);
+            Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed,
+                result.Message);
         }
 
         // Indirectly tests InternalOutputDataReceivedHandler
@@ -107,7 +98,8 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.AddOutputDataReceivedHandler(mockTestSubject.Object.InternalOutputDataReceivedHandler));
-            MessageReceivedEventHandler dummyHandler = (object _, string __) => { };
+
+            static void dummyHandler(object _, string __) { }
 
             // Act
             mockTestSubject.Object.AddOutputReceivedHandler(dummyHandler);
@@ -146,7 +138,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.AddErrorDataReceivedHandler(mockTestSubject.Object.InternalErrorDataReceivedHandler));
-            MessageReceivedEventHandler dummyHandler = (object _, string __) => { };
+            static void dummyHandler(object _, string __) { }
 
             // Act
             mockTestSubject.Object.AddErrorReceivedHandler(dummyHandler);
@@ -193,15 +185,13 @@ namespace Jering.Javascript.NodeJS.Tests
         public void ExitStatus_ReturnsExitStatusDisposedIfProcessHasBeenDisposed()
         {
             // Arrange
-            using (NodeJSProcess testSubject = CreateNodeJSProcess())
-            {
-                // Act
-                testSubject.Dispose();
-                string result = testSubject.ExitStatus;
+            using NodeJSProcess testSubject = CreateNodeJSProcess();
+            // Act
+            testSubject.Dispose();
+            string result = testSubject.ExitStatus;
 
-                // Assert
-                Assert.Equal(NodeJSProcess.EXIT_STATUS_DISPOSED, result);
-            }
+            // Assert
+            Assert.Equal(NodeJSProcess.EXIT_STATUS_DISPOSED, result);
         }
 
         [Fact]
@@ -249,7 +239,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             var sb = new StringBuilder();
             string capturedMessage = "__NOTCALLED__";
-            mockTestSubject.Object.DataReceivedHandler(sb, (object sender, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
+            mockTestSubject.Object.DataReceivedHandler(sb, (object _, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
 
             // Assert
             string dummyOutMessage = null;
@@ -268,7 +258,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var sb = new StringBuilder();
             sb.Append("test message");
             string capturedMessage = null;
-            mockTestSubject.Object.DataReceivedHandler(sb, (object sender, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
+            mockTestSubject.Object.DataReceivedHandler(sb, (object _, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
 
             // Assert
             string dummyOutMessage = null;
@@ -289,7 +279,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Setup(t => t.TryCreateMessage(dummyStringBuilder, dummyData, out dummyMessage)).Returns(true);
             object resultSender = null;
             string resultMessage = null;
-            MessageReceivedEventHandler dummyMessageReceivedEventHandler = (object sender, string message) => { resultSender = sender; resultMessage = message; };
+            void dummyMessageReceivedEventHandler(object sender, string message) { resultSender = sender; resultMessage = message; }
 
             // Act
             mockTestSubject.Object.DataReceivedHandler(dummyStringBuilder, dummyMessageReceivedEventHandler, dummySender, CreateDataReceivedEventArgs(dummyData));

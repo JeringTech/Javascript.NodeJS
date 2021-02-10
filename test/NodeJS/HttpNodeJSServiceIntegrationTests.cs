@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -962,31 +960,6 @@ module.exports = (callback) => {
         }
 
         [Fact]
-        public async void AllInvokeMethods_HandleHttpClientErrorsSuchAsMalformedRequests()
-        {
-            // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync("module.exports = callback => callback();").ConfigureAwait(false); // Starts the Node.js process
-            Uri dummyEndpoint = testSubject._endpoint;
-            var dummyJsonService = new JsonService();
-
-            // Act
-            using (var dummyHttpClient = new HttpClient())
-            // Send a request with an invalid HTTP method. NodeJS drops the connection halfway through and fires the clientError event - https://nodejs.org/api/http.html#http_event_clienterror
-            using (var dummyHttpRequestMessage = new HttpRequestMessage(new HttpMethod("INVALID"), dummyEndpoint))
-            using (HttpResponseMessage dummyHttpResponseMessage = await dummyHttpClient.SendAsync(dummyHttpRequestMessage).ConfigureAwait(false))
-            using (Stream dummyStream = await dummyHttpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
-            {
-                InvocationError result = await dummyJsonService.DeserializeAsync<InvocationError>(dummyStream).ConfigureAwait(false);
-
-                // Assert
-                Assert.Equal(HttpStatusCode.InternalServerError, dummyHttpResponseMessage.StatusCode);
-                Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
-                Assert.False(string.IsNullOrWhiteSpace(result.ErrorStack));
-            }
-        }
-
-        [Fact]
         public async void AllInvokeMethodsThatReturnAValue_HandleStreamReturnType()
         {
             // Arrange
@@ -1002,13 +975,11 @@ module.exports = (callback) => {{
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            using (Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false))
-            using (var streamReader = new StreamReader(resultStream))
-            {
-                // Assert
-                string result = streamReader.ReadToEnd();
-                Assert.Equal(dummyData, result);
-            }
+            using Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false);
+            using var streamReader = new StreamReader(resultStream);
+            // Assert
+            string result = streamReader.ReadToEnd();
+            Assert.Equal(dummyData, result);
         }
 
         // FileWatching integration tests aren't for specific HttpNodeJSService methods, rather they test how HttpNodeJSService reacts to 
@@ -1120,7 +1091,7 @@ module.exports = (callback) => {{
             string projectPath = default,
             ServiceCollection services = default)
         {
-            services = services ?? new ServiceCollection();
+            services ??= new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
             if (projectPath != null)
             {
@@ -1153,10 +1124,8 @@ module.exports = (callback) => {{
 
         private MemoryStream CreateMemoryStream(string value)
         {
-#pragma warning disable IDE0067
             var memoryStream = new MemoryStream();
             var streamWriter = new StreamWriter(memoryStream);
-#pragma warning disable IDE0067
             streamWriter.Write(value);
             streamWriter.Flush();
             memoryStream.Position = 0;
