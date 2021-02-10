@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -233,7 +234,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             string resultLog = resultStringBuilder.ToString();
-            Assert.Equal(dummyNumProcesses, Regex.Matches(resultLog, nameof(IOException)).Count); // IOExceptions thrown when initial processes are killed
+            Assert.Equal(dummyNumProcesses, Regex.Matches(resultLog, nameof(HttpRequestException)).Count); // HttpRequestException thrown when initial processes are killed
             foreach (int newProcessID1 in newProcessID1s)
             {
                 Assert.Contains(newProcessID1, newProcessID2s); // Long running invocations should complete in new processes

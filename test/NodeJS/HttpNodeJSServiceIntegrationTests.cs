@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -959,31 +957,6 @@ module.exports = (callback) => {
                         new object[] { "{}", "{}" },
                         new object[] { "'a\\n\\nb'", "a\n\nb" }
             };
-        }
-
-        [Fact]
-        public async void AllInvokeMethods_HandleHttpClientErrorsSuchAsMalformedRequests()
-        {
-            // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync("module.exports = callback => callback();").ConfigureAwait(false); // Starts the Node.js process
-            Uri dummyEndpoint = testSubject._endpoint;
-            var dummyJsonService = new JsonService();
-
-            // Act
-            using (var dummyHttpClient = new HttpClient())
-            // Send a request with an invalid HTTP method. NodeJS drops the connection halfway through and fires the clientError event - https://nodejs.org/api/http.html#http_event_clienterror
-            using (var dummyHttpRequestMessage = new HttpRequestMessage(new HttpMethod("INVALID"), dummyEndpoint))
-            using (HttpResponseMessage dummyHttpResponseMessage = await dummyHttpClient.SendAsync(dummyHttpRequestMessage).ConfigureAwait(false))
-            using (Stream dummyStream = await dummyHttpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
-            {
-                InvocationError result = await dummyJsonService.DeserializeAsync<InvocationError>(dummyStream).ConfigureAwait(false);
-
-                // Assert
-                Assert.Equal(HttpStatusCode.InternalServerError, dummyHttpResponseMessage.StatusCode);
-                Assert.False(string.IsNullOrWhiteSpace(result.ErrorMessage));
-                Assert.False(string.IsNullOrWhiteSpace(result.ErrorStack));
-            }
         }
 
         [Fact]

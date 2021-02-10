@@ -36,9 +36,8 @@ namespace Jering.Javascript.NodeJS.Tests
                 // Act and assert
                 ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
                 Assert.IsType<InvalidOperationException>(result.InnerException);
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
+                Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed,
+                    result.Message);
             }
         }
 
@@ -53,9 +52,8 @@ namespace Jering.Javascript.NodeJS.Tests
 
                 // Act and assert
                 ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasExited + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
+                Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasExited,
+                    result.Message);
             }
         }
 
@@ -72,9 +70,8 @@ namespace Jering.Javascript.NodeJS.Tests
                 // Act and assert
                 ArgumentException result = Assert.Throws<ArgumentException>(() => new NodeJSProcess(dummyProcess));
                 Assert.IsType<InvalidOperationException>(result.InnerException);
-                Assert.Equal(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed + "\nParameter name: process",
-                    result.Message,
-                    ignoreLineEndingDifferences: true);
+                Assert.StartsWith(Strings.ArgumentException_NodeJSProcess_ProcessHasNotBeenStartedOrHasBeenDisposed,
+                    result.Message);
             }
         }
 

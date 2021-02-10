@@ -1,5 +1,4 @@
-﻿using Jering.IocServices.System.Net.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
