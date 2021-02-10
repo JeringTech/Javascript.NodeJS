@@ -221,13 +221,11 @@ namespace Jering.Javascript.NodeJS
                 throw new ArgumentNullException(nameof(moduleFactory));
             }
 
-            using (Stream moduleStream = moduleFactory())
-            {
-                // If module doesn't exist in cache, create module stream and send it to the NodeJS process
-                var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, cacheIdentifier, exportName, args, moduleStream);
+            using Stream moduleStream = moduleFactory();
+            // If module doesn't exist in cache, create module stream and send it to the NodeJS process
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, cacheIdentifier, exportName, args, moduleStream);
 
-                return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
-            }
+            return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />

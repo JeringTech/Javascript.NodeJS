@@ -10,7 +10,8 @@
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
         <AssemblyOriginatorKeyFile>../../keypair.snk</AssemblyOriginatorKeyFile>
-        <SignAssembly>true</SignAssembly>
+		<LangVersion>8.0</LangVersion>
+		<SignAssembly>true</SignAssembly>
         <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     </PropertyGroup>
 

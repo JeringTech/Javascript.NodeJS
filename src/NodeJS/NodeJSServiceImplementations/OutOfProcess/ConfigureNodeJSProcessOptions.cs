@@ -50,25 +50,23 @@ namespace Jering.Javascript.NodeJS
             }
 
             // Create a scope to avoid leaking unintended singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
-            using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IServiceProvider serviceProvider = scope.ServiceProvider;
+
+            IHostingEnvironment hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
+            if (hostingEnvironment == null)
             {
-                IServiceProvider serviceProvider = scope.ServiceProvider;
+                return;
+            }
 
-                IHostingEnvironment hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
-                if (hostingEnvironment == null)
-                {
-                    return;
-                }
+            if (!projectPathSpecified)
+            {
+                options.ProjectPath = hostingEnvironment.ContentRootPath;
+            }
 
-                if (!projectPathSpecified)
-                {
-                    options.ProjectPath = hostingEnvironment.ContentRootPath;
-                }
-
-                if (!nodeEnvSpecified)
-                {
-                    options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
-                }
+            if (!nodeEnvSpecified)
+            {
+                options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
             }
         }
     }

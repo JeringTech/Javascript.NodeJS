@@ -12,11 +12,9 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public string ReadAsString(Assembly embeddedResourceAssembly, string name)
         {
-            using (Stream stream = embeddedResourceAssembly.GetManifestResourceStream(name))
-            using (var streamReader = new StreamReader(stream))
-            {
-                return streamReader.ReadToEnd();
-            }
+            using Stream stream = embeddedResourceAssembly.GetManifestResourceStream(name);
+            using var streamReader = new StreamReader(stream);
+            return streamReader.ReadToEnd();
         }
 
         /// <inheritdoc />

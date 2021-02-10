@@ -28,7 +28,7 @@ namespace Jering.Javascript.NodeJS
                         _serviceProvider?.Dispose();
 
                         // Create new service provider
-                        _services = _services ?? new ServiceCollection().AddNodeJS();
+                        _services ??= new ServiceCollection().AddNodeJS();
                         _serviceProvider = _services.BuildServiceProvider();
                         _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
 

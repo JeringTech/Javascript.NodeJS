@@ -246,7 +246,7 @@ namespace Jering.Javascript.NodeJS.Tests
         /// </summary>
         private HttpNodeJSPoolService CreateHttpNodeJSPoolService(int numProcesses, ServiceCollection services = default, StringBuilder loggerStringBuilder = default)
         {
-            services = services ?? new ServiceCollection();
+            services ??= new ServiceCollection();
             services.AddNodeJS();
             services.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {

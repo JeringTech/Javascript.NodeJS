@@ -975,13 +975,11 @@ module.exports = (callback) => {{
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            using (Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false))
-            using (var streamReader = new StreamReader(resultStream))
-            {
-                // Assert
-                string result = streamReader.ReadToEnd();
-                Assert.Equal(dummyData, result);
-            }
+            using Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false);
+            using var streamReader = new StreamReader(resultStream);
+            // Assert
+            string result = streamReader.ReadToEnd();
+            Assert.Equal(dummyData, result);
         }
 
         // FileWatching integration tests aren't for specific HttpNodeJSService methods, rather they test how HttpNodeJSService reacts to 
@@ -1093,7 +1091,7 @@ module.exports = (callback) => {{
             string projectPath = default,
             ServiceCollection services = default)
         {
-            services = services ?? new ServiceCollection();
+            services ??= new ServiceCollection();
             services.AddNodeJS(); // Default INodeService is HttpNodeService
             if (projectPath != null)
             {
@@ -1126,10 +1124,8 @@ module.exports = (callback) => {{
 
         private MemoryStream CreateMemoryStream(string value)
         {
-#pragma warning disable IDE0067
             var memoryStream = new MemoryStream();
             var streamWriter = new StreamWriter(memoryStream);
-#pragma warning disable IDE0067
             streamWriter.Write(value);
             streamWriter.Flush();
             memoryStream.Position = 0;

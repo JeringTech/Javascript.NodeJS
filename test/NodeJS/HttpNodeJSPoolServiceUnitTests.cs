@@ -33,9 +33,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockHttpNodeJSService.
                 Setup(t => t.InvokeFromFileAsync<int>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken)).
                 ReturnsAsync(dummyResult);
-#pragma warning disable IDE0067
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(new[] { mockHttpNodeJSService.Object });
-#pragma warning disable IDE0067
 
             // Act
             int result = await testSubject.InvokeFromFileAsync<int>(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -56,9 +54,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
                 Setup(t => t.InvokeFromFileAsync(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken));
-#pragma warning disable IDE0067
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(new[] { mockHttpNodeJSService.Object });
-#pragma warning disable IDE0067
 
             // Act
             await testSubject.InvokeFromFileAsync(dummyModulePath, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -258,9 +254,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockHttpNodeJSService.
                 Setup(t => t.TryInvokeFromCacheAsync<int>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken)).
                 ReturnsAsync((true, dummyResult));
-#pragma warning disable IDE0067
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(new[] { mockHttpNodeJSService.Object });
-#pragma warning disable IDE0067
 
             // Act
             (bool success, int result) = await testSubject.TryInvokeFromCacheAsync<int>(dummyModuleCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken).ConfigureAwait(false);
@@ -303,9 +297,8 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 dummyHttpNodeJSServices[i] = CreateHttpNodeJSService();
             }
-#pragma warning disable IDE0067
+
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(dummyHttpNodeJSServices);
-#pragma warning disable IDE0067
 
             // Act
             var results = new ConcurrentBag<HttpNodeJSService>();
