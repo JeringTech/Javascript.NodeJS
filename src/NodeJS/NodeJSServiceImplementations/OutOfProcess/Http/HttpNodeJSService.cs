@@ -1,4 +1,3 @@
-using Jering.IocServices.System.Net.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -106,6 +105,9 @@ namespace Jering.Javascript.NodeJS
             using (HttpContent httpContent = _httpContentFactory.Create(invocationRequest))
             using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint))
             {
+#if NETCOREAPP3_0
+                httpRequestMessage.Version = HttpVersion.Version20;
+#endif
                 httpRequestMessage.Content = httpContent;
 
                 // Some notes on disposal:
