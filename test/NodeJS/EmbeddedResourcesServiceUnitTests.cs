@@ -5,8 +5,8 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class EmbeddedResourcesServiceUnitTests
     {
-        private const string _dummyEmbeddedResourceName = "dummyEmbed"; // Name defined in .csproj (LogicalName attribute).
-        private const string _dummyEmbeddedResourceContent = "This file is embedded in the assembly and used to test the EmbeddedResourcesService.";
+        private const string DUMMY_EMBEDDED_RESOURCE_NAME = "dummyEmbed"; // Name defined in .csproj (LogicalName attribute).
+        private const string DUMMY_EMBEDDED_RESOURCE_CONTENT = "This file is embedded in the assembly and used to test the EmbeddedResourcesService.";
 
         [Fact]
         public void ReadAsString_AssemblyOverload_ReadsEmbeddedResourceAsString()
@@ -15,10 +15,10 @@ namespace Jering.Javascript.NodeJS.Tests
             var testSubject = new EmbeddedResourcesService();
 
             // Act
-            string result = testSubject.ReadAsString(typeof(EmbeddedResourcesServiceUnitTests).Assembly, _dummyEmbeddedResourceName);
+            string result = testSubject.ReadAsString(typeof(EmbeddedResourcesServiceUnitTests).Assembly, DUMMY_EMBEDDED_RESOURCE_NAME);
 
             // Assert
-            Assert.Equal(_dummyEmbeddedResourceContent, result);
+            Assert.Equal(DUMMY_EMBEDDED_RESOURCE_CONTENT, result);
         }
 
         [Fact]
@@ -28,10 +28,10 @@ namespace Jering.Javascript.NodeJS.Tests
             var testSubject = new EmbeddedResourcesService();
 
             // Act
-            string result = testSubject.ReadAsString(typeof(EmbeddedResourcesServiceUnitTests), _dummyEmbeddedResourceName);
+            string result = testSubject.ReadAsString(typeof(EmbeddedResourcesServiceUnitTests), DUMMY_EMBEDDED_RESOURCE_NAME);
 
             // Assert
-            Assert.Equal(_dummyEmbeddedResourceContent, result);
+            Assert.Equal(DUMMY_EMBEDDED_RESOURCE_CONTENT, result);
         }
 
         [Fact]
@@ -41,11 +41,11 @@ namespace Jering.Javascript.NodeJS.Tests
             var testSubject = new EmbeddedResourcesService();
 
             // Act
-            Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests).Assembly, _dummyEmbeddedResourceName);
+            Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests).Assembly, DUMMY_EMBEDDED_RESOURCE_NAME);
 
             // Assert
             using var streamReader = new StreamReader(result);
-            Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
+            Assert.Equal(DUMMY_EMBEDDED_RESOURCE_CONTENT, streamReader.ReadToEnd());
         }
 
         [Fact]
@@ -55,11 +55,11 @@ namespace Jering.Javascript.NodeJS.Tests
             var testSubject = new EmbeddedResourcesService();
 
             // Act
-            Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests), _dummyEmbeddedResourceName);
+            Stream result = testSubject.ReadAsStream(typeof(EmbeddedResourcesServiceUnitTests), DUMMY_EMBEDDED_RESOURCE_NAME);
 
             // Assert
             using var streamReader = new StreamReader(result);
-            Assert.Equal(_dummyEmbeddedResourceContent, streamReader.ReadToEnd());
+            Assert.Equal(DUMMY_EMBEDDED_RESOURCE_CONTENT, streamReader.ReadToEnd());
         }
     }
 }

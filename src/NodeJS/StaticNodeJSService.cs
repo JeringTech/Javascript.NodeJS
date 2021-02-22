@@ -14,13 +14,13 @@ namespace Jering.Javascript.NodeJS
         private static volatile ServiceProvider _serviceProvider;
         private static volatile IServiceCollection _services;
         private static volatile INodeJSService _nodeJSService;
-        private static readonly object _createLock = new object();
+        private static readonly object CREATE_LOCK = new object();
 
         private static INodeJSService GetOrCreateNodeJSService()
         {
             if (_nodeJSService == null || _services != null)
             {
-                lock (_createLock)
+                lock (CREATE_LOCK)
                 {
                     if (_nodeJSService == null || _services != null)
                     {
