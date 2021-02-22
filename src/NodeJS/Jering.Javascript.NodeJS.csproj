@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp3.0;net461</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard2.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netcoreapp3.1;net461;net5.0</TargetFrameworks>
+        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard2.0;net5.0;netcoreapp3.1</TargetFrameworks>
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
@@ -21,8 +21,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-		<HttpServerSourceName Condition="'$(TargetFramework)' == 'netcoreapp3.0'">Http20Server.js</HttpServerSourceName>
-		<HttpServerSourceName Condition="'$(TargetFramework)' != 'netcoreapp3.0'">Http11Server.js</HttpServerSourceName>
+		<HttpServerSourceName Condition="'$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'net5.0'">Http20Server.js</HttpServerSourceName>
+		<HttpServerSourceName Condition="'$(TargetFramework)' != 'netcoreapp3.1' And '$(TargetFramework)' != 'net5.0'">Http11Server.js</HttpServerSourceName>
 		<HttpServerBundleName>HttpServer.js</HttpServerBundleName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
@@ -80,7 +80,6 @@
         </EmbeddedResource>
     </ItemGroup>
 
-    <!-- TODO one target per bundle or one target for all bundles? will have to generalize webpack.config if one target per bundle. -->
     <!-- 
         Notes on BeforeTargets: DispatchToInnerBuilds only runs if we're multi-targeting. PreBuildEvent runs before builds for each framework. 
         If BeforeTargets contains only DispatchToInnerBuilds and we specify a framework when we call dotnet build, JavascriptBuild does not run.
@@ -88,12 +87,7 @@
         So we must specify both. This way if we are multi-targeting, JavascriptBuild runs once, before DispatchToInnerBuilds after which inputs == outputs. 
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
-    <Target Name="JavascriptBuildNonWindows" BeforeTargets="PreBuildEvent" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' != 'Windows_NT'">
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
-    </Target>
-
-    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)" Condition="'$(OS)' == 'Windows_NT'">
+    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
 		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
 		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
     </Target>

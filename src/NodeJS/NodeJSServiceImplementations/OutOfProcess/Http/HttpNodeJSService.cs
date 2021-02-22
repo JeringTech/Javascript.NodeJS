@@ -105,8 +105,11 @@ namespace Jering.Javascript.NodeJS
             using HttpContent httpContent = _httpContentFactory.Create(invocationRequest);
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
             {
-#if NETCOREAPP3_0
+#if NETCOREAPP3_1 || NET5_0
                 Version = HttpVersion.Version20,
+#endif
+#if NET5_0
+                VersionPolicy = HttpVersionPolicy.RequestVersionExact,
 #endif
                 Content = httpContent
             };
