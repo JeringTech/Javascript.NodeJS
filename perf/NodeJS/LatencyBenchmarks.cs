@@ -14,7 +14,7 @@ namespace Jering.Javascript.NodeJS.Performance
         private const string DUMMY_WARMUP_MODULE = "module.exports = (callback) => callback()";
         private const string DUMMY_LATENCY_MODULE_FILE = "dummyLatencyModule.js";
         private const string DUMMY_MODULE_IDENTIFIER = "dummyLatencyModuleIdentifier";
-        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../../../../../Javascript"); // BenchmarkDotNet creates a project nested deep in bin
+        private static readonly string PROJECT_PATH = Path.Combine(Directory.GetCurrentDirectory(), "../../../../../../../Javascript"); // BenchmarkDotNet creates a project nested deep in bin
 
         private ServiceProvider _serviceProvider;
         private int _counter;
@@ -27,7 +27,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = _projectPath);
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = PROJECT_PATH);
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
             _counter = 0;
@@ -50,7 +50,7 @@ namespace Jering.Javascript.NodeJS.Performance
         {
             var services = new ServiceCollection();
             services.AddNodeJS();
-            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = _projectPath);
+            services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = PROJECT_PATH);
             services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.EnableFileWatching = true);
             _serviceProvider = services.BuildServiceProvider();
             _nodeJSService = _serviceProvider.GetRequiredService<INodeJSService>();
@@ -87,7 +87,7 @@ namespace Jering.Javascript.NodeJS.Performance
 
         private string DummyModuleFactory()
         {
-            return File.ReadAllText(Path.Combine(_projectPath, DUMMY_LATENCY_MODULE_FILE));
+            return File.ReadAllText(Path.Combine(PROJECT_PATH, DUMMY_LATENCY_MODULE_FILE));
         }
 
         [Obsolete]
@@ -97,7 +97,7 @@ namespace Jering.Javascript.NodeJS.Performance
             var services = new ServiceCollection();
             services.AddNodeServices(options =>
             {
-                options.ProjectPath = _projectPath;
+                options.ProjectPath = PROJECT_PATH;
                 options.WatchFileExtensions = null;
             });
             _serviceProvider = services.BuildServiceProvider();

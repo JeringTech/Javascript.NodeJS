@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net5.0;netcoreapp3.1;net461</TargetFrameworks>
+        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net5.0;netcoreapp3.1</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
@@ -47,11 +47,7 @@
         <EmbeddedResource Include=".\dummyEmbed.txt" LogicalName="dummyEmbed" />
     </ItemGroup>
 
-    <Target Name="JavascriptBuildNonWindows" BeforeTargets="PreBuildEvent" Condition="'$(OS)' != 'Windows_NT'">
-        <Yarn WorkingDirectory=".\Javascript" Command="run build" />
-    </Target>
-
-    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Condition="'$(OS)' == 'Windows_NT'">
+    <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds">
         <Yarn WorkingDirectory=".\Javascript" Command="run build" />
     </Target>
 

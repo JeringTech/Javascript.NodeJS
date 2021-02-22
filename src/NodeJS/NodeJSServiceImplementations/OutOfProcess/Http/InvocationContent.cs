@@ -18,7 +18,7 @@ namespace Jering.Javascript.NodeJS
         // Arbitrary boundary
         internal static readonly byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
 
-        private static readonly MediaTypeHeaderValue _multipartContentType = new MediaTypeHeaderValue("multipart/mixed");
+        private static readonly MediaTypeHeaderValue MULTIPART_CONTENT_TYPE = new MediaTypeHeaderValue("multipart/mixed");
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;
 
@@ -34,7 +34,7 @@ namespace Jering.Javascript.NodeJS
 
             if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
-                Headers.ContentType = _multipartContentType;
+                Headers.ContentType = MULTIPART_CONTENT_TYPE;
             }
         }
 

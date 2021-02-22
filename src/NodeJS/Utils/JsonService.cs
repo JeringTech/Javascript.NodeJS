@@ -11,7 +11,7 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class JsonService : IJsonService
     {
-        private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new JsonSerializerOptions
         {
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 
@@ -24,13 +24,13 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default)
         {
-            return JsonSerializer.DeserializeAsync<T>(stream, _jsonSerializerOptions, cancellationToken);
+            return JsonSerializer.DeserializeAsync<T>(stream, JSON_SERIALIZER_OPTIONS, cancellationToken);
         }
 
         /// <inheritdoc />
         public Task SerializeAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
-            return JsonSerializer.SerializeAsync(stream, value, _jsonSerializerOptions, cancellationToken);
+            return JsonSerializer.SerializeAsync(stream, value, JSON_SERIALIZER_OPTIONS, cancellationToken);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Jering.Javascript.NodeJS
 
         internal static IHttpClientService IHttpClientServiceFactory(IServiceProvider serviceProvider)
         {
-#if NETCOREAPP3_0
+#if NETCOREAPP3_1
             // If not called, framework forces HTTP/1.1 so long as origin isn't https
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 #endif
