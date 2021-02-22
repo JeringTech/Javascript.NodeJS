@@ -29,7 +29,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private const int TIMEOUT_MS = 60000;
 
         // File watching
-        private static readonly string TEMP_WATCH_DIRECTORY = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSPoolServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
+        private static readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSPoolServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
         private Uri _tempWatchDirectoryUri;
 
         private readonly ITestOutputHelper _testOutputHelper;
@@ -111,7 +111,7 @@ namespace Jering.Javascript.NodeJS.Tests
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
                 options.EnableFileWatching = true;
-                options.WatchPath = TEMP_WATCH_DIRECTORY;
+                options.WatchPath = _tempWatchDirectory;
                 // Graceful shutdown is true by default
             });
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(dummyNumProcesses, dummyServices);
@@ -182,7 +182,7 @@ namespace Jering.Javascript.NodeJS.Tests
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
                 options.EnableFileWatching = true;
-                options.WatchPath = TEMP_WATCH_DIRECTORY;
+                options.WatchPath = _tempWatchDirectory;
                 options.WatchGracefulShutdown = false;
             });
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(dummyNumProcesses, dummyServices, resultStringBuilder);
@@ -292,15 +292,15 @@ namespace Jering.Javascript.NodeJS.Tests
         private void RecreateWatchDirectory()
         {
             TryDeleteWatchDirectory();
-            Directory.CreateDirectory(TEMP_WATCH_DIRECTORY);
-            _tempWatchDirectoryUri = new Uri(TEMP_WATCH_DIRECTORY);
+            Directory.CreateDirectory(_tempWatchDirectory);
+            _tempWatchDirectoryUri = new Uri(_tempWatchDirectory);
         }
 
         private void TryDeleteWatchDirectory()
         {
             try
             {
-                Directory.Delete(TEMP_WATCH_DIRECTORY, true);
+                Directory.Delete(_tempWatchDirectory, true);
             }
             catch
             {

@@ -59,7 +59,7 @@ namespace Jering.Javascript.NodeJS.Tests
             resultMemoryStream.Position = 0;
             using var resultReader = new StreamReader(resultMemoryStream);
             string result = resultReader.ReadToEnd();
-            Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent.BOUNDARY_BYTES)}{dummyModuleSource}", result);
+            Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent._boundaryBytes)}{dummyModuleSource}", result);
         }
 
         [Theory]
