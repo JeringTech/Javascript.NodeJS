@@ -228,6 +228,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connected to NodeJS through HTTP. Endpoint: {0}..
+        /// </summary>
+        internal static string LogInformation_HttpEndpoint {
+            get {
+                return ResourceManager.GetString("LogInformation_HttpEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Killing NodeJS process: {0}..
         /// </summary>
         internal static string LogInformation_KillingNodeJSProcess {

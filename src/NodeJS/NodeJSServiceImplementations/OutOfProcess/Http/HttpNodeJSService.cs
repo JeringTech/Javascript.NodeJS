@@ -22,6 +22,7 @@ namespace Jering.Javascript.NodeJS
 
         private readonly IHttpContentFactory _httpContentFactory;
         private readonly IJsonService _jsonService;
+        private readonly ILogger<HttpNodeJSService> _logger;
         private readonly IHttpClientService _httpClientService;
 
         private bool _disposed;
@@ -41,7 +42,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="httpClientService"></param>
         /// <param name="jsonService"></param>
         /// <param name="nodeJSProcessFactory"></param>
-        /// <param name="loggerFactory"></param>
+        /// <param name="logger"></param>
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
@@ -51,9 +52,9 @@ namespace Jering.Javascript.NodeJS
             IHttpClientService httpClientService,
             IJsonService jsonService,
             INodeJSProcessFactory nodeJSProcessFactory,
-            ILoggerFactory loggerFactory) :
+            ILogger<HttpNodeJSService> logger) :
             base(nodeJSProcessFactory,
-                loggerFactory.CreateLogger(typeof(HttpNodeJSService)),
+                logger,
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 fileWatcherFactory,
@@ -64,39 +65,8 @@ namespace Jering.Javascript.NodeJS
         {
             _httpClientService = httpClientService;
             _jsonService = jsonService;
+            _logger = logger;
             _httpContentFactory = httpContentFactory;
-        }
-
-        // DO NOT DELETE - keep for backward compatibility.
-        /// <summary>
-        /// <para>Creates a <see cref="HttpNodeJSService"/>.</para> 
-        /// <para>If this constructor is used, file watching is disabled.</para>
-        /// </summary>
-        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
-        /// <param name="httpContentFactory"></param>
-        /// <param name="embeddedResourcesService"></param>
-        /// <param name="httpClientService"></param>
-        /// <param name="jsonService"></param>
-        /// <param name="nodeJSProcessFactory"></param>
-        /// <param name="loggerFactory"></param>
-        public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
-            IHttpContentFactory httpContentFactory,
-            IEmbeddedResourcesService embeddedResourcesService,
-            IHttpClientService httpClientService,
-            IJsonService jsonService,
-            INodeJSProcessFactory nodeJSProcessFactory,
-            ILoggerFactory loggerFactory) :
-            this(outOfProcessNodeJSServiceOptionsAccessor,
-                httpContentFactory,
-                embeddedResourcesService,
-                null,
-                null,
-                null,
-                httpClientService,
-                jsonService,
-                nodeJSProcessFactory,
-                loggerFactory)
-        {
         }
 
         /// <inheritdoc />
@@ -201,6 +171,7 @@ namespace Jering.Javascript.NodeJS
                 else if (currentChar == ']')
                 {
                     _endpoint = new Uri(stringBuilder.ToString());
+                    _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint, _endpoint));
                     return;
                 }
                 else
