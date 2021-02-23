@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Options;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,9 +20,16 @@ namespace Jering.Javascript.NodeJS
         /// Creates a <see cref="HttpClientService"/>.
         /// </summary>
         /// <param name="httpClient">The <see cref="HttpClient"/> to send HTTP requests with.</param>
-        public HttpClientService(HttpClient httpClient)
+        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
+        public HttpClientService(HttpClient httpClient,
+            IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor)
         {
             _httpClient = httpClient;
+
+            // Configure
+            OutOfProcessNodeJSServiceOptions outOfProcessNodeJSServiceOptions = outOfProcessNodeJSServiceOptionsAccessor.Value;
+            httpClient.Timeout = outOfProcessNodeJSServiceOptions.TimeoutMS == -1 ? System.Threading.Timeout.InfiniteTimeSpan :
+                TimeSpan.FromMilliseconds(outOfProcessNodeJSServiceOptions.TimeoutMS + 1000);
         }
 
         /// <inheritdoc />

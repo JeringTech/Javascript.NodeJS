@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.ObjectModel;
-using System.Net.Http;
 using System.Threading;
 
 namespace Jering.Javascript.NodeJS
@@ -22,10 +21,9 @@ namespace Jering.Javascript.NodeJS
             services.
                 AddLogging().
                 AddOptions();
-            services.AddHttpClient();
 
             // Services defined in this project
-            return services.
+            services.
                 AddSingleton<IConfigureOptions<NodeJSProcessOptions>, ConfigureNodeJSProcessOptions>().
                 AddSingleton<IHttpContentFactory, InvocationContentFactory>().
                 AddSingleton<IEmbeddedResourcesService, EmbeddedResourcesService>().
@@ -35,26 +33,16 @@ namespace Jering.Javascript.NodeJS
                 AddSingleton<IEnvironmentService, EnvironmentService>().
                 AddSingleton<IFileWatcherFactory, FileWatcherFactory>().
                 AddSingleton<IMonitorService, MonitorService>().
-                AddSingleton<ITaskService, TaskService>().
-                AddSingleton(IHttpClientServiceFactory);
-        }
-
-        internal static IHttpClientService IHttpClientServiceFactory(IServiceProvider serviceProvider)
-        {
+                AddSingleton<ITaskService, TaskService>();
 #if NETCOREAPP3_1
             // If not called, framework forces HTTP/1.1 so long as origin isn't https
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 #endif
+            services.
+                AddHttpClient<IHttpClientService, HttpClientService>().
+                SetHandlerLifetime(Timeout.InfiniteTimeSpan); // No DNS changes, handler lifetime can be infinite
 
-            // Create client
-            OutOfProcessNodeJSServiceOptions outOfProcessNodeJSServiceOptions = serviceProvider.GetRequiredService<IOptions<OutOfProcessNodeJSServiceOptions>>().Value;
-            IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            HttpClient httpClient = httpClientFactory.CreateClient();
-
-            // Configure
-            httpClient.Timeout = outOfProcessNodeJSServiceOptions.TimeoutMS == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(outOfProcessNodeJSServiceOptions.TimeoutMS + 1000);
-
-            return new HttpClientService(httpClient);
+            return services;
         }
 
         internal static INodeJSService INodeJSServiceFactory(IServiceProvider serviceProvider)
