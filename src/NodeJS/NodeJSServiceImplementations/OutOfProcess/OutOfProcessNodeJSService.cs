@@ -365,7 +365,7 @@ namespace Jering.Javascript.NodeJS
                 // Stopping _fileWatcher prevents its underlying FileSystemWatcher's buffer from overflowing. 
                 // 
                 // Note that we don't need to worry about file events filling up the buffer between entering this _connectingLock block 
-                // and the following line because FileChangedHandler returns immediately if we're connecting.
+                // and the following line because MoveToNewProcess returns immediately if we're connecting.
                 _fileWatcher?.Stop();
 
                 int numConnectionRetries = _numConnectionRetries;
@@ -514,7 +514,7 @@ namespace Jering.Javascript.NodeJS
 
         // FileSystemWatcher handles file events synchronously, storing pending events in a buffer - https://github.com/dotnet/runtime/blob/master/src/libraries/System.IO.FileSystem.Watcher/src/System/IO/FileSystemWatcher.Win32.cs.
         // We don't need to worry about this method being called simultaneously by multiple threads.
-        internal virtual void FileChangedHandler(string path)
+        internal virtual void MoveToNewProcess(bool reswapIfJustConnected)
         {
             bool acquiredConnectingLock = false;
             try
@@ -523,24 +523,22 @@ namespace Jering.Javascript.NodeJS
 
                 if (!acquiredConnectingLock)
                 {
-                    if (_nodeJSProcess?.Connected != true) // If we're connecting, do nothing.
+                    if (!reswapIfJustConnected || // Don't need to reswap again if we've just connected. We only need to reswap on just connected if a file changed and we need to reload it.
+                        _nodeJSProcess?.Connected != true) // If we're connecting, do nothing.
                     {
                         return;
                     }
 
                     // If we get here, _nodeJSProcess.SetConnected() has been called in ConnectIfNotConnected, but ConnectIfNotConnected hasn't exited _connectingLock.
                     // Once _nodeJSProcess.SetConnected() is called, invocations aren't blocked in ConnectIfNotConnected. This means the NodeJS process may have already
-                    // received invocations and loaded user modules, so we must create a new process again.
+                    // received invocations and loaded user modules.
+                    //
+                    // If we're moving to a new process because a file changed, we must create a new process again.
                     _monitorService.Enter(_connectingLock, ref acquiredConnectingLock);
                 }
 
                 // Immediately stop file watching to avoid FileSystemWatcher buffer overflows. Restarted in ConnectIfNotConnected.
                 _fileWatcher.Stop();
-
-                if (_infoLoggingEnabled)
-                {
-                    Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
-                }
 
                 SwapProcesses();
             }

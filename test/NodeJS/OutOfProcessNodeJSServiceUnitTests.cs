@@ -1227,7 +1227,25 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void FileChangedHandler_DoesNothingIfConnectingLockNotAquiredAndConnecting()
+        public void MoveToNewProcess_DoesNothingIfConnectingLockNotAquiredAndReswapIfJustConnectedIsFalse()
+        {
+            // Arrange
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            bool dummyAquiredConnectingLock = false;
+            mockMonitorService.Setup(m => m.TryEnter(It.IsAny<object>(), ref dummyAquiredConnectingLock));
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object);
+            mockTestSubject.CallBase = true;
+
+            // Act
+            mockTestSubject.Object.MoveToNewProcess(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockMonitorService.Verify(m => m.Enter(It.IsAny<object>(), ref dummyAquiredConnectingLock), Times.Never); // Verifies that we return immediately, nothing else called
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void MoveToNewProcess_DoesNothingIfConnectingLockNotAquiredAndConnecting()
         {
             // Arrange
             Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
@@ -1244,7 +1262,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(null);
+            mockTestSubject.Object.MoveToNewProcess(true);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -1252,10 +1270,9 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void FileChangedHandler_MovesToNewProcessIfConnectingLockAcquired()
+        public void MoveToNewProcess_MovesToNewProcessIfConnectingLockAcquired()
         {
             // Arrange
-            const string dummyPath = "dummyPath";
             bool dummyInitialAquiredConnectingLock = false;
             const bool dummyFinalAquiredConnectingLock = true;
             object dummyConnectingLock = null;
@@ -1280,29 +1297,24 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
                 Returns(mockFileWatcher.Object);
 
-            var loggerStringBuilder = new StringBuilder();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 fileWatcherFactory: mockFileWatcherFactory.Object,
                 monitorService: mockMonitorService.Object,
-                taskService: _mockRepository.Create<ITaskService>().Object,
-                loggerStringBuilder: loggerStringBuilder,
-                logLevel: LogLevel.Information);
+                taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.MoveToNewProcess());
+            mockTestSubject.Setup(t => t.SwapProcesses());
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(dummyPath);
+            mockTestSubject.Object.MoveToNewProcess(default); // reswapIfJustConnected unused
 
             // Assert
-            _mockRepository.VerifyAll();
-            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
+            _mockRepository.VerifyAll();          
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void FileChangedHandler_MovesToNewProcessIfConnectingLockNotAquiredButAlreadyConnected()
+        public void MoveToNewProcess_MovesToNewProcessIfConnectingLockNotAquiredButAlreadyConnectedAndReswapIfJustConnectedIsTrue()
         {
             // Arrange
-            const string dummyPath = "dummyPath";
             bool dummyInitialAquiredConnectingLock = false;
             const bool dummyFinalAquiredConnectingLock = true;
             object dummyConnectingLock = null;
@@ -1328,13 +1340,10 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
                 Returns(mockFileWatcher.Object);
 
-            var loggerStringBuilder = new StringBuilder();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 fileWatcherFactory: mockFileWatcherFactory.Object,
                 monitorService: mockMonitorService.Object,
-                taskService: _mockRepository.Create<ITaskService>().Object,
-                loggerStringBuilder: loggerStringBuilder,
-                logLevel: LogLevel.Information);
+                taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.SwapProcesses());
             mockTestSubject.
