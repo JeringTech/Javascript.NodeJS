@@ -1226,7 +1226,25 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(logResult, $"{nameof(LogLevel.Error)}: {dummyMessage}\n", ignoreLineEndingDifferences: true);
         }
 
-        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        [Fact]
+        public void FileChangedHandler_LogsChangedFileAndMovesToNewProcess()
+        {
+            // Arrange
+            const string dummyPath = "dummyPath";
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder, logLevel: LogLevel.Information);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.MoveToNewProcess(true));
+
+            // Act
+            mockTestSubject.Object.FileChangedHandler(dummyPath);
+
+            // Assert
+            mockTestSubject.Verify(t => t.MoveToNewProcess(true), times: Times.Once);
+            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
+        }
+
+        [Fact]
         public void MoveToNewProcess_DoesNothingIfConnectingLockNotAquiredAndReswapIfJustConnectedIsFalse()
         {
             // Arrange

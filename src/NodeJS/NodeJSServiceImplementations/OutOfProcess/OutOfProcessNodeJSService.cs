@@ -514,6 +514,16 @@ namespace Jering.Javascript.NodeJS
 
         // FileSystemWatcher handles file events synchronously, storing pending events in a buffer - https://github.com/dotnet/runtime/blob/master/src/libraries/System.IO.FileSystem.Watcher/src/System/IO/FileSystemWatcher.Win32.cs.
         // We don't need to worry about this method being called simultaneously by multiple threads.
+        internal virtual void FileChangedHandler(string path)
+        {
+            if (_infoLoggingEnabled)
+            {
+                Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
+            }
+
+            MoveToNewProcess(true);
+        }
+
         internal virtual void MoveToNewProcess(bool reswapIfJustConnected)
         {
             bool acquiredConnectingLock = false;
