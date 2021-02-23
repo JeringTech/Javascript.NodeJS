@@ -161,7 +161,7 @@
     <value>Before wait, thread ID: {0}.</value>
   </data>
   <data name="LogWarning_InvocationAttemptFailed" xml:space="preserve">
-    <value>An invocation attempt failed. Retries remaining: {0}.
+    <value>An invocation attempt failed. Retries using existing process remaining: {0}.
 Exception:
   {1}</value>
   </data>
@@ -190,5 +190,8 @@ Exception:
   </data>
   <data name="LogInformation_HttpEndpoint" xml:space="preserve">
     <value>Connected to NodeJS through HTTP. Endpoint: {0}.</value>
+  </data>
+  <data name="LogWarning_RetriesInExistingProcessExhausted" xml:space="preserve">
+    <value>Retries in existing process exhausted. Process retries remaining: {0}.</value>
   </data>
 </root>

@@ -86,7 +86,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         // When graceful shutdown is true, we kill initial processes only after their invocations complete.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsTrue()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsTrue()
         {
             // Arrange
             const int dummyNumProcesses = 5;
@@ -165,7 +165,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         // When graceful shutdown is false, we kill the initial process immediately. Invocation retry in the new process.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsFalse()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsFalse()
         {
             // Arrange
             const int dummyNumProcesses = 5;
@@ -183,7 +183,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 options.EnableFileWatching = true;
                 options.WatchPath = _tempWatchDirectory;
-                options.WatchGracefulShutdown = false;
+                options.GracefulProcessShutdown = false;
             });
             HttpNodeJSPoolService testSubject = CreateHttpNodeJSPoolService(dummyNumProcesses, dummyServices, resultStringBuilder);
 

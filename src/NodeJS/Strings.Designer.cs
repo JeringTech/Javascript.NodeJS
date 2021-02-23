@@ -257,13 +257,22 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An invocation attempt failed. Retries remaining: {0}.
+        ///   Looks up a localized string similar to An invocation attempt failed. Retries using existing process remaining: {0}.
         ///Exception:
         ///  {1}.
         /// </summary>
         internal static string LogWarning_InvocationAttemptFailed {
             get {
                 return ResourceManager.GetString("LogWarning_InvocationAttemptFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retries in existing process exhausted. Process retries remaining: {0}..
+        /// </summary>
+        internal static string LogWarning_RetriesInExistingProcessExhausted {
+            get {
+                return ResourceManager.GetString("LogWarning_RetriesInExistingProcessExhausted", resourceCulture);
             }
         }
     }

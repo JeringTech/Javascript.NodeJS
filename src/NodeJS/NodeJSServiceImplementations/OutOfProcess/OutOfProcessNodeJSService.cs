@@ -45,6 +45,7 @@ namespace Jering.Javascript.NodeJS
         private readonly object _connectingLock = new object();
         private readonly object _invokeTaskTrackingLock = new object();
         private readonly int _numRetries;
+        private readonly int _numProcessRetries;
         private readonly int _numConnectionRetries;
         private readonly int _timeoutMS;
         private readonly ConcurrentDictionary<Task, object> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
@@ -115,6 +116,7 @@ namespace Jering.Javascript.NodeJS
             _infoLoggingEnabled = Logger.IsEnabled(LogLevel.Information);
 
             _numRetries = _options.NumRetries;
+            _numProcessRetries = _options.NumProcessRetries;
             _numConnectionRetries = _options.NumConnectionRetries;
             _timeoutMS = _options.TimeoutMS;
         }
@@ -256,6 +258,7 @@ namespace Jering.Javascript.NodeJS
             }
 
             int numRetries = _numRetries;
+            int numProcessRetries = _numProcessRetries;
             while (true)
             {
                 CancellationTokenSource cancellationTokenSource = null;
@@ -283,7 +286,7 @@ namespace Jering.Javascript.NodeJS
                     // Invocation canceled, don't retry
                     throw;
                 }
-                catch (OperationCanceledException) when (numRetries == 0)
+                catch (OperationCanceledException) when (numRetries == 0 && numProcessRetries == 0)
                 {
                     // Invocation timed out and no more retries
                     throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
@@ -291,7 +294,7 @@ namespace Jering.Javascript.NodeJS
                         nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
                         nameof(OutOfProcessNodeJSServiceOptions)));
                 }
-                catch (Exception exception) when (numRetries != 0)
+                catch (Exception exception) when (numRetries != 0 || numProcessRetries != 0)
                 {
                     if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
                     {
@@ -316,7 +319,27 @@ namespace Jering.Javascript.NodeJS
                     cancellationTokenSource?.Dispose();
                 }
 
-                numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+                if (numRetries == 0)
+                {
+                    // If retries in the existing process have been exhausted but process retries remain,
+                    // move to new process and reset numRetries.
+                    if (numProcessRetries > 0)
+                    {
+                        if (_warningLoggingEnabled)
+                        {
+                            Logger.LogWarning(string.Format(Strings.LogWarning_RetriesInExistingProcessExhausted, numProcessRetries < 0 ? "infinity" : numProcessRetries.ToString()));
+                        }
+
+                        numProcessRetries = numProcessRetries > 0 ? numProcessRetries - 1 : numProcessRetries;
+                        numRetries = _numRetries - 1;
+
+                        MoveToNewProcess(false);
+                    }
+                }
+                else
+                {
+                    numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+                }
             }
         }
 
@@ -467,7 +490,7 @@ namespace Jering.Javascript.NodeJS
 
             _fileWatcher = _fileWatcherFactory.Create(_options.WatchPath, _options.WatchSubdirectories, _options.WatchFileNamePatterns, FileChangedHandler);
 
-            if (!_options.WatchGracefulShutdown)
+            if (!_options.GracefulProcessShutdown)
             {
                 return default;
             }
@@ -548,7 +571,7 @@ namespace Jering.Javascript.NodeJS
                 }
 
                 // Immediately stop file watching to avoid FileSystemWatcher buffer overflows. Restarted in ConnectIfNotConnected.
-                _fileWatcher.Stop();
+                _fileWatcher?.Stop();
 
                 SwapProcesses();
             }

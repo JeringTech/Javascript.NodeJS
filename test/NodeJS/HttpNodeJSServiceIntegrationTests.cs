@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -987,7 +988,7 @@ module.exports = (callback) => {{
 
         // When graceful shutdown is true, we kill the initial process only after invocations complete.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsTrue()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsTrue()
         {
             // Arrange
             RecreateWatchDirectory();
@@ -1038,7 +1039,7 @@ module.exports = (callback) => {{
 
         // When graceful shutdown is false, we kill the initial process immediately. Invocations retry in the new process.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsFalse()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsFalse()
         {
             // Arrange
             RecreateWatchDirectory();
@@ -1055,7 +1056,7 @@ module.exports = (callback) => {{
             {
                 options.EnableFileWatching = true;
                 options.WatchPath = _tempWatchDirectory;
-                options.WatchGracefulShutdown = false;
+                options.GracefulProcessShutdown = false;
             });
             HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, services: dummyServices);
 
@@ -1082,6 +1083,31 @@ module.exports = (callback) => {{
             string resultLog = resultStringBuilder.ToString();
             Assert.Contains(nameof(IOException), resultLog); // IOException thrown when initial process is killed
             Assert.Equal(newProcessID1, newProcessID2); // Long running invocation should complete in new process
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void NewProcessRetries_RetriesFailedInvocationInNewProcess()
+        {
+            // Arrange
+            const string dummyErrorMessagePrefix = "Error in process with ID: ";
+            string dummyErrorThrowingModule = $"module.exports = (callback) => {{throw new Error('{dummyErrorMessagePrefix}' + process.pid);}}";
+            var resultStringBuilder = new StringBuilder();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
+
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.InvokeFromStringAsync(dummyErrorThrowingModule)).ConfigureAwait(false);
+            // By default, we try once in existing process, retry there once then retry one more time in a new process.
+            //
+            // Process ID of NodeJS process first two errors were thrown in
+            string resultLog = resultStringBuilder.ToString();
+            MatchCollection logMatches = Regex.Matches(resultLog, $"{typeof(InvocationException).FullName}: {dummyErrorMessagePrefix}(\\d+)");
+            string firstExceptionProcessID = logMatches[0].Groups[1].Captures[0].Value;
+            string secondExceptionProcessID = logMatches[1].Groups[1].Captures[0].Value;
+            Assert.Equal(firstExceptionProcessID, secondExceptionProcessID);
+            // Process ID of NodeJS process last error was thrown in
+            MatchCollection exceptionMessageMatches = Regex.Matches(result.Message, $"^{dummyErrorMessagePrefix}(\\d+)");
+            string thirdExceptionProcessID = exceptionMessageMatches[0].Groups[1].Captures[0].Value;
+            Assert.NotEqual(firstExceptionProcessID, thirdExceptionProcessID); // Invocation invoked in new process
         }
 
         /// <summary>

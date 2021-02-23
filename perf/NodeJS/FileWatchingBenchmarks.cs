@@ -40,7 +40,7 @@ namespace Jering.Javascript.NodeJS.Performance
             services.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
                 options.EnableFileWatching = true;
-                options.WatchGracefulShutdown = false;
+                options.GracefulProcessShutdown = false;
             });
             _serviceProvider = services.BuildServiceProvider();
             _httpNodeJSService = _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;

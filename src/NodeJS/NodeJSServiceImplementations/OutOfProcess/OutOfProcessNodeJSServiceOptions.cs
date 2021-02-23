@@ -16,13 +16,27 @@ namespace Jering.Javascript.NodeJS
         public int TimeoutMS { get; set; } = 60000;
 
         /// <summary>
-        /// <para>The number of times an invocation is retried.</para>
+        /// <para>The number of times an invocation is retried in the existing NodeJS process.</para>
         /// <para>If set to a negative value, invocations are retried indefinitely.</para>
         /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
         /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
         /// <para>Defaults to 1.</para>
         /// </summary>
         public int NumRetries { get; set; } = 1;
+
+        /// <summary>
+        /// <para>The number of times we create a new NodeJS process to retry an invocation.</para>
+        /// <para>Invocations are retried <see cref="NumRetries"/> times in the existing NodeJS process. Once <b>existing process retries</b> are exhausted,
+        /// if any <b>process retries</b> remain, a new NodeJS process is created and invocations are tried <see cref="NumRetries"/> times in the new process.</para>
+        /// <para>For example, consider the situation where <see cref="NumRetries"/> and this value are both 1. An invocation is first tried in the existing process.
+        /// If it fails it is retried in the same process. If it fails again, a new process is created and the invocation is retried there once. In total, the
+        /// invocation is attempted 3 times.</para>
+        /// <para>If set to a negative value, new NodeJS processes are recreated for retries indefinitely.</para>
+        /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
+        /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
+        /// <para>Defaults to 1.</para>
+        /// </summary>
+        public int NumProcessRetries { get; set; } = 1;
 
         /// <summary>
         /// <para>The number of times a NodeJS connection attempt is retried.</para>
@@ -84,18 +98,18 @@ namespace Jering.Javascript.NodeJS
         public IEnumerable<string> WatchFileNamePatterns { get; set; } = new[] { "*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.html" };
 
         /// <summary>
-        /// <para>The value specifying whether NodeJS processes shutdown gracefully when a file changes.</para>
+        /// <para>The value specifying whether NodeJS processes shutdown gracefully when a file changes or an invocation is retried in a new process.</para>
         /// <para>If this value is true, NodeJS processes shutdown gracefully. Otherwise they're killed immediately.</para>
-        /// <para>This value does nothing if <see cref="EnableFileWatching"/> is <c>false</c>.</para>
-        /// <para>What's a graceful shutdown? When a file changes, a new NodeJS process is created and subsequent invocations are sent to it. The old NodeJS process
-        /// might still be handling earlier invocations. If graceful shutdown is enabled, the old NodeJS process is killed after its
-        /// invocations complete. If graceful shutdown is disabled, the old NodeJS process is killed immediately and
-        /// invocations are retried in the new NodeJS process if retries remain (see <see cref="NumRetries"/>).</para>
+        /// <para>What's a graceful shutdown? When we create a new NodeJS process, the old NodeJS process
+        /// might still be handling earlier invocations. If graceful shutdown is enabled, the old NodeJS process is killed <b>after</b> its
+        /// invocations complete. If graceful shutdown is disabled, the old NodeJS process is killed immediately and existing
+        /// invocations are retried in the new NodeJS process if they have remaining retries (see <see cref="NumRetries"/>).</para>
         /// <para>Should I use graceful shutdown? Shutting down gracefully is safer: chances of an invocation exhausting retries and failing is lower, also,
         /// you won't face issues from an invocation terminating midway. However, graceful shutdown does incur a small performance cost
         /// and invocations complete using the outdated version of your script. Weigh these factors for your script and use-case to decide whether to use graceful shutdown.</para>
+        /// <para>This value does nothing if <see cref="EnableFileWatching"/> is <c>false</c> and <see cref="NumProcessRetries"/> is 0.</para>
         /// <para>Defaults to <c>true</c>.</para>
         /// </summary>
-        public bool WatchGracefulShutdown { get; set; } = true;
+        public bool GracefulProcessShutdown { get; set; } = true;
     }
 }
