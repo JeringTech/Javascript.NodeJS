@@ -353,7 +353,7 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            // // Apart from the thread creating the process, all other threads will be blocked.
+            // Apart from the thread creating the process, all other threads will be blocked.
             lock (_connectingLock)
             {
                 if (_nodeJSProcess?.Connected == true)
@@ -658,7 +658,7 @@ namespace Jering.Javascript.NodeJS
 
                 waitHandle.Set();
             }
-            else if(_infoLoggingEnabled)
+            else if (_infoLoggingEnabled)
             {
                 Logger.LogInformation(message);
             }

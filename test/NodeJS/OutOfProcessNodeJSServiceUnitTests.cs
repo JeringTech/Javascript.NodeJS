@@ -53,7 +53,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -83,7 +83,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -106,7 +106,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -137,7 +137,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -173,7 +173,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -197,7 +197,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
             const string dummyModule = "dummyModule";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -231,7 +231,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -254,7 +254,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -285,7 +285,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -321,7 +321,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -345,7 +345,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
             var dummyModule = new MemoryStream();
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -379,7 +379,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -400,7 +400,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -431,7 +431,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
