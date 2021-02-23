@@ -441,11 +441,11 @@ namespace Jering.Javascript.NodeJS
         // To do this, we store invoke tasks and call Task.WaitAll on them before killing processes.
         //
         // We store invoke tasks in an air-tight manner.
-        // When a file event occurs, we enter _connectionLock and ditch the current process (see FileChangedHandler). 
+        // When a file event occurs, we enter _connectionLock and ditch the current process (see MoveToNewProcess). 
         // Subsequent invocations get blocked in ConnectIfNotConnected. However, there may be in-flight invocations that have gotten past 
         // ConnectIfNotConnected. These invocations could be sent to the ditched process.
         // Therefore we allow their threads to "drain" past the task creation block (see TryTrackedInvokeAsync) before we store
-        // invoke tasks (see MoveToNewProcess). 
+        // invoke tasks (see SwapProcesses). 
         //
         // With this sytem in place, we're guaranteed to get every invoke task sent to the process we're ditching.
 
@@ -507,7 +507,7 @@ namespace Jering.Javascript.NodeJS
             }
             finally
             {
-                // Remove completed task, note that it might already have been removed in MoveToNewProcess
+                // Remove completed task, note that it might already have been removed in SwapProcesses
                 trackedInvokeTasks.TryRemove(trackedInvokeTask, out object _);
             }
         }
@@ -542,7 +542,7 @@ namespace Jering.Javascript.NodeJS
                     Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
                 }
 
-                MoveToNewProcess();
+                SwapProcesses();
             }
             finally
             {
@@ -553,7 +553,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void MoveToNewProcess()
+        internal virtual void SwapProcesses()
         {
             INodeJSProcess lastNodeJSProcess = null;
             ICollection<Task> lastProcessInvokeTasks = null;

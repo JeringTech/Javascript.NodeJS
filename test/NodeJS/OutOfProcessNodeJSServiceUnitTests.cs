@@ -1058,7 +1058,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // Doesn't verify that countdown isn't signaled till after tracked task is added to trackedInvokeTasks.
-        // This is verified in MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe.
+        // This is verified in SwapProcesses_TryTrackedInvokeAsync_AreThreadSafe.
         [Fact]
         public async void TryTrackedInvokeAsync_TriesTrackedInvoke()
         {
@@ -1336,7 +1336,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 loggerStringBuilder: loggerStringBuilder,
                 logLevel: LogLevel.Information);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.MoveToNewProcess());
+            mockTestSubject.Setup(t => t.SwapProcesses());
             mockTestSubject.
                 Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
                 Returns(mockNodeJSProcess.Object).
@@ -1344,15 +1344,14 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(dummyPath);
+            mockTestSubject.Object.MoveToNewProcess(true);
 
             // Assert
             _mockRepository.VerifyAll();
-            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_MovesToNewProcess()
+        public void SwapProcesses_SwapsToNewProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1376,7 +1375,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1386,7 +1385,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereArePendingInvokeTasksStoresTasksAndWaitsForThemToCompleteBeforeDisposingOfLastProcess()
+        public void SwapProcesses_IfInvokeTaskTrackingIsEnabledAndThereArePendingInvokeTasksStoresTasksAndWaitsForThemToCompleteBeforeDisposingOfLastProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1423,7 +1422,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1435,7 +1434,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereAreNoPendingInvokeTasksDoesNotWaitBeforeDisposingOfLastProcess()
+        public void SwapProcesses_IfInvokeTaskTrackingIsEnabledAndThereAreNoPendingInvokeTasksDoesNotWaitBeforeDisposingOfLastProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1469,7 +1468,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1482,10 +1481,10 @@ namespace Jering.Javascript.NodeJS.Tests
 
         // Verifies that the "lock and countdown" system drains threads creating tasks while blocking subsequent threads from creating tasks.
         //
-        // To step through the lock and countdown system, set breakpoints in TryTrackedInvokeAsync and MoveToNewProcess and run this test in debug mode.
+        // To step through the lock and countdown system, set breakpoints in TryTrackedInvokeAsync and SwapProcesses and run this test in debug mode.
         // Use VS's parallel windows to keep track of threads.
         [Fact]
-        public async void MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe()
+        public async void SwapProcesses_TryTrackedInvokeAsync_AreThreadSafe()
         {
             // Arrange
             (bool, int) expectedResult1 = (true, 5);
@@ -1537,11 +1536,11 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act and assert
             // Simulates a thread creating a task when a file event occurs. Blocked at TryInvokeAsync by dummyEventWaitHandle1.
             Task<(bool, int)> task1 = Task.Run(() => testSubject.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
-            // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in MoveToNewProcess.
+            // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in SwapProcesses.
             Task task2 = Task.Run(() =>
              {
                  dummyEventWaitHandle2.WaitOne();
-                 testSubject.MoveToNewProcess();
+                 testSubject.SwapProcesses();
              });
             // Simulates a thread for an invocation that occurs while a file event is processing. Block at _invokeTaskTrackingLock in TryTrackedInvokeAsync.
             Task<(bool, int)> task3 = Task.Run(() =>
