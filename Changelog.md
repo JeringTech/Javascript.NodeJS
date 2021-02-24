@@ -7,7 +7,7 @@ for an overview of semantic versioning.
 
 ## [6.0.0-beta.2](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.1...6.0.0-beta.2) - Feb 24, 2021
 ### Additions
-- Added `OutOfProcessNodeJSServiceOptions.NumProcessRetries` option. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101).
+- Added `OutOfProcessNodeJSServiceOptions.NumProcessRetries` option. Allows for retrying of invocations in new processes. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101)).
 ### Changes
 - `HttpNodeJSService` now logs endpoint on connect. Logged at `information` level. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101)).
 - **Breaking**: Renamed `OutOfProcessNodeJSServiceOptions.WatchGracefulShutdown` to `GracefulProcessShutdown`. Option now affects
