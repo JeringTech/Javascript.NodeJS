@@ -3,7 +3,15 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.2...HEAD)
+
+## [6.0.0-beta.2](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.1...6.0.0-beta.2) - Feb 24, 2021
+### Additions
+- Added `OutOfProcessNodeJSServiceOptions.NumProcessRetries` option. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101).
+### Changes
+- `HttpNodeJSService` now logs endpoint on connect. Logged at `information` level. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101)).
+- **Breaking**: Renamed `OutOfProcessNodeJSServiceOptions.WatchGracefulShutdown` to `GracefulProcessShutdown`. Option now affects
+process shutdowns on-file-change *and* when retrying invocations. ([#101](https://github.com/JeringTech/Javascript.NodeJS/pull/101)).
 
 ## [6.0.0-beta.1](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.0...6.0.0-beta.1) - Feb 22, 2021
 ### Fixes
