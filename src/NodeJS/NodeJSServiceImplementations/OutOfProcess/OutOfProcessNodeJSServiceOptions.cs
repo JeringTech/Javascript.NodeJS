@@ -27,7 +27,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// <para>The number of times we create a new NodeJS process to retry an invocation.</para>
         /// <para>Invocations are retried <see cref="NumRetries"/> times in the existing NodeJS process. Once <b>existing process retries</b> are exhausted,
-        /// if any <b>process retries</b> remain, a new NodeJS process is created and invocations are tried <see cref="NumRetries"/> times in the new process.</para>
+        /// if any <b>process retries</b> remain, a new NodeJS process is created and invocations are retried <see cref="NumRetries"/> times in the new process.</para>
         /// <para>For example, consider the situation where <see cref="NumRetries"/> and this value are both 1. An invocation is first tried in the existing process.
         /// If it fails it is retried in the same process. If it fails again, a new process is created and the invocation is retried there once. In total, the
         /// invocation is attempted 3 times.</para>
