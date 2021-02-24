@@ -17,8 +17,8 @@ namespace Jering.Javascript.NodeJS.Tests
     {
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
         private const string DUMMY_LONG_RUNNING_SCRIPT_NAME = "dummyLongRunningScript.js";
-        private static readonly string PROJECT_PATH = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
-        private static readonly string DUMMY_LONG_RUNNING_SCRIPT = File.ReadAllText(Path.Combine(PROJECT_PATH, DUMMY_LONG_RUNNING_SCRIPT_NAME));
+        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+        private static readonly string _dummyLongRunningScript = File.ReadAllText(Path.Combine(_projectPath, DUMMY_LONG_RUNNING_SCRIPT_NAME));
 
         [Fact]
         public void Constructor_ThrowsArgumentNullExceptionIfProcessIsNull()
@@ -374,7 +374,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private Process CreateProcess()
         {
             var dummyNodeJSProcessFactory = new NodeJSProcessFactory(null);
-            ProcessStartInfo dummyProcessStartInfo = dummyNodeJSProcessFactory.CreateStartInfo(DUMMY_LONG_RUNNING_SCRIPT);
+            ProcessStartInfo dummyProcessStartInfo = dummyNodeJSProcessFactory.CreateStartInfo(_dummyLongRunningScript);
 
             return dummyNodeJSProcessFactory.CreateProcess(dummyProcessStartInfo);
         }

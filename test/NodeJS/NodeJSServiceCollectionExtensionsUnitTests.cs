@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Xunit;
 
 namespace Jering.Javascript.NodeJS.Tests
@@ -20,36 +19,6 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             INodeJSService _ = serviceProvider.GetRequiredService<INodeJSService>(); // As long as this doesn't throw, the dependency graph is valid
-        }
-
-        [Theory]
-        [MemberData(nameof(IHttpClientServiceFactory_SetsTimeout_Data))]
-        public void IHttpClientServiceFactory_SetsTimeout(int dummyTimeoutMS, TimeSpan expectedTimeoutMS)
-        {
-            // Arrange
-            var services = new ServiceCollection();
-            services.AddNodeJS();
-            services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = dummyTimeoutMS);
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-
-            // Act
-            var result = NodeJSServiceCollectionExtensions.IHttpClientServiceFactory(serviceProvider) as HttpClientService;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(expectedTimeoutMS, result.Timeout);
-        }
-
-        public static IEnumerable<object[]> IHttpClientServiceFactory_SetsTimeout_Data()
-        {
-            return new object[][]
-            {
-                // -1 == infinite
-                new object[]{ -1, Timeout.InfiniteTimeSpan},
-                // All other values == value + 1000
-                new object[]{ 0, TimeSpan.FromMilliseconds(1000)},
-                new object[]{ 1000, TimeSpan.FromMilliseconds(2000)}
-            };
         }
 
         [Theory]

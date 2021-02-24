@@ -53,7 +53,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -83,7 +83,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -106,7 +106,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -137,7 +137,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -173,7 +173,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -197,7 +197,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
             const string dummyModule = "dummyModule";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -231,7 +231,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -254,7 +254,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -285,7 +285,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -321,7 +321,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -345,7 +345,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
             var dummyModule = new MemoryStream();
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -379,7 +379,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -400,7 +400,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -431,7 +431,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
@@ -511,7 +511,8 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyException = new OperationCanceledException();
             const int dummyTimeoutMS = 100;
             const int dummyNumRetries = 2;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries };
+            const int dummyNumProcessRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries, NumProcessRetries = dummyNumProcessRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var loggerStringBuilder = new StringBuilder();
@@ -527,22 +528,28 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
             mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.MoveToNewProcess(false));
 
             // Act and assert
             InvocationException result = await Assert.
                 ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
                 ConfigureAwait(false);
             _mockRepository.VerifyAll();
-            Assert.Equal(dummyNumRetries, Regex.Matches(loggerStringBuilder.ToString(), $"{nameof(LogLevel.Warning)}: ").Count); // Must log before each retry
+            // Verify log
+            string resultLog = loggerStringBuilder.ToString();
+            Assert.Equal(dummyNumRetries * (dummyNumProcessRetries + 1), Regex.Matches(resultLog, Strings.LogWarning_InvocationAttemptFailed.Substring(0, 30)).Count); // Logs before each retry
+            Assert.Equal(dummyNumProcessRetries, Regex.Matches(resultLog, Strings.LogWarning_RetriesInExistingProcessExhausted.Substring(0, 30)).Count); // Logs before each process swap
+            // Verify calls
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(1 + dummyNumRetries));
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1) + 1));
             Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
                     dummyTimeoutMS,
                     nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
                     nameof(OutOfProcessNodeJSServiceOptions)),
                 result.Message);
+            mockTestSubject.Verify(t => t.MoveToNewProcess(false), times: Times.Exactly(2));
         }
 
         [Fact]
@@ -552,7 +559,8 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyException = new InvocationException();
             const int dummyTimeoutMS = 100;
             const int dummyNumRetries = 2;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries };
+            const int dummyNumProcessRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { TimeoutMS = dummyTimeoutMS, NumRetries = dummyNumRetries, NumProcessRetries = dummyNumProcessRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var loggerStringBuilder = new StringBuilder();
@@ -568,17 +576,23 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
             mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.MoveToNewProcess(false));
 
             // Act and assert
             InvocationException result = await Assert.
                 ThrowsAsync<InvocationException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<int>(dummyInvocationRequest, dummyCancellationToken).ConfigureAwait(false)).
                 ConfigureAwait(false);
             _mockRepository.VerifyAll();
-            Assert.Equal(dummyNumRetries, Regex.Matches(loggerStringBuilder.ToString(), $"{nameof(LogLevel.Warning)}: ").Count); // Must log before each retry
+            // Verify log
+            string resultLog = loggerStringBuilder.ToString();
+            Assert.Equal(dummyNumRetries * (dummyNumProcessRetries + 1), Regex.Matches(resultLog, Strings.LogWarning_InvocationAttemptFailed.Substring(0, 30)).Count); // Logs before each retry
+            Assert.Equal(dummyNumProcessRetries, Regex.Matches(resultLog, Strings.LogWarning_RetriesInExistingProcessExhausted.Substring(0, 30)).Count); // Logs before each process swap
+            // Verify calls
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(1 + dummyNumRetries));
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1) + 1));
+            mockTestSubject.Verify(t => t.MoveToNewProcess(false), times: Times.Exactly(2));
             Assert.Same(dummyException, result);
         }
 
@@ -619,7 +633,8 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             var dummyCancellationToken = new CancellationToken();
             const int dummyNumRetries = 2;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries };
+            const int dummyNumProcessRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries, NumProcessRetries = dummyNumProcessRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var dummyException = new InvocationException();
@@ -637,6 +652,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
             mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.MoveToNewProcess(false));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -647,8 +663,8 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(1 + dummyNumRetries));
-            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Exactly(dummyNumRetries));
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1) + 1));
+            mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1)));
         }
 
         [Fact]
@@ -657,14 +673,15 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             var dummyCancellationToken = new CancellationToken();
             const int dummyNumRetries = 2;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries };
+            const int dummyNumProcessRetries = 2;
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions { NumRetries = dummyNumRetries, NumProcessRetries = dummyNumProcessRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             var dummyException = new InvocationException();
             const int dummyStreamInitialPosition = 1;
             Mock<Stream> mockStream = _mockRepository.Create<Stream>();
             mockStream.Setup(s => s.CanSeek).Returns(true);
-            mockStream.SetupSequence(s => s.Position).Returns(dummyStreamInitialPosition).Returns(dummyStreamInitialPosition).Returns(dummyStreamInitialPosition); // Stay at initial position
+            mockStream.Setup(s => s.Position).Returns(dummyStreamInitialPosition);
             var dummyInvocationRequest = new InvocationRequest(ModuleSourceType.Stream, moduleStreamSource: mockStream.Object);
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
@@ -675,6 +692,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken)).
                 ThrowsAsync(dummyException);
             mockTestSubject.Setup(t => t.CreateCancellationToken(dummyCancellationToken)).Returns((dummyCancellationToken, null));
+            mockTestSubject.Setup(t => t.MoveToNewProcess(false));
 
             // Act and assert
             InvocationException result = await Assert.
@@ -685,7 +703,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(1 + dummyNumRetries));
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, It.IsAny<CancellationToken>()), Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1) + 1));
             mockStream.VerifySet(s => s.Position = dummyStreamInitialPosition, Times.Never);
         }
 
@@ -998,7 +1016,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyOptions = new OutOfProcessNodeJSServiceOptions()
             {
                 EnableFileWatching = true,
-                WatchGracefulShutdown = false,
+                GracefulProcessShutdown = false,
                 WatchPath = dummyWatchPath,
                 WatchSubdirectories = dummyWatchSubdirectories
             };
@@ -1031,7 +1049,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyOptions = new OutOfProcessNodeJSServiceOptions()
             {
                 EnableFileWatching = true,
-                WatchGracefulShutdown = true,
+                GracefulProcessShutdown = true,
                 WatchPath = dummyWatchPath,
                 WatchSubdirectories = dummyWatchSubdirectories
             };
@@ -1058,7 +1076,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // Doesn't verify that countdown isn't signaled till after tracked task is added to trackedInvokeTasks.
-        // This is verified in MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe.
+        // This is verified in SwapProcesses_TryTrackedInvokeAsync_AreThreadSafe.
         [Fact]
         public async void TryTrackedInvokeAsync_TriesTrackedInvoke()
         {
@@ -1226,8 +1244,44 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(logResult, $"{nameof(LogLevel.Error)}: {dummyMessage}\n", ignoreLineEndingDifferences: true);
         }
 
+        [Fact]
+        public void FileChangedHandler_LogsChangedFileAndMovesToNewProcess()
+        {
+            // Arrange
+            const string dummyPath = "dummyPath";
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder, logLevel: LogLevel.Information);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.MoveToNewProcess(true));
+
+            // Act
+            mockTestSubject.Object.FileChangedHandler(dummyPath);
+
+            // Assert
+            mockTestSubject.Verify(t => t.MoveToNewProcess(true), times: Times.Once);
+            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
+        }
+
+        [Fact]
+        public void MoveToNewProcess_DoesNothingIfConnectingLockNotAquiredAndReswapIfJustConnectedIsFalse()
+        {
+            // Arrange
+            Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
+            bool dummyAquiredConnectingLock = false;
+            mockMonitorService.Setup(m => m.TryEnter(It.IsAny<object>(), ref dummyAquiredConnectingLock));
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(monitorService: mockMonitorService.Object);
+            mockTestSubject.CallBase = true;
+
+            // Act
+            mockTestSubject.Object.MoveToNewProcess(false);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            mockMonitorService.Verify(m => m.Enter(It.IsAny<object>(), ref dummyAquiredConnectingLock), Times.Never); // Verifies that we return immediately, nothing else called
+        }
+
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void FileChangedHandler_DoesNothingIfConnectingLockNotAquiredAndConnecting()
+        public void MoveToNewProcess_DoesNothingIfConnectingLockNotAquiredAndConnecting()
         {
             // Arrange
             Mock<IMonitorService> mockMonitorService = _mockRepository.Create<IMonitorService>();
@@ -1244,7 +1298,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(null);
+            mockTestSubject.Object.MoveToNewProcess(true);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -1252,10 +1306,9 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void FileChangedHandler_MovesToNewProcessIfConnectingLockAcquired()
+        public void MoveToNewProcess_MovesToNewProcessIfConnectingLockAcquired()
         {
             // Arrange
-            const string dummyPath = "dummyPath";
             bool dummyInitialAquiredConnectingLock = false;
             const bool dummyFinalAquiredConnectingLock = true;
             object dummyConnectingLock = null;
@@ -1280,29 +1333,24 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
                 Returns(mockFileWatcher.Object);
 
-            var loggerStringBuilder = new StringBuilder();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 fileWatcherFactory: mockFileWatcherFactory.Object,
                 monitorService: mockMonitorService.Object,
-                taskService: _mockRepository.Create<ITaskService>().Object,
-                loggerStringBuilder: loggerStringBuilder,
-                logLevel: LogLevel.Information);
+                taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.MoveToNewProcess());
+            mockTestSubject.Setup(t => t.SwapProcesses());
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(dummyPath);
+            mockTestSubject.Object.MoveToNewProcess(default); // reswapIfJustConnected unused
 
             // Assert
-            _mockRepository.VerifyAll();
-            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
+            _mockRepository.VerifyAll();          
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void FileChangedHandler_MovesToNewProcessIfConnectingLockNotAquiredButAlreadyConnected()
+        public void MoveToNewProcess_MovesToNewProcessIfConnectingLockNotAquiredButAlreadyConnectedAndReswapIfJustConnectedIsTrue()
         {
             // Arrange
-            const string dummyPath = "dummyPath";
             bool dummyInitialAquiredConnectingLock = false;
             const bool dummyFinalAquiredConnectingLock = true;
             object dummyConnectingLock = null;
@@ -1328,15 +1376,12 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
                 Returns(mockFileWatcher.Object);
 
-            var loggerStringBuilder = new StringBuilder();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 fileWatcherFactory: mockFileWatcherFactory.Object,
                 monitorService: mockMonitorService.Object,
-                taskService: _mockRepository.Create<ITaskService>().Object,
-                loggerStringBuilder: loggerStringBuilder,
-                logLevel: LogLevel.Information);
+                taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.MoveToNewProcess());
+            mockTestSubject.Setup(t => t.SwapProcesses());
             mockTestSubject.
                 Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
                 Returns(mockNodeJSProcess.Object).
@@ -1344,15 +1389,14 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(dummyPath);
+            mockTestSubject.Object.MoveToNewProcess(true);
 
             // Assert
             _mockRepository.VerifyAll();
-            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_MovesToNewProcess()
+        public void SwapProcesses_SwapsToNewProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1376,7 +1420,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1386,7 +1430,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereArePendingInvokeTasksStoresTasksAndWaitsForThemToCompleteBeforeDisposingOfLastProcess()
+        public void SwapProcesses_IfInvokeTaskTrackingIsEnabledAndThereArePendingInvokeTasksStoresTasksAndWaitsForThemToCompleteBeforeDisposingOfLastProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1423,7 +1467,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1435,7 +1479,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        public void MoveToNewProcess_IfInvokeTaskTrackingIsEnabledAndThereAreNoPendingInvokeTasksDoesNotWaitBeforeDisposingOfLastProcess()
+        public void SwapProcesses_IfInvokeTaskTrackingIsEnabledAndThereAreNoPendingInvokeTasksDoesNotWaitBeforeDisposingOfLastProcess()
         {
             // Arrange
             const int dummySafeID = 12345;
@@ -1469,7 +1513,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.ConnectIfNotConnected(); // Creates _nodeJSProcess
 
             // Act
-            mockTestSubject.Object.MoveToNewProcess();
+            mockTestSubject.Object.SwapProcesses();
             dummyKillProcessAction();
 
             // Assert
@@ -1482,10 +1526,10 @@ namespace Jering.Javascript.NodeJS.Tests
 
         // Verifies that the "lock and countdown" system drains threads creating tasks while blocking subsequent threads from creating tasks.
         //
-        // To step through the lock and countdown system, set breakpoints in TryTrackedInvokeAsync and MoveToNewProcess and run this test in debug mode.
+        // To step through the lock and countdown system, set breakpoints in TryTrackedInvokeAsync and SwapProcesses and run this test in debug mode.
         // Use VS's parallel windows to keep track of threads.
         [Fact]
-        public async void MoveToNewProcess_TryTrackedInvokeAsync_AreThreadSafe()
+        public async void SwapProcesses_TryTrackedInvokeAsync_AreThreadSafe()
         {
             // Arrange
             (bool, int) expectedResult1 = (true, 5);
@@ -1537,11 +1581,11 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act and assert
             // Simulates a thread creating a task when a file event occurs. Blocked at TryInvokeAsync by dummyEventWaitHandle1.
             Task<(bool, int)> task1 = Task.Run(() => testSubject.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown));
-            // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in MoveToNewProcess.
+            // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in SwapProcesses.
             Task task2 = Task.Run(() =>
              {
                  dummyEventWaitHandle2.WaitOne();
-                 testSubject.MoveToNewProcess();
+                 testSubject.SwapProcesses();
              });
             // Simulates a thread for an invocation that occurs while a file event is processing. Block at _invokeTaskTrackingLock in TryTrackedInvokeAsync.
             Task<(bool, int)> task3 = Task.Run(() =>

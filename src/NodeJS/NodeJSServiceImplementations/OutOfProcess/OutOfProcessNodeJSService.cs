@@ -45,6 +45,7 @@ namespace Jering.Javascript.NodeJS
         private readonly object _connectingLock = new object();
         private readonly object _invokeTaskTrackingLock = new object();
         private readonly int _numRetries;
+        private readonly int _numProcessRetries;
         private readonly int _numConnectionRetries;
         private readonly int _timeoutMS;
         private readonly ConcurrentDictionary<Task, object> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
@@ -115,6 +116,7 @@ namespace Jering.Javascript.NodeJS
             _infoLoggingEnabled = Logger.IsEnabled(LogLevel.Information);
 
             _numRetries = _options.NumRetries;
+            _numProcessRetries = _options.NumProcessRetries;
             _numConnectionRetries = _options.NumConnectionRetries;
             _timeoutMS = _options.TimeoutMS;
         }
@@ -256,6 +258,7 @@ namespace Jering.Javascript.NodeJS
             }
 
             int numRetries = _numRetries;
+            int numProcessRetries = _numProcessRetries;
             while (true)
             {
                 CancellationTokenSource cancellationTokenSource = null;
@@ -283,7 +286,7 @@ namespace Jering.Javascript.NodeJS
                     // Invocation canceled, don't retry
                     throw;
                 }
-                catch (OperationCanceledException) when (numRetries == 0)
+                catch (OperationCanceledException) when (numRetries == 0 && numProcessRetries == 0)
                 {
                     // Invocation timed out and no more retries
                     throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
@@ -291,7 +294,7 @@ namespace Jering.Javascript.NodeJS
                         nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
                         nameof(OutOfProcessNodeJSServiceOptions)));
                 }
-                catch (Exception exception) when (numRetries != 0)
+                catch (Exception exception) when (numRetries != 0 || numProcessRetries != 0)
                 {
                     if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
                     {
@@ -316,7 +319,27 @@ namespace Jering.Javascript.NodeJS
                     cancellationTokenSource?.Dispose();
                 }
 
-                numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+                if (numRetries == 0)
+                {
+                    // If retries in the existing process have been exhausted but process retries remain,
+                    // move to new process and reset numRetries.
+                    if (numProcessRetries > 0)
+                    {
+                        if (_warningLoggingEnabled)
+                        {
+                            Logger.LogWarning(string.Format(Strings.LogWarning_RetriesInExistingProcessExhausted, numProcessRetries < 0 ? "infinity" : numProcessRetries.ToString()));
+                        }
+
+                        numProcessRetries = numProcessRetries > 0 ? numProcessRetries - 1 : numProcessRetries;
+                        numRetries = _numRetries - 1;
+
+                        MoveToNewProcess(false);
+                    }
+                }
+                else
+                {
+                    numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+                }
             }
         }
 
@@ -353,7 +376,7 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            // // Apart from the thread creating the process, all other threads will be blocked.
+            // Apart from the thread creating the process, all other threads will be blocked.
             lock (_connectingLock)
             {
                 if (_nodeJSProcess?.Connected == true)
@@ -365,7 +388,7 @@ namespace Jering.Javascript.NodeJS
                 // Stopping _fileWatcher prevents its underlying FileSystemWatcher's buffer from overflowing. 
                 // 
                 // Note that we don't need to worry about file events filling up the buffer between entering this _connectingLock block 
-                // and the following line because FileChangedHandler returns immediately if we're connecting.
+                // and the following line because MoveToNewProcess returns immediately if we're connecting.
                 _fileWatcher?.Stop();
 
                 int numConnectionRetries = _numConnectionRetries;
@@ -441,11 +464,11 @@ namespace Jering.Javascript.NodeJS
         // To do this, we store invoke tasks and call Task.WaitAll on them before killing processes.
         //
         // We store invoke tasks in an air-tight manner.
-        // When a file event occurs, we enter _connectionLock and ditch the current process (see FileChangedHandler). 
+        // When a file event occurs, we enter _connectionLock and ditch the current process (see MoveToNewProcess). 
         // Subsequent invocations get blocked in ConnectIfNotConnected. However, there may be in-flight invocations that have gotten past 
         // ConnectIfNotConnected. These invocations could be sent to the ditched process.
         // Therefore we allow their threads to "drain" past the task creation block (see TryTrackedInvokeAsync) before we store
-        // invoke tasks (see MoveToNewProcess). 
+        // invoke tasks (see SwapProcesses). 
         //
         // With this sytem in place, we're guaranteed to get every invoke task sent to the process we're ditching.
 
@@ -467,7 +490,7 @@ namespace Jering.Javascript.NodeJS
 
             _fileWatcher = _fileWatcherFactory.Create(_options.WatchPath, _options.WatchSubdirectories, _options.WatchFileNamePatterns, FileChangedHandler);
 
-            if (!_options.WatchGracefulShutdown)
+            if (!_options.GracefulProcessShutdown)
             {
                 return default;
             }
@@ -507,7 +530,7 @@ namespace Jering.Javascript.NodeJS
             }
             finally
             {
-                // Remove completed task, note that it might already have been removed in MoveToNewProcess
+                // Remove completed task, note that it might already have been removed in SwapProcesses
                 trackedInvokeTasks.TryRemove(trackedInvokeTask, out object _);
             }
         }
@@ -516,6 +539,16 @@ namespace Jering.Javascript.NodeJS
         // We don't need to worry about this method being called simultaneously by multiple threads.
         internal virtual void FileChangedHandler(string path)
         {
+            if (_infoLoggingEnabled)
+            {
+                Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
+            }
+
+            MoveToNewProcess(true);
+        }
+
+        internal virtual void MoveToNewProcess(bool reswapIfJustConnected)
+        {
             bool acquiredConnectingLock = false;
             try
             {
@@ -523,26 +556,24 @@ namespace Jering.Javascript.NodeJS
 
                 if (!acquiredConnectingLock)
                 {
-                    if (_nodeJSProcess?.Connected != true) // If we're connecting, do nothing.
+                    if (!reswapIfJustConnected || // Don't need to reswap again if we've just connected. We only need to reswap on just connected if a file changed and we need to reload it.
+                        _nodeJSProcess?.Connected != true) // If we're connecting, do nothing.
                     {
                         return;
                     }
 
                     // If we get here, _nodeJSProcess.SetConnected() has been called in ConnectIfNotConnected, but ConnectIfNotConnected hasn't exited _connectingLock.
                     // Once _nodeJSProcess.SetConnected() is called, invocations aren't blocked in ConnectIfNotConnected. This means the NodeJS process may have already
-                    // received invocations and loaded user modules, so we must create a new process again.
+                    // received invocations and loaded user modules.
+                    //
+                    // If we're moving to a new process because a file changed, we must create a new process again.
                     _monitorService.Enter(_connectingLock, ref acquiredConnectingLock);
                 }
 
                 // Immediately stop file watching to avoid FileSystemWatcher buffer overflows. Restarted in ConnectIfNotConnected.
-                _fileWatcher.Stop();
+                _fileWatcher?.Stop();
 
-                if (_infoLoggingEnabled)
-                {
-                    Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
-                }
-
-                MoveToNewProcess();
+                SwapProcesses();
             }
             finally
             {
@@ -553,7 +584,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void MoveToNewProcess()
+        internal virtual void SwapProcesses()
         {
             INodeJSProcess lastNodeJSProcess = null;
             ICollection<Task> lastProcessInvokeTasks = null;
@@ -660,7 +691,7 @@ namespace Jering.Javascript.NodeJS
 
                 waitHandle.Set();
             }
-            else if(_infoLoggingEnabled)
+            else if (_infoLoggingEnabled)
             {
                 Logger.LogInformation(message);
             }

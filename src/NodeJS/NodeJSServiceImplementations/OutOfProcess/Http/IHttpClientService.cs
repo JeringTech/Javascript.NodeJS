@@ -13,7 +13,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Gets or sets the timespan to wait before the request times out.
         /// </summary>
-        TimeSpan Timeout {get; set;}
+        TimeSpan Timeout { get; set; }
 
         /// <summary>
         /// Send an HTTP request as an asynchronous operation.

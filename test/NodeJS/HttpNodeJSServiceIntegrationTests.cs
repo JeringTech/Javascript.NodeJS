@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -28,12 +29,12 @@ namespace Jering.Javascript.NodeJS.Tests
         private const string DUMMY_RETURNS_ARG_MODULE_FILE = "dummyReturnsArgModule.js";
         private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
         private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
-        private static readonly string PROJECT_PATH = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
-        private static readonly string DUMMY_RETURNS_ARG_MODULE = File.ReadAllText(Path.Combine(PROJECT_PATH, DUMMY_RETURNS_ARG_MODULE_FILE));
-        private static readonly string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE = File.ReadAllText(Path.Combine(PROJECT_PATH, DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE));
+        private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
+        private static readonly string _dummyReturnsArgModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_RETURNS_ARG_MODULE_FILE));
+        private static readonly string _dummyExportsMultipleFunctionsModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE));
 
         // File watching
-        private static readonly string TEMP_WATCH_DIRECTORY = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
+        private static readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
         private Uri _tempWatchDirectoryUri;
 
         private readonly ITestOutputHelper _testOutputHelper;
@@ -48,7 +49,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
         {
             const string dummyArg = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             DummyResult result = await testSubject.
@@ -63,7 +64,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyArg = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             var results = new ConcurrentQueue<DummyResult>();
@@ -93,7 +94,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromFileAsync_WithoutTypeParameter_InvokesFromFile()
         {
             const string dummyArg = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             await testSubject.InvokeFromFileAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "setString", new[] { dummyArg }).ConfigureAwait(false);
@@ -108,7 +109,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromFileAsync_WithoutTypeParameter_IsThreadSafe()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             const int numThreads = 5;
@@ -139,7 +140,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE, args: new[] { dummyArg }).ConfigureAwait(false);
+                InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             Assert.Equal(dummyArg, result.Result);
@@ -159,7 +160,7 @@ namespace Jering.Javascript.NodeJS.Tests
             for (int i = 0; i < numThreads; i++)
             {
                 var thread = new Thread(() => results.Enqueue(testSubject.
-                    InvokeFromStringAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE, args: new[] { dummyArg }).GetAwaiter().GetResult()));
+                    InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, args: new[] { dummyArg }).GetAwaiter().GetResult()));
                 threads.Add(thread);
                 thread.Start();
             }
@@ -180,14 +181,14 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromStringAsync_WithoutTypeParameter_WithRawStringModule_InvokesFromString()
         {
             const string dummyArg = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            await testSubject.InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+                InvokeFromStringAsync<DummyResult>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
             Assert.Equal(dummyArg, result.Result);
         }
 
@@ -195,7 +196,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromStringAsync_WithoutTypeParameter_WithRawStringModule_IsThreadSafe()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             const int numThreads = 5;
@@ -203,7 +204,7 @@ namespace Jering.Javascript.NodeJS.Tests
             for (int i = 0; i < numThreads; i++)
             {
                 var thread = new Thread(() => testSubject.
-                    InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
+                    InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
                 threads.Add(thread);
                 thread.Start();
             }
@@ -213,7 +214,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
 
             // Assert
-            int result = await testSubject.InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
             Assert.Equal(numThreads, result);
         }
 
@@ -223,7 +224,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
             DummyResult result = await testSubject.
@@ -243,7 +244,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             // Module hasn't been cached, so if this returns the expected value, string was sent over
             DummyResult result1 = await testSubject.
-                InvokeFromStringAsync<DummyResult>(() => DUMMY_RETURNS_ARG_MODULE, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+                InvokeFromStringAsync<DummyResult>(() => _dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             // Ensure module was cached
@@ -266,7 +267,7 @@ namespace Jering.Javascript.NodeJS.Tests
             for (int i = 0; i < numThreads; i++)
             {
                 var thread = new Thread(() => results.Enqueue(testSubject.
-                    InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementAndGetNumber").GetAwaiter().GetResult()));
+                    InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementAndGetNumber").GetAwaiter().GetResult()));
                 threads.Add(thread);
                 thread.Start();
             }
@@ -291,14 +292,14 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Act
             await testSubject.
                 InvokeFromStringAsync(() => null, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Assert
-            int result = await testSubject.InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
             Assert.Equal(2, result);
         }
 
@@ -310,7 +311,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             await testSubject.
-                InvokeFromStringAsync(() => DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+                InvokeFromStringAsync(() => _dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Assert
             // Ensure module was cached
@@ -331,7 +332,7 @@ namespace Jering.Javascript.NodeJS.Tests
             for (int i = 0; i < numThreads; i++)
             {
                 var thread = new Thread(() => testSubject.
-                    InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
+                    InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult());
                 threads.Add(thread);
                 thread.Start();
             }
@@ -352,7 +353,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_RETURNS_ARG_MODULE);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
 
             // Act
             DummyResult result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).ConfigureAwait(false);
@@ -376,7 +377,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 var thread = new Thread(() =>
                 {
-                    MemoryStream memoryStream = CreateMemoryStream(DUMMY_RETURNS_ARG_MODULE);
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
                     results.Enqueue(testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).GetAwaiter().GetResult());
                 });
                 threads.Add(thread);
@@ -400,8 +401,8 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyArg = "success";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
 
             // Act
             await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
@@ -416,7 +417,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public async void InvokeFromStreamAsync_WithoutTypeParameter_WithRawStreamModule_IsThreadSafe()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             const int numThreads = 5;
@@ -425,7 +426,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 var thread = new Thread(() =>
                 {
-                    MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
                     testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult();
                 });
                 threads.Add(thread);
@@ -438,7 +439,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             int result = await testSubject.
-                InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+                InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
             Assert.Equal(numThreads, result);
         }
 
@@ -448,7 +449,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
             await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
@@ -465,7 +466,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_RETURNS_ARG_MODULE);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
 
             // Act
             // Module hasn't been cached, so if this returns the expected value, stream was sent over
@@ -495,7 +496,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 var thread = new Thread(() =>
                 {
-                    MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
                     results.Enqueue(testSubject.InvokeFromStreamAsync<int>(() => memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementAndGetNumber").GetAwaiter().GetResult());
                 });
                 threads.Add(thread);
@@ -522,7 +523,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
             await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Act
@@ -539,7 +540,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+            MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
 
             // Act
             await testSubject.
@@ -565,7 +566,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 var thread = new Thread(() =>
                 {
-                    MemoryStream memoryStream = CreateMemoryStream(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE);
+                    MemoryStream memoryStream = CreateMemoryStream(_dummyExportsMultipleFunctionsModule);
                     testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "incrementNumber").GetAwaiter().GetResult();
                 });
                 threads.Add(thread);
@@ -588,7 +589,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
             (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
@@ -618,7 +619,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
             var results = new ConcurrentQueue<(bool, DummyResult)>();
@@ -650,14 +651,14 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Act
             bool success = await testSubject.TryInvokeFromCacheAsync(DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Assert
             Assert.True(success);
-            int result = await testSubject.InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
             Assert.Equal(2, result);
         }
 
@@ -679,7 +680,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
-            await testSubject.InvokeFromStringAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+            await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Act
             const int numThreads = 5;
@@ -696,7 +697,7 @@ namespace Jering.Javascript.NodeJS.Tests
             }
 
             // Assert
-            int result = await testSubject.InvokeFromStringAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
+            int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
             Assert.Equal(numThreads + 1, result);
         }
 
@@ -709,7 +710,7 @@ namespace Jering.Javascript.NodeJS.Tests
     // Example comment
     return arg + ""dummyString"";
 }";
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
             string result = await testSubject.InvokeFromStringAsync<string>(@"const prismjs = require('prismjs');
@@ -734,7 +735,7 @@ module.exports = (callback, code) => {
         public async void InMemoryInvokeMethods_LoadRequiredModulesFromFilesInProjectDirectory()
         {
             // Arrange
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: PROJECT_PATH); // Current directory is <test project path>/bin/debug/<framework>
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath); // Current directory is <test project path>/bin/debug/<framework>
 
             // Act
             int result = await testSubject.InvokeFromStringAsync<int>(@"const value = require('./dummyReturnsValueModule.js');
@@ -987,7 +988,7 @@ module.exports = (callback) => {{
 
         // When graceful shutdown is true, we kill the initial process only after invocations complete.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsTrue()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsTrue()
         {
             // Arrange
             RecreateWatchDirectory();
@@ -1011,7 +1012,7 @@ module.exports = (callback) => {{
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
                 options.EnableFileWatching = true;
-                options.WatchPath = TEMP_WATCH_DIRECTORY;
+                options.WatchPath = _tempWatchDirectory;
                 // Graceful shutdown is true by default
             });
             HttpNodeJSService testSubject = CreateHttpNodeJSService(services: dummyServices);
@@ -1038,7 +1039,7 @@ module.exports = (callback) => {{
 
         // When graceful shutdown is false, we kill the initial process immediately. Invocations retry in the new process.
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void FileWatching_RespectsWatchGracefulShutdownOptionWhenItsFalse()
+        public async void FileWatching_RespectsGracefulShutdownOptionWhenItsFalse()
         {
             // Arrange
             RecreateWatchDirectory();
@@ -1054,8 +1055,8 @@ module.exports = (callback) => {{
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
                 options.EnableFileWatching = true;
-                options.WatchPath = TEMP_WATCH_DIRECTORY;
-                options.WatchGracefulShutdown = false;
+                options.WatchPath = _tempWatchDirectory;
+                options.GracefulProcessShutdown = false;
             });
             HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, services: dummyServices);
 
@@ -1082,6 +1083,31 @@ module.exports = (callback) => {{
             string resultLog = resultStringBuilder.ToString();
             Assert.Contains(nameof(IOException), resultLog); // IOException thrown when initial process is killed
             Assert.Equal(newProcessID1, newProcessID2); // Long running invocation should complete in new process
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void NewProcessRetries_RetriesFailedInvocationInNewProcess()
+        {
+            // Arrange
+            const string dummyErrorMessagePrefix = "Error in process with ID: ";
+            string dummyErrorThrowingModule = $"module.exports = (callback) => {{throw new Error('{dummyErrorMessagePrefix}' + process.pid);}}";
+            var resultStringBuilder = new StringBuilder();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
+
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.InvokeFromStringAsync(dummyErrorThrowingModule)).ConfigureAwait(false);
+            // By default, we try once in existing process, retry there once then retry one more time in a new process.
+            //
+            // Process ID of NodeJS process first two errors were thrown in
+            string resultLog = resultStringBuilder.ToString();
+            MatchCollection logMatches = Regex.Matches(resultLog, $"{typeof(InvocationException).FullName}: {dummyErrorMessagePrefix}(\\d+)");
+            string firstExceptionProcessID = logMatches[0].Groups[1].Captures[0].Value;
+            string secondExceptionProcessID = logMatches[1].Groups[1].Captures[0].Value;
+            Assert.Equal(firstExceptionProcessID, secondExceptionProcessID);
+            // Process ID of NodeJS process last error was thrown in
+            MatchCollection exceptionMessageMatches = Regex.Matches(result.Message, $"^{dummyErrorMessagePrefix}(\\d+)");
+            string thirdExceptionProcessID = exceptionMessageMatches[0].Groups[1].Captures[0].Value;
+            Assert.NotEqual(firstExceptionProcessID, thirdExceptionProcessID); // Invocation invoked in new process
         }
 
         /// <summary>
@@ -1151,15 +1177,15 @@ module.exports = (callback) => {{
         private void RecreateWatchDirectory()
         {
             TryDeleteWatchDirectory();
-            Directory.CreateDirectory(TEMP_WATCH_DIRECTORY);
-            _tempWatchDirectoryUri = new Uri(TEMP_WATCH_DIRECTORY);
+            Directory.CreateDirectory(_tempWatchDirectory);
+            _tempWatchDirectoryUri = new Uri(_tempWatchDirectory);
         }
 
         private void TryDeleteWatchDirectory()
         {
             try
             {
-                Directory.Delete(TEMP_WATCH_DIRECTORY, true);
+                Directory.Delete(_tempWatchDirectory, true);
             }
             catch
             {

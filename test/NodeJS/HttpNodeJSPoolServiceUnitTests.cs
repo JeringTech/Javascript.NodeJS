@@ -339,51 +339,59 @@ namespace Jering.Javascript.NodeJS.Tests
         private Mock<HttpNodeJSService> CreateMockHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
             IHttpContentFactory httpContentFactory = null,
             IEmbeddedResourcesService embeddedResourcesService = null,
+            IFileWatcherFactory fileWatcherFactory = null,
+            IMonitorService monitorService = null,
+            ITaskService taskService = null,
             IHttpClientService httpClientService = null,
             IJsonService jsonService = null,
             INodeJSProcessFactory nodeProcessFactory = null,
-            ILoggerFactory loggerFactory = null)
+            ILogger<HttpNodeJSService> logger = null)
         {
-            if (loggerFactory == null)
+            if (logger == null)
             {
-                Mock<ILogger> mockLogger = _mockRepository.Create<ILogger>();
-                Mock<ILoggerFactory> mockLoggerFactory = _mockRepository.Create<ILoggerFactory>();
-                mockLoggerFactory.Setup(l => l.CreateLogger(typeof(HttpNodeJSService).FullName)).Returns(mockLogger.Object);
-                loggerFactory = mockLoggerFactory.Object;
+                Mock<ILogger<HttpNodeJSService>> mockLogger = _mockRepository.Create<ILogger<HttpNodeJSService>>();
+                logger = mockLogger.Object;
             }
 
             return _mockRepository.Create<HttpNodeJSService>(outOfProcessNodeHostOptionsAccessor,
                 httpContentFactory,
                 embeddedResourcesService,
+                fileWatcherFactory,
+                monitorService,
+                taskService,
                 httpClientService,
                 jsonService,
                 nodeProcessFactory,
-                loggerFactory);
+                logger);
         }
 
         private HttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
             IHttpContentFactory httpContentFactory = null,
             IEmbeddedResourcesService embeddedResourcesService = null,
+            IFileWatcherFactory fileWatcherFactory = null,
+            IMonitorService monitorService = null,
+            ITaskService taskService = null,
             IHttpClientService httpClientService = null,
             IJsonService jsonService = null,
             INodeJSProcessFactory nodeProcessFactory = null,
-            ILoggerFactory loggerFactory = null)
+            ILogger<HttpNodeJSService> logger = null)
         {
-            if (loggerFactory == null)
+            if (logger == null)
             {
-                Mock<ILogger> mockLogger = _mockRepository.Create<ILogger>();
-                Mock<ILoggerFactory> mockLoggerFactory = _mockRepository.Create<ILoggerFactory>();
-                mockLoggerFactory.Setup(l => l.CreateLogger(typeof(HttpNodeJSService).FullName)).Returns(mockLogger.Object);
-                loggerFactory = mockLoggerFactory.Object;
+                Mock<ILogger<HttpNodeJSService>> mockLogger = _mockRepository.Create<ILogger<HttpNodeJSService>>();
+                logger = mockLogger.Object;
             }
 
             return new HttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
                 httpContentFactory,
                 embeddedResourcesService,
+                fileWatcherFactory,
+                monitorService,
+                taskService,
                 httpClientService,
                 jsonService,
                 nodeProcessFactory,
-                loggerFactory);
+                logger);
         }
     }
 }

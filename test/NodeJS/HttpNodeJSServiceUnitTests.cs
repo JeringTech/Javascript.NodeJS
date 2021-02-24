@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System;
@@ -209,14 +210,16 @@ namespace Jering.Javascript.NodeJS.Tests
         public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyIP, string dummyPort, string expectedResult)
         {
             // Arrange
+            var loggerStringBuilder = new StringBuilder();
             string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
-            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService();
+            ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(loggerStringBuilder: loggerStringBuilder);
 
             // Act
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
             // Assert
             Assert.Equal(expectedResult, testSubject._endpoint.AbsoluteUri);
+            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, expectedResult), loggerStringBuilder.ToString());
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
@@ -235,38 +238,70 @@ namespace Jering.Javascript.NodeJS.Tests
         private ExposedHttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
             IHttpContentFactory httpContentFactory = null,
             IEmbeddedResourcesService embeddedResourcesService = null,
+            IFileWatcherFactory fileWatcherFactory = null,
+            IMonitorService monitorService = null,
+            ITaskService taskService = null,
             IHttpClientService httpClientService = null,
             IJsonService jsonService = null,
             INodeJSProcessFactory nodeProcessFactory = null,
-            ILoggerFactory loggerFactory = null)
+            ILogger<HttpNodeJSService> logger = null,
+            StringBuilder loggerStringBuilder = null)
         {
-            if (loggerFactory == null)
+            if (logger == null)
             {
-                Mock<ILogger> mockLogger = _mockRepository.Create<ILogger>();
-                Mock<ILoggerFactory> mockLoggerFactory = _mockRepository.Create<ILoggerFactory>();
-                mockLoggerFactory.Setup(l => l.CreateLogger(typeof(HttpNodeJSService).FullName)).Returns(mockLogger.Object);
-                loggerFactory = mockLoggerFactory.Object;
+                // Log output
+                if (loggerStringBuilder != null)
+                {
+                    var services = new ServiceCollection();
+                    services.AddLogging(lb =>
+                    {
+                        lb.
+                            AddProvider(new StringBuilderProvider(loggerStringBuilder)).
+                            AddFilter<StringBuilderProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Trace);
+                    });
+                    logger = services.BuildServiceProvider().GetRequiredService<ILogger<HttpNodeJSService>>();
+                }
+                else
+                {
+                    Mock<ILogger<HttpNodeJSService>> mockLogger = _mockRepository.Create<ILogger<HttpNodeJSService>>();
+                    logger = mockLogger.Object;
+                }
             }
 
             return new ExposedHttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
                 httpContentFactory,
                 embeddedResourcesService,
+                fileWatcherFactory,
+                monitorService,
+                taskService,
                 httpClientService,
                 jsonService,
                 nodeProcessFactory,
-                loggerFactory);
+                logger);
         }
 
         private class ExposedHttpNodeJSService : HttpNodeJSService
         {
-            public ExposedHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor,
-                IHttpContentFactory httpContentFactory,
-                IEmbeddedResourcesService embeddedResourcesService,
-                IHttpClientService httpClientService,
-                IJsonService jsonService,
-                INodeJSProcessFactory nodeProcessFactory,
-                ILoggerFactory loggerFactory) :
-                base(outOfProcessNodeHostOptionsAccessor, httpContentFactory, embeddedResourcesService, httpClientService, jsonService, nodeProcessFactory, loggerFactory)
+            public ExposedHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
+            IHttpContentFactory httpContentFactory,
+            IEmbeddedResourcesService embeddedResourcesService,
+            IFileWatcherFactory fileWatcherFactory,
+            IMonitorService monitorService,
+            ITaskService taskService,
+            IHttpClientService httpClientService,
+            IJsonService jsonService,
+            INodeJSProcessFactory nodeJSProcessFactory,
+            ILogger<HttpNodeJSService> logger) :
+                base(outOfProcessNodeJSServiceOptionsAccessor,
+                    httpContentFactory,
+                    embeddedResourcesService,
+                    fileWatcherFactory,
+                    monitorService,
+                    taskService,
+                    httpClientService,
+                    jsonService,
+                    nodeJSProcessFactory,
+                    logger)
             {
             }
 

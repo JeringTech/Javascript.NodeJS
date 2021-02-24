@@ -16,9 +16,9 @@ namespace Jering.Javascript.NodeJS
     public class InvocationContent : HttpContent
     {
         // Arbitrary boundary
-        internal static readonly byte[] BOUNDARY_BYTES = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
+        internal static readonly byte[] _boundaryBytes = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
 
-        private static readonly MediaTypeHeaderValue MULTIPART_CONTENT_TYPE = new MediaTypeHeaderValue("multipart/mixed");
+        private static readonly MediaTypeHeaderValue _multipartContentType = new MediaTypeHeaderValue("multipart/mixed");
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;
 
@@ -34,7 +34,7 @@ namespace Jering.Javascript.NodeJS
 
             if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
-                Headers.ContentType = MULTIPART_CONTENT_TYPE;
+                Headers.ContentType = _multipartContentType;
             }
         }
 
@@ -50,7 +50,7 @@ namespace Jering.Javascript.NodeJS
 
             if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
-                await stream.WriteAsync(BOUNDARY_BYTES, 0, BOUNDARY_BYTES.Length).ConfigureAwait(false);
+                await stream.WriteAsync(_boundaryBytes, 0, _boundaryBytes.Length).ConfigureAwait(false);
                 await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
             }
         }
