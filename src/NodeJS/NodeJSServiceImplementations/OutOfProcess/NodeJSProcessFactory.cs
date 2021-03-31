@@ -34,7 +34,7 @@ namespace Jering.Javascript.NodeJS
             nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding? Would avoid an allocation every time we start a NodeJS process.
 
             int currentProcessPid = Process.GetCurrentProcess().Id;
-            var startInfo = new ProcessStartInfo("node")
+            var startInfo = new ProcessStartInfo(_nodeJSProcessOptions.ExecutablePath)
             {
                 Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
                 UseShellExecute = false,

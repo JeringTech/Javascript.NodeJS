@@ -11,6 +11,37 @@ namespace Jering.Javascript.NodeJS.Tests
     {
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
 
+        [Theory]
+        [MemberData(nameof(Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString_Data))]
+        public void Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString(string dummyExecutablePath)
+        {
+            // Arrange
+            Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(null); // Called by the extension method GetService<T>
+            Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
+            mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
+            Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
+            mockServiceScopeFactory.Setup(s => s.CreateScope()).Returns(mockServiceScope.Object);
+            var dummyOptions = new NodeJSProcessOptions { ExecutablePath = dummyExecutablePath };
+            ConfigureNodeJSProcessOptions testSubject = CreateConfigureNodeJSProcessOptions(mockServiceScopeFactory.Object);
+
+            // Act
+            testSubject.Configure(dummyOptions);
+
+            // AssertS
+            Assert.Equal("node", dummyOptions.ExecutablePath);
+        }
+
+        public static IEnumerable<object[]> Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString_Data()
+        {
+            return new object[][]
+            {
+                new object[]{null},
+                new object[]{" "},
+                new object[]{string.Empty}
+            };
+        }
+
         [Fact]
         public void Configure_DoesNothingIfProjectPathAndNodeEnvAlreadySpecified()
         {

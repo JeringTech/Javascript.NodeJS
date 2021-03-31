@@ -28,6 +28,12 @@ namespace Jering.Javascript.NodeJS
         /// <param name="options">The target <see cref="NodeJSProcessOptions"/> to configure.</param>
         public void Configure(NodeJSProcessOptions options)
         {
+            // Set executable path if unspecified
+            if (string.IsNullOrWhiteSpace(options.ExecutablePath))
+            {
+                options.ExecutablePath = "node";
+            }
+
             // Check whether project path already specified
             bool projectPathSpecified = !string.IsNullOrWhiteSpace(options.ProjectPath);
 

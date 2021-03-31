@@ -17,6 +17,16 @@ namespace Jering.Javascript.NodeJS
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
         /// <summary>
+        /// <para>The value used to locate the NodeJS executable.</para>
+        /// <para>This value may be an absolute path, a relative path, or a file name.</para>
+        /// <para>If this value is a relative path, the executable's path is resolved relative to <see cref="Directory.GetCurrentDirectory"/>.</para>
+        /// <para>If this value is a file name, the executable's path is resolved using the path environment variable.</para>
+        /// <para>If this value is <c>null</c>, whitespace or an empty string, it is overridden with the file name "node".</para>
+        /// <para>Defaults to <c>null</c>.</para>
+        /// </summary>
+        public string ExecutablePath { get; set; }
+
+        /// <summary>
         /// <para>NodeJS and V8 options in the form [NodeJS options] [V8 options].</para>
         /// <para>The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options.</para>
         /// </summary>
