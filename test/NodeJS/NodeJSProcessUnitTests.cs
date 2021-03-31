@@ -375,6 +375,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             var dummyNodeJSProcessFactory = new NodeJSProcessFactory(null);
             ProcessStartInfo dummyProcessStartInfo = dummyNodeJSProcessFactory.CreateStartInfo(_dummyLongRunningScript);
+            dummyProcessStartInfo.FileName = "node";
 
             return dummyNodeJSProcessFactory.CreateProcess(dummyProcessStartInfo);
         }

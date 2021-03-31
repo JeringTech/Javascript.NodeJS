@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -46,8 +47,59 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
+        public async void ExecutablePath_CanBeAbsolute()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            string absoluteExecutablePath = GetNodeAbsolutePath();
+            Assert.NotNull(absoluteExecutablePath); // Node executable must be present on test machine
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: absoluteExecutablePath);
+
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void ExecutablePath_CanBeRelative()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            string absoluteExecutablePath = GetNodeAbsolutePath();
+            Assert.NotNull(absoluteExecutablePath); // Node executable must be present on test machine
+            string relativeExecutablePath = GetRelativePath(Directory.GetCurrentDirectory(), absoluteExecutablePath);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: relativeExecutablePath);
+
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void ExecutablePath_CanBeAFileName()
+        {
+            // Arrange
+            const string dummyArg = "success";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: "node");
+
+            // Act
+            DummyResult result = await testSubject.
+                InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(dummyArg, result.Result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
         {
+            // Arrange
             const string dummyArg = "success";
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
@@ -1115,6 +1167,7 @@ module.exports = (callback) => {{
         /// </summary>
         private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = default,
             string projectPath = default,
+            string executablePath = default,
             ServiceCollection services = default)
         {
             services ??= new ServiceCollection();
@@ -1122,6 +1175,10 @@ module.exports = (callback) => {{
             if (projectPath != null)
             {
                 services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = projectPath);
+            }
+            if (executablePath != null)
+            {
+                services.Configure<NodeJSProcessOptions>(options => options.ExecutablePath = executablePath);
             }
             services.AddLogging(lb =>
             {
@@ -1191,6 +1248,58 @@ module.exports = (callback) => {{
             {
                 // Do nothing
             }
+        }
+
+        private string GetNodeAbsolutePath()
+        {
+#if NETCOREAPP3_1 || NET5_0
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return GetNodeAbsolutePathCore("Path", ';', "node.exe");
+            }
+            else
+            {
+                return GetNodeAbsolutePathCore("PATH", ':', "node");
+            }
+#else
+            // net461
+            return GetNodeAbsolutePathCore("Path", ';', "node.exe");
+#endif
+        }
+
+        private string GetNodeAbsolutePathCore(string environmentVariableName, char pathSeparator, string executableFile)
+        {
+            string pathEnvironmentVariable = Environment.GetEnvironmentVariable(environmentVariableName);
+            string[] directories = pathEnvironmentVariable.Split(new char[] { pathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string directory in directories)
+            {
+                string nodeAbsolutePath = Path.Combine(directory, executableFile);
+                if (File.Exists(nodeAbsolutePath))
+                {
+                    return nodeAbsolutePath;
+                }
+            }
+
+            return null;
+        }
+
+        private string GetRelativePath(string directoryRelativeTo, string path)
+        {
+#if NETCOREAPP3_1 || NET5_0
+            return Path.GetRelativePath(directoryRelativeTo, path);
+#else
+
+            // net461 doesn't support GetRelativePath. Make sure directory ends with '/'.
+            if (!directoryRelativeTo.EndsWith("/") && !directoryRelativeTo.EndsWith("\\"))
+            {
+                directoryRelativeTo += "/";
+            }
+            var relativeToUri = new Uri(directoryRelativeTo);
+            var pathUri = new Uri(path);
+            Uri relativeUri = relativeToUri.MakeRelativeUri(pathUri);
+            return Uri.UnescapeDataString(relativeUri.ToString());
+#endif
         }
     }
 }
