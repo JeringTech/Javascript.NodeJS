@@ -88,8 +88,8 @@
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
     <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http11Server.ts" />
+		<Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http20Server.ts" />
     </Target>
 
 </Project>
