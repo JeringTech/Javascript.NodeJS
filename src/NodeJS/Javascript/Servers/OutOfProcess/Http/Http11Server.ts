@@ -49,7 +49,7 @@ function startServer(): void {
         // Signal to HttpNodeHost which loopback IP address (IPv4 or IPv6) and port it should make its HTTP connections on
         // and that we are ready to process invocations.
         let info = server.address() as AddressInfo;
-        console.log(`[Jering.Javascript.NodeJS: Listening on IP - ${info.address} Port - ${info.port}]`);
+        console.log(`[Jering.Javascript.NodeJS: HttpVersion - HTTP/1.1 Listening on IP - ${info.address} Port - ${info.port}]`);
     });
 }
 

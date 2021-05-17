@@ -24,7 +24,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Start of the message used to perform a handshake with the NodeJS process.
         /// </summary>
-        protected internal const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: Listening on ";
+        protected internal const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: ";
 
         /// <summary>
         /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.
@@ -98,9 +98,13 @@ namespace Jering.Javascript.NodeJS
             _numConnectionRetries = _options.NumConnectionRetries;
             _timeoutMS = _options.TimeoutMS;
 
+#if NET5_0
 #pragma warning disable CA2214 // Do not call overridable methods in constructors - method is internal
+#endif
             (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
+#if NET5_0
 #pragma warning restore CA2214
+#endif
         }
 
         /// <summary>

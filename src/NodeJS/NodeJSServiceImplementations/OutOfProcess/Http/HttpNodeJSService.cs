@@ -17,12 +17,16 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
-        internal const string SERVER_SCRIPT_NAME = "HttpServer.js";
+        internal const string HTTP11_SERVER_SCRIPT_NAME = "Http11Server.js";
+        internal const string HTTP20_SERVER_SCRIPT_NAME = "Http20Server.js";
 
         private readonly IHttpContentFactory _httpContentFactory;
         private readonly IJsonService _jsonService;
         private readonly ILogger<HttpNodeJSService> _logger;
         private readonly IHttpClientService _httpClientService;
+#if NETCOREAPP3_1 || NET5_0
+        private readonly Version _httpVersion;
+#endif
 
         private bool _disposed;
         // Volatile since it may be updated by different threads and we always
@@ -33,6 +37,7 @@ namespace Jering.Javascript.NodeJS
         /// Creates an <see cref="HttpNodeJSService"/>.
         /// </summary>
         /// <param name="outOfProcessNodeJSServiceOptionsAccessor">The <see cref="OutOfProcessNodeJSServiceOptions"/> accessor.</param>
+        /// <param name="httpNodeJSServiceOptionsAccessor">The <see cref="HttpNodeJSServiceOptions"/> accessor.</param>
         /// <param name="httpContentFactory">The factory for creating <see cref="HttpContent"/>s.</param>
         /// <param name="embeddedResourcesService">The service for retrieving NodeJS Http server scripts.</param>
         /// <param name="fileWatcherFactory">The service for creating <see cref="IFileWatcher"/>s</param>
@@ -43,6 +48,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="nodeJSProcessFactory">The factory for creating <see cref="NodeJSProcess"/>s.</param>
         /// <param name="logger">The logger for the instance.</param>
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
+            IOptions<HttpNodeJSServiceOptions> httpNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
             IFileWatcherFactory fileWatcherFactory,
@@ -60,12 +66,20 @@ namespace Jering.Javascript.NodeJS
                 monitorService,
                 taskService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,
-                SERVER_SCRIPT_NAME)
+#if NETCOREAPP3_1 || NET5_0
+                httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HTTP20_SERVER_SCRIPT_NAME : HTTP11_SERVER_SCRIPT_NAME)
+#else
+                HTTP11_SERVER_SCRIPT_NAME)
+#endif
+
         {
             _httpClientService = httpClientService;
             _jsonService = jsonService;
             _logger = logger;
             _httpContentFactory = httpContentFactory;
+#if NETCOREAPP3_1 || NET5_0
+            _httpVersion = httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HttpVersion.Version20 : HttpVersion.Version11;
+#endif
         }
 
         /// <inheritdoc />
@@ -75,12 +89,12 @@ namespace Jering.Javascript.NodeJS
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
             {
 #if NETCOREAPP3_1 || NET5_0
-                Version = HttpVersion.Version20,
+                Version = _httpVersion,
 #endif
 #if NET5_0
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
 #endif
-                Content = httpContent
+                Content = httpContent,
             };
 
             // Some notes on disposal:
@@ -160,8 +174,8 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
         {
-            // Start after message start and "IP - "
-            int startIndex = CONNECTION_ESTABLISHED_MESSAGE_START.Length + 5;
+            // Start after message start and "HttpVersion - HTTP/X.X Listening on IP - "
+            int startIndex = CONNECTION_ESTABLISHED_MESSAGE_START.Length + 41;
             var stringBuilder = new StringBuilder("http://");
 
             for (int i = startIndex; i < connectionEstablishedMessage.Length; i++)
@@ -184,7 +198,9 @@ namespace Jering.Javascript.NodeJS
                 else if (currentChar == ']')
                 {
                     _endpoint = new Uri(stringBuilder.ToString());
-                    _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint, _endpoint));
+                    _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint,
+                        connectionEstablishedMessage.Substring(41, 8), // Pluck out HTTP version
+                        _endpoint));
                     return;
                 }
                 else

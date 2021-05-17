@@ -237,7 +237,7 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected to NodeJS through HTTP. Endpoint: {0}..
+        ///   Looks up a localized string similar to Connected to NodeJS through {0}. Endpoint: {1}..
         /// </summary>
         internal static string LogInformation_HttpEndpoint {
             get {

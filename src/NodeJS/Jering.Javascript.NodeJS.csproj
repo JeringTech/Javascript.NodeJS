@@ -20,9 +20,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
         <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-		<HttpServerSourceName Condition="'$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'net5.0'">Http20Server.js</HttpServerSourceName>
-		<HttpServerSourceName Condition="'$(TargetFramework)' != 'netcoreapp3.1' And '$(TargetFramework)' != 'net5.0'">Http11Server.js</HttpServerSourceName>
-		<HttpServerBundleName>HttpServer.js</HttpServerBundleName>
+        <Http11ServerFileName>Http11Server.js</Http11ServerFileName>
+        <Http20ServerFileName>Http20Server.js</Http20ServerFileName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -37,10 +36,11 @@
 
     <ItemGroup>
         <JavascriptInputs Include="Javascript\**" Exclude="$(DefaultItemExcludes)" />
-        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(HttpServerBundleName)" />
+        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName);Javascript\bin\$(Configuration)\$(Http20ServerFileName)" />
         <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
         <UpToDateCheckInput Include="@(JavascriptInputs)" />
-		<EmbeddedResource Include="Javascript\bin\$(Configuration)\$(HttpServerSourceName)" LogicalName="$(HttpServerBundleName)" />
+        <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName)" LogicalName="$(Http11ServerFileName)" />
+        <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http20ServerFileName)" LogicalName="$(Http20ServerFileName)" />
     </ItemGroup>
 
     <ItemGroup>

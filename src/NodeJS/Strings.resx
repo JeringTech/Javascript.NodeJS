@@ -189,7 +189,7 @@ Exception:
     <value>Value cannot be null, whitespace or an empty string.</value>
   </data>
   <data name="LogInformation_HttpEndpoint" xml:space="preserve">
-    <value>Connected to NodeJS through HTTP. Endpoint: {0}.</value>
+    <value>Connected to NodeJS through {0}. Endpoint: {1}.</value>
   </data>
   <data name="LogWarning_RetriesInExistingProcessExhausted" xml:space="preserve">
     <value>Retries in existing process exhausted. Process retries remaining: {0}.</value>
