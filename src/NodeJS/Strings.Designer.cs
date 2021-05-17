@@ -174,6 +174,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No embedded resource with specified name: {0}..
+        /// </summary>
+        internal static string InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName {
+            get {
+                return ResourceManager.GetString("InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Received a HTTP response with an unexpected status code: {0}..
         /// </summary>
         internal static string InvocationException_HttpNodeJSService_UnexpectedStatusCode {

@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class FileWatcherFactory : IFileWatcherFactory
     {
-        private readonly ConcurrentDictionary<string, Regex> _cachedRegices = new ConcurrentDictionary<string, Regex>();
+        private readonly ConcurrentDictionary<string, Regex> _cachedRegices = new();
         private readonly NodeJSProcessOptions _nodeJSProcessOptions;
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public IFileWatcher Create(string directoryPath,
+        public IFileWatcher Create(string? directoryPath,
             bool includeSubdirectories,
             IEnumerable<string> fileNamePatterns,
             FileChangedEventHandler fileChangedEventHandler)
@@ -38,9 +38,9 @@ namespace Jering.Javascript.NodeJS
 
         // TODO validate options using https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-3.1#options-validation
         // so directoryPath and NodeJSProcessOptions are never both null, whitespace or empty strings.
-        internal virtual string ResolveDirectoryPath(string directoryPath, NodeJSProcessOptions nodeJSProcessOptions)
+        internal virtual string ResolveDirectoryPath(string? directoryPath, NodeJSProcessOptions nodeJSProcessOptions)
         {
-            return string.IsNullOrWhiteSpace(directoryPath) ? nodeJSProcessOptions.ProjectPath : directoryPath;
+            return string.IsNullOrWhiteSpace(directoryPath) ? nodeJSProcessOptions.ProjectPath : directoryPath!;
         }
 
         internal virtual ReadOnlyCollection<Regex> ResolveFilters(IEnumerable<string> fileNamePatterns)

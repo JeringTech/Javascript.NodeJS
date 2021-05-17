@@ -16,7 +16,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates a <see cref="ConfigureNodeJSProcessOptions"/>.
         /// </summary>
-        /// <param name="serviceScopeFactory"></param>
+        /// <param name="serviceScopeFactory">The factory for creating <see cref="IServiceScope"/>s.</param>
         public ConfigureNodeJSProcessOptions(IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
@@ -55,11 +55,11 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            // Create a scope to avoid leaking unintended singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
+            // Create a scope to avoid leaking singletons - https://wildermuth.com/2016/08/07/ASP-NET-Core-Dependency-Injection
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IServiceProvider serviceProvider = scope.ServiceProvider;
 
-            IHostingEnvironment hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
+            IHostingEnvironment? hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
             if (hostingEnvironment == null)
             {
                 return;

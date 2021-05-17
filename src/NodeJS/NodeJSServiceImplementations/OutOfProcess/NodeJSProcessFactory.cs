@@ -15,10 +15,10 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates a <see cref="NodeJSProcessFactory"/>.
         /// </summary>
-        /// <param name="optionsAccessor"></param>
+        /// <param name="optionsAccessor">The <see cref="NodeJSProcessOptions"/> accessor.</param>
         public NodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor)
         {
-            _nodeJSProcessOptions = optionsAccessor?.Value ?? new NodeJSProcessOptions();
+            _nodeJSProcessOptions = optionsAccessor.Value;
         }
 
         /// <inheritdoc />
@@ -33,8 +33,12 @@ namespace Jering.Javascript.NodeJS
         {
             nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding? Would avoid an allocation every time we start a NodeJS process.
 
+#if NET5_0
+            int currentProcessPid = Environment.ProcessId;
+#else
             int currentProcessPid = Process.GetCurrentProcess().Id;
-            var startInfo = new ProcessStartInfo(_nodeJSProcessOptions.ExecutablePath)
+#endif
+            var startInfo = new ProcessStartInfo(_nodeJSProcessOptions.ExecutablePath!) // ConfigureNodeJSProcessOptions sets ExecutablePath to "node" if user specified value is null, whitespace or an empty string
             {
                 Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
                 UseShellExecute = false,
@@ -49,42 +53,44 @@ namespace Jering.Javascript.NodeJS
             // Append environment Variables
             if (_nodeJSProcessOptions.EnvironmentVariables != null)
             {
-                foreach (var envVarKey in _nodeJSProcessOptions.EnvironmentVariables.Keys)
+                foreach (string envVarKey in _nodeJSProcessOptions.EnvironmentVariables.Keys)
                 {
                     string envVarValue = _nodeJSProcessOptions.EnvironmentVariables[envVarKey];
-                    if (envVarValue != null)
-                    {
-                        startInfo.Environment[envVarKey] = envVarValue;
-                    }
+                    startInfo.Environment[envVarKey] = envVarValue;
                 }
             }
 
             return startInfo;
         }
 
-        internal Process CreateProcess(ProcessStartInfo startInfo)
+        internal static Process CreateProcess(ProcessStartInfo startInfo)
         {
             try
             {
-                Process process = Process.Start(startInfo);
+                var process = Process.Start(startInfo);
 
-                // On Mac at least, a killed child process is left open as a zombie until the parent
-                // captures its exit code. We don't need the exit code for this process, and don't want
-                // to use process.WaitForExit() explicitly (we'd have to block the thread until it really
-                // has exited), but we don't want to leave zombies lying around either. It's sufficient
-                // to use process.EnableRaisingEvents so that .NET will grab the exit code and let the
-                // zombie be cleaned away without having to block our thread.
-                process.EnableRaisingEvents = true;
+                if (process != null)
+                {
+                    // On Mac at least, a killed child process is left open as a zombie until the parent
+                    // captures its exit code. We don't need the exit code for this process, and don't want
+                    // to use process.WaitForExit() explicitly (we'd have to block the thread until it really
+                    // has exited), but we don't want to leave zombies lying around either. It's sufficient
+                    // to use process.EnableRaisingEvents so that .NET will grab the exit code and let the
+                    // zombie be cleaned away without having to block our thread.
+                    process.EnableRaisingEvents = true;
 
-                return process;
+                    return process;
+                }
             }
             catch (Exception exception)
             {
                 throw new InvalidOperationException(string.Format(Strings.InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess, Environment.GetEnvironmentVariable("PATH")), exception);
             }
+
+            throw new InvalidOperationException(string.Format(Strings.InvalidOperationException_NodeJSProcessFactory_FailedToStartNodeProcess, Environment.GetEnvironmentVariable("PATH")));
         }
 
-        internal string EscapeCommandLineArg(string arg)
+        internal static string EscapeCommandLineArg(string arg)
         {
             var stringBuilder = new StringBuilder();
             int slashSequenceLength = 0;

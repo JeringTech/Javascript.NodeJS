@@ -16,7 +16,7 @@ namespace Jering.Javascript.NodeJS
         /// <typeparam name="T">The type of the object to create.</typeparam>
         /// <param name="stream">The <see cref="Stream"/> containing the JSON to deserialize.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel deserialization.</param>
-        ValueTask<T> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default);
+        ValueTask<T?> DeserializeAsync<T>(Stream stream, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Serializes <paramref name="value"/> and writes the generated JSON to <paramref name="stream"/>.

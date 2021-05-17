@@ -6,7 +6,7 @@
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
-        <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can use javascript libraries and scripts from C# projects.</Description>
+        <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can use NodeJS javascript libraries and scripts from C# projects.</Description>
         <Copyright>© 2018-2021 Jering. All rights reserved.</Copyright>
         <PackageProjectUrl>https://www.jering.tech/utilities/jering.javascript.nodejs/index</PackageProjectUrl>
         <RepositoryUrl>https://github.com/JeringTech/Javascript.NodeJS</RepositoryUrl>
@@ -30,6 +30,8 @@
         <AssemblyOriginatorKeyFile>../../keypair.snk</AssemblyOriginatorKeyFile>
         <SignAssembly>true</SignAssembly>
         <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+        <Nullable>enable</Nullable>
+        <!-- So we can use generators -->
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
@@ -43,22 +45,20 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Roslynator.Analyzers" Version="2.2.0" PrivateAssets="all" ExcludeAssets="Runtime">
-            <IncludeAssets>build; native; contentfiles; analyzers</IncludeAssets>
+        <PackageReference Include="Nullable" Version="1.3.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-        </PackageReference>
-		<!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
-        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
-        <PackageReference Include="Yarn.MSBuild" Version="1.22.0" PrivateAssets="all" ExcludeAssets="Runtime">
+        <!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.22.10" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.Text.Json" Version="5.0.1" />
+        <PackageReference Include="System.Text.Json" Version="5.0.2" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
@@ -66,7 +66,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -92,8 +92,8 @@
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
     <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http11Server.ts" />
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http20Server.ts" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http11Server.ts" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http20Server.ts" />
     </Target>
 
 </Project>

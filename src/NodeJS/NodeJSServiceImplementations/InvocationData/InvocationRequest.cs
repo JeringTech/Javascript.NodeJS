@@ -14,14 +14,14 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates an <see cref="InvocationRequest"/>.
         /// </summary>
-        /// <param name="moduleSourceType">The source type of the module.</param>
+        /// <param name="moduleSourceType">The module's source type.</param>
         /// <param name="moduleSource">
         /// <para>The module's source.</para>
-        /// <para>This value may be the path of the module relative to <see cref="NodeJSProcessOptions.ProjectPath"/>, the module as a string, or the module's cache identifier.</para>
+        /// <para>This value may be the module's path relative to <see cref="NodeJSProcessOptions.ProjectPath"/>, the module as a string, or the module's cache identifier.</para>
         /// <para>If <paramref name="moduleSourceType"/> is not <see cref="ModuleSourceType.Stream"/>, this value must not be <c>null</c>. Additionally, if <paramref name="moduleSourceType"/> 
         /// is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/>, this value must not be an empty string or whitespace.</para>
         /// </param>
-        /// <param name="newCacheIdentifier">The module's cache identifier. If this value is <c>null</c>, no attempt is made to retrieve or cache the module's exports.</param>
+        /// <param name="cacheIdentifier">The module's cache identifier. If this value is <c>null</c>, no attempt is made to retrieve or cache the module's exports.</param>
         /// <param name="exportName">The name of the function in the module's exports to invoke. If this value is <c>null</c>, the module's exports is assumed to be a function and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
         /// <param name="moduleStreamSource">The module as a <see cref="Stream"/>.</param>
@@ -30,11 +30,11 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ArgumentException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/> but <paramref name="moduleSource"/> 
         /// is <c>null</c>, whitespace or an empty string.</exception>
         public InvocationRequest(ModuleSourceType moduleSourceType,
-            string moduleSource = null,
-            string newCacheIdentifier = null,
-            string exportName = null,
-            object[] args = null,
-            Stream moduleStreamSource = null)
+            string? moduleSource = null,
+            string? cacheIdentifier = null,
+            string? exportName = null,
+            object[]? args = null,
+            Stream? moduleStreamSource = null)
         {
             if (moduleSourceType == ModuleSourceType.Stream)
             {
@@ -65,7 +65,7 @@ namespace Jering.Javascript.NodeJS
 
             ModuleSourceType = moduleSourceType;
             ModuleSource = moduleSource;
-            NewCacheIdentifier = newCacheIdentifier;
+            CacheIdentifier = cacheIdentifier;
             ExportName = exportName;
             Args = args;
         }
@@ -118,27 +118,27 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Gets the module's source
         /// </summary>
-        public string ModuleSource { get; }
+        public string? ModuleSource { get; }
 
         /// <summary>
         /// Gets the module's cache identifier.
         /// </summary>
-        public string NewCacheIdentifier { get; }
+        public string? CacheIdentifier { get; }
 
         /// <summary>
         /// Gets the name of the function in the module's exports to invoke.
         /// </summary>
-        public string ExportName { get; }
+        public string? ExportName { get; }
 
         /// <summary>
         /// Gets the sequence of JSON-serializable arguments to pass to the function to invoke.
         /// </summary>
-        public object[] Args { get; }
+        public object[]? Args { get; }
 
         /// <summary>
         /// Gets the module as a <see cref="Stream"/>.
         /// </summary>
         [JsonIgnore]
-        public Stream ModuleStreamSource { get; }
+        public Stream? ModuleStreamSource { get; }
     }
 }

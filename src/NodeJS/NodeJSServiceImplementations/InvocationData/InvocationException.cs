@@ -29,13 +29,13 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <param name="message">The NodeJS error's description.</param>
         /// <param name="stack">The NodeJS error's stack trace.</param>
-        public InvocationException(string message, string stack)
-            : base(message + Environment.NewLine + stack)
+        public InvocationException(string message, string? stack)
+            : base(message + Environment.NewLine + (stack ?? string.Empty))
         {
         }
 
         /// <summary>
-        /// Creates a <see cref="InvocationException"/>.
+        /// Creates an <see cref="InvocationException"/>.
         /// </summary>
         /// <param name="info">The data store for serialization/deserialization.</param>
         /// <param name="context">The struct representing the source and destination of a serialized stream.</param>

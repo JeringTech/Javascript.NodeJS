@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -16,9 +17,12 @@ namespace Jering.Javascript.NodeJS
     public class InvocationContent : HttpContent
     {
         // Arbitrary boundary
+#if NET461 || NETSTANDARD2_0
         internal static readonly byte[] _boundaryBytes = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==");
-
-        private static readonly MediaTypeHeaderValue _multipartContentType = new MediaTypeHeaderValue("multipart/mixed");
+#else
+        internal static readonly ReadOnlyMemory<byte> _boundaryBytes = Encoding.UTF8.GetBytes("--Uiw6+hXl3k+5ia0cUYGhjA==").AsMemory();
+#endif
+        private static readonly MediaTypeHeaderValue _multipartContentType = new("multipart/mixed");
         private readonly IJsonService _jsonService;
         private readonly InvocationRequest _invocationRequest;
 
@@ -42,16 +46,20 @@ namespace Jering.Javascript.NodeJS
         /// Serialize the HTTP content to a stream as an asynchronous operation.
         /// </summary>
         /// <param name="stream">The target stream.</param>
-        /// <param name="context">Information about the transport (channel binding token, for example). This parameter may be null.</param>
-        /// <returns>The task object representing the asynchronous operation.</returns>
-        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        /// <param name="context">Information about the transport (channel binding token, for example). This parameter may be <c>null</c>.</param>
+        /// <returns>The task representing the asynchronous operation.</returns>
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
             await _jsonService.SerializeAsync(stream, _invocationRequest).ConfigureAwait(false);
 
             if (_invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
             {
+#if NET461 || NETSTANDARD2_0
                 await stream.WriteAsync(_boundaryBytes, 0, _boundaryBytes.Length).ConfigureAwait(false);
-                await _invocationRequest.ModuleStreamSource.CopyToAsync(stream).ConfigureAwait(false);
+#else
+                await stream.WriteAsync(_boundaryBytes).ConfigureAwait(false);
+#endif
+                await _invocationRequest.ModuleStreamSource!.CopyToAsync(stream).ConfigureAwait(false); // If ModuleSourceType is Stream, ModuleStreamSource is not null
             }
         }
 

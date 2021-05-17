@@ -17,6 +17,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="embeddedResourceAssembly">The assembly that contains the embedded resource.</param>
         /// <param name="name">The name of the embedded resource to be read.</param>
         /// <returns>The contents of the resource as a string.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if there is no embedded resource with the specified name.</exception>
         string ReadAsString(Assembly embeddedResourceAssembly, string name);
 
         /// <summary>
@@ -27,6 +28,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="typeFromEmbeddedResourceAssembly">Any <see cref="Type"/> in the assembly that contains the embedded resource.</param>
         /// <param name="name">The name of the embedded resource to be read.</param>
         /// <returns>The contents of the resource as a string.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if there is no embedded resource with the specified name.</exception>
         string ReadAsString(Type typeFromEmbeddedResourceAssembly, string name);
 
         /// <summary>
@@ -37,6 +39,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="embeddedResourceAssembly">The assembly that contains the embedded resource.</param>
         /// <param name="name">The name of the embedded resource to be read.</param>
         /// <returns>The contents of the resource as a stream.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if there is no embedded resource with the specified name.</exception>
         Stream ReadAsStream(Assembly embeddedResourceAssembly, string name);
 
         /// <summary>
@@ -47,6 +50,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="typeFromEmbeddedResourceAssembly">Any <see cref="Type"/> in the assembly that contains the embedded resource.</param>
         /// <param name="name">The name of the embedded resource to be read.</param>
         /// <returns>The contents of the resource as a stream.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if there is no embedded resource with the specified name.</exception>
         Stream ReadAsStream(Type typeFromEmbeddedResourceAssembly, string name);
     }
 }

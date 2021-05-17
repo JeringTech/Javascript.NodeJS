@@ -1,15 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// An implementation of <see cref="INodeJSService"/> that uses Http for inter-process communication with a pool of NodeJS processes.
     /// </summary>
-    public class HttpNodeJSPoolService : INodeJSService
+    public partial class HttpNodeJSPoolService : INodeJSService
     {
         private readonly ReadOnlyCollection<HttpNodeJSService> _httpNodeJSServices;
 
@@ -31,78 +29,6 @@ namespace Jering.Javascript.NodeJS
             Size = httpNodeJSServices.Count;
         }
 
-        /// <inheritdoc />
-        public Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromFileAsync<T>(modulePath, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromFileAsync(modulePath, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStringAsync<T>(moduleString, newCacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task InvokeFromStringAsync(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStringAsync(moduleString, newCacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<T> InvokeFromStringAsync<T>(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStringAsync<T>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task InvokeFromStringAsync(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStringAsync(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStreamAsync<T>(moduleStream, newCacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task InvokeFromStreamAsync(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStreamAsync(moduleStream, newCacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<T> InvokeFromStreamAsync<T>(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStreamAsync<T>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task InvokeFromStreamAsync(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().InvokeFromStreamAsync(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().TryInvokeFromCacheAsync<T>(moduleCacheIdentifier, exportName, args, cancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
-        {
-            return GetHttpNodeJSService().TryInvokeFromCacheAsync(moduleCacheIdentifier, exportName, args, cancellationToken);
-        }
-
         internal HttpNodeJSService GetHttpNodeJSService()
         {
             // Notes
@@ -121,6 +47,7 @@ namespace Jering.Javascript.NodeJS
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

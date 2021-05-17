@@ -42,19 +42,19 @@ namespace Jering.Javascript.NodeJS
         private readonly string _serverScriptName;
         private readonly Assembly _serverScriptAssembly;
         private readonly OutOfProcessNodeJSServiceOptions _options;
-        private readonly object _connectingLock = new object();
-        private readonly object _invokeTaskTrackingLock = new object();
+        private readonly object _connectingLock = new();
+        private readonly object _invokeTaskTrackingLock = new();
         private readonly int _numRetries;
         private readonly int _numProcessRetries;
         private readonly int _numConnectionRetries;
         private readonly int _timeoutMS;
-        private readonly ConcurrentDictionary<Task, object> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
+        private readonly ConcurrentDictionary<Task, object?> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
         private readonly CountdownEvent _invokeTaskCreationCountdown;
         private readonly bool _trackInvokeTasks;
 
         private bool _disposed;
-        private volatile INodeJSProcess _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it's null)
-        private IFileWatcher _fileWatcher;
+        private volatile INodeJSProcess? _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it's null)
+        private IFileWatcher? _fileWatcher;
 
         /// <summary>
         /// Creates an <see cref="OutOfProcessNodeJSService"/> instance.
@@ -76,34 +76,12 @@ namespace Jering.Javascript.NodeJS
             IMonitorService monitorService,
             ITaskService taskService,
             Assembly serverScriptAssembly,
-            string serverScriptName) :
-            this(nodeProcessFactory, logger, optionsAccessor, embeddedResourcesService, serverScriptAssembly, serverScriptName)
+            string serverScriptName)
         {
             _fileWatcherFactory = fileWatcherFactory;
             _monitorService = monitorService;
             _taskService = taskService;
 
-            (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
-        }
-
-        // DO NOT DELETE - keep for backward compatibility.
-        /// <summary>
-        /// <para>Creates an <see cref="OutOfProcessNodeJSService"/> instance.</para>
-        /// <para>If this constructor is used, file watching is disabled.</para>
-        /// </summary>
-        /// <param name="nodeProcessFactory"></param>
-        /// <param name="logger"></param>
-        /// <param name="optionsAccessor"></param>
-        /// <param name="embeddedResourcesService"></param>
-        /// <param name="serverScriptAssembly"></param>
-        /// <param name="serverScriptName"></param>
-        protected OutOfProcessNodeJSService(INodeJSProcessFactory nodeProcessFactory,
-            ILogger logger,
-            IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
-            IEmbeddedResourcesService embeddedResourcesService,
-            Assembly serverScriptAssembly,
-            string serverScriptName)
-        {
             _nodeProcessFactory = nodeProcessFactory;
             _options = optionsAccessor?.Value ?? new OutOfProcessNodeJSServiceOptions();
             _embeddedResourcesService = embeddedResourcesService;
@@ -119,6 +97,10 @@ namespace Jering.Javascript.NodeJS
             _numProcessRetries = _options.NumProcessRetries;
             _numConnectionRetries = _options.NumConnectionRetries;
             _timeoutMS = _options.TimeoutMS;
+
+#pragma warning disable CA2214 // Do not call overridable methods in constructors - method is internal
+            (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
+#pragma warning restore CA2214
         }
 
         /// <summary>
@@ -128,7 +110,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="invocationRequest">The invocation request to send to the NodeJS process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        protected abstract Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
+        protected abstract Task<(bool, T?)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken); 
 
         /// <summary>
         /// <para>This method is called when the connection established message from the NodeJS process is received.</para>
@@ -139,7 +121,7 @@ namespace Jering.Javascript.NodeJS
         protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
 
         /// <inheritdoc />
-        public virtual async Task<T> InvokeFromFileAsync<T>(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> InvokeFromFileAsync<T>(string modulePath, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.File, modulePath, exportName: exportName, args: args);
 
@@ -147,30 +129,30 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public virtual Task InvokeFromFileAsync(string modulePath, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromFileAsync(string modulePath, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             // Task<T> extends Task
             return InvokeFromFileAsync<Void>(modulePath, exportName, args, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual async Task<T> InvokeFromStringAsync<T>(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> InvokeFromStringAsync<T>(string moduleString, string? cacheIdentifier = null, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.String, moduleString, newCacheIdentifier, exportName, args);
+            var invocationRequest = new InvocationRequest(ModuleSourceType.String, moduleString, cacheIdentifier, exportName, args);
 
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />
-        public virtual Task InvokeFromStringAsync(string moduleString, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStringAsync(string moduleString, string? cacheIdentifier = null, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            return InvokeFromStringAsync<Void>(moduleString, newCacheIdentifier, exportName, args, cancellationToken);
+            return InvokeFromStringAsync<Void>(moduleString, cacheIdentifier, exportName, args, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual async Task<T> InvokeFromStringAsync<T>(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> InvokeFromStringAsync<T>(Func<string> moduleFactory, string cacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            (bool success, T result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
+            (bool success, T? result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
 
             if (success)
             {
@@ -189,29 +171,29 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public virtual Task InvokeFromStringAsync(Func<string> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStringAsync(Func<string> moduleFactory, string cacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             return InvokeFromStringAsync<Void>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual async Task<T> InvokeFromStreamAsync<T>(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> InvokeFromStreamAsync<T>(Stream moduleStream, string? cacheIdentifier = null, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, newCacheIdentifier, exportName, args, moduleStream);
+            var invocationRequest = new InvocationRequest(ModuleSourceType.Stream, null, cacheIdentifier, exportName, args, moduleStream);
 
             return (await TryInvokeCoreAsync<T>(invocationRequest, cancellationToken).ConfigureAwait(false)).Item2;
         }
 
         /// <inheritdoc />
-        public virtual Task InvokeFromStreamAsync(Stream moduleStream, string newCacheIdentifier = null, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStreamAsync(Stream moduleStream, string? cacheIdentifier = null, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            return InvokeFromStreamAsync<Void>(moduleStream, newCacheIdentifier, exportName, args, cancellationToken);
+            return InvokeFromStreamAsync<Void>(moduleStream, cacheIdentifier, exportName, args, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual async Task<T> InvokeFromStreamAsync<T>(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> InvokeFromStreamAsync<T>(Func<Stream> moduleFactory, string cacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
-            (bool success, T result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
+            (bool success, T? result) = await TryInvokeFromCacheAsync<T>(cacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false);
 
             if (success)
             {
@@ -231,13 +213,13 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public virtual Task InvokeFromStreamAsync(Func<Stream> moduleFactory, string cacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task InvokeFromStreamAsync(Func<Stream> moduleFactory, string cacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             return InvokeFromStreamAsync<Void>(moduleFactory, cacheIdentifier, exportName, args, cancellationToken);
         }
 
         /// <inheritdoc />
-        public virtual Task<(bool, T)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual Task<(bool, T?)> TryInvokeFromCacheAsync<T>(string moduleCacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             var invocationRequest = new InvocationRequest(ModuleSourceType.Cache, moduleCacheIdentifier, exportName: exportName, args: args);
 
@@ -245,12 +227,12 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        public virtual async Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string exportName = null, object[] args = null, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> TryInvokeFromCacheAsync(string moduleCacheIdentifier, string? exportName = null, object[]? args = null, CancellationToken cancellationToken = default)
         {
             return (await TryInvokeFromCacheAsync<Void>(moduleCacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false)).Item1;
         }
 
-        internal virtual async Task<(bool, T)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+        internal virtual async Task<(bool, T?)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             if (_disposed)
             {
@@ -261,19 +243,20 @@ namespace Jering.Javascript.NodeJS
             int numProcessRetries = _numProcessRetries;
             while (true)
             {
-                CancellationTokenSource cancellationTokenSource = null;
+                CancellationTokenSource? cancellationTokenSource = null;
                 try
                 {
                     // If we haven't connected to a NodeJS process or we've been disconnected, connect to a new process.
                     // We want this within the while loop so if we disconnect between tries, we connect before retrying.
                     ConnectIfNotConnected();
 
-                    // Create cancellation token
+                    // Create cancellation token so we can add a timeout 
+                    // TODO we're setting HttpClient.Timeout, is this token necessary?
                     CancellationToken invokeCancellationToken;
-                    (invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken); // We need CTS so we can dispose of it
+                    (invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken); // We need the CTS for disposal
 
                     return await (_trackInvokeTasks ?
-                        TryTrackedInvokeAsync<T>(invocationRequest, invokeCancellationToken, _trackedInvokeTasks, _invokeTaskCreationCountdown) :
+                        TryTrackedInvokeAsync<T>(invocationRequest, _trackedInvokeTasks, _invokeTaskCreationCountdown, invokeCancellationToken) :
                         TryInvokeAsync<T>(invocationRequest, invokeCancellationToken)).ConfigureAwait(false);
                 }
                 catch (ConnectionException)
@@ -298,7 +281,7 @@ namespace Jering.Javascript.NodeJS
                 {
                     if (invocationRequest.ModuleSourceType == ModuleSourceType.Stream)
                     {
-                        if (!invocationRequest.ModuleStreamSource.CanSeek)
+                        if (!invocationRequest.ModuleStreamSource!.CanSeek) // ModuleStreamSource is not null if ModuleSourceType is Stream
                         {
                             // Don't retry if stream source is unseekable. Callers can "cache" stream contents in a memory stream if they want retries.
                             throw;
@@ -343,7 +326,7 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual (CancellationToken, CancellationTokenSource) CreateCancellationToken(CancellationToken cancellationToken)
+        internal virtual (CancellationToken, CancellationTokenSource?) CreateCancellationToken(CancellationToken cancellationToken)
         {
             if (_timeoutMS >= 0)
             {
@@ -392,7 +375,7 @@ namespace Jering.Javascript.NodeJS
                 _fileWatcher?.Stop();
 
                 int numConnectionRetries = _numConnectionRetries;
-                EventWaitHandle waitHandle = null;
+                EventWaitHandle? waitHandle = null;
 
                 while (true)
                 {
@@ -478,12 +461,9 @@ namespace Jering.Javascript.NodeJS
         // - and we can mock this method to return custom objects.
         //
         // Perfect dependency inversion would entail creating factories for these types. This internal virtual method does the job for now.
-        internal virtual (bool trackInvokeTasks, ConcurrentDictionary<Task, object> trackedInvokeTasks, CountdownEvent invokeTaskCreationCountdown) InitializeFileWatching()
+        internal virtual (bool trackInvokeTasks, ConcurrentDictionary<Task, object?> trackedInvokeTasks, CountdownEvent invokeTaskCreationCountdown) InitializeFileWatching()
         {
-            if (!_options.EnableFileWatching ||
-                _fileWatcherFactory == null ||
-                _monitorService == null ||
-                _taskService == null)
+            if (!_options.EnableFileWatching)
             {
                 return default;
             }
@@ -497,21 +477,21 @@ namespace Jering.Javascript.NodeJS
 
             // Note that we don't start file watching in this method. It's started when we actually have a process to restart.
 
-            return (true, new ConcurrentDictionary<Task, object>(), new CountdownEvent(1));
+            return (true, new ConcurrentDictionary<Task, object?>(), new CountdownEvent(1));
         }
 
-        internal virtual async Task<(bool, T)> TryTrackedInvokeAsync<T>(InvocationRequest invocationRequest,
-            CancellationToken cancellationToken,
+        internal virtual async Task<(bool, T?)> TryTrackedInvokeAsync<T>(InvocationRequest invocationRequest,
             // Instance variables newed in this class must be passed as arguments so we can mock them for testability.
-            ConcurrentDictionary<Task, object> trackedInvokeTasks,
-            CountdownEvent invokeTaskCreationCountdown)
+            ConcurrentDictionary<Task, object?> trackedInvokeTasks,
+            CountdownEvent invokeTaskCreationCountdown,
+            CancellationToken cancellationToken)
         {
             // Create tracked task
             lock (_invokeTaskTrackingLock)
             {
                 invokeTaskCreationCountdown.AddCount();
             }
-            Task<(bool, T)> trackedInvokeTask = null;
+            Task<(bool, T?)>? trackedInvokeTask = null;
             try
             {
                 trackedInvokeTask = TryInvokeAsync<T>(invocationRequest, cancellationToken);
@@ -586,8 +566,8 @@ namespace Jering.Javascript.NodeJS
 
         internal virtual void SwapProcesses()
         {
-            INodeJSProcess lastNodeJSProcess = null;
-            ICollection<Task> lastProcessInvokeTasks = null;
+            INodeJSProcess? lastNodeJSProcess = null;
+            ICollection<Task>? lastProcessInvokeTasks = null;
 
             try
             {
@@ -607,7 +587,7 @@ namespace Jering.Javascript.NodeJS
                     // - https://github.com/dotnet/runtime/blob/master/src/libraries/System.Collections.Concurrent/src/System/Collections/Concurrent/ConcurrentDictionary.cs#L1977.
                     // Also note that trackedInvokeTasks may empty between calling Count and Keys, but it doesn't matter since _taskService.WaitAll doesn't throw if 
                     // its argument is empty.
-                    lastProcessInvokeTasks = _trackedInvokeTasks.Count == 0 ? null : _trackedInvokeTasks.Keys;
+                    lastProcessInvokeTasks = _trackedInvokeTasks.IsEmpty ? null : _trackedInvokeTasks.Keys;
 
                     // TODO if a user invokes, changes a file, invokes more and changes a file again, and so on,
                     // we could end up with multiple NodeJS processes shutting down simultaneously. This is not a pressing issue:
@@ -645,11 +625,14 @@ namespace Jering.Javascript.NodeJS
                     }
 
                     // Kill process
-                    if (_infoLoggingEnabled)
+                    if (lastNodeJSProcess != null)
                     {
-                        Logger.LogInformation(string.Format(Strings.LogInformation_KillingNodeJSProcess, lastNodeJSProcess.SafeID));
+                        if (_infoLoggingEnabled)
+                        {
+                            Logger.LogInformation(string.Format(Strings.LogInformation_KillingNodeJSProcess, lastNodeJSProcess.SafeID));
+                        }
+                        lastNodeJSProcess.Dispose();
                     }
-                    lastNodeJSProcess.Dispose();
                 });
             }
         }

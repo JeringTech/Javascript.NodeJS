@@ -194,4 +194,7 @@ Exception:
   <data name="LogWarning_RetriesInExistingProcessExhausted" xml:space="preserve">
     <value>Retries in existing process exhausted. Process retries remaining: {0}.</value>
   </data>
+  <data name="InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName" xml:space="preserve">
+    <value>No embedded resource with specified name: {0}.</value>
+  </data>
 </root>

@@ -11,17 +11,10 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <param name="errorMessage">The error's description.</param>
         /// <param name="errorStack">The error's NodeJS stack trace.</param>
-        public InvocationError(string errorMessage, string errorStack = null)
+        public InvocationError(string errorMessage, string? errorStack = null)
         {
             ErrorMessage = errorMessage;
             ErrorStack = errorStack;
-        }
-
-        /// <summary>
-        /// Creates an <see cref="InvocationError"/>.
-        /// </summary>
-        public InvocationError()
-        {
         }
 
         // TODO this class is supposed to be immutable, but System.Text.Json doesn't
@@ -35,6 +28,6 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// The error's NodeJS stack trace.
         /// </summary>
-        public string ErrorStack { get; set; }
+        public string? ErrorStack { get; set; }
     }
 }

@@ -23,7 +23,7 @@ namespace Jering.Javascript.NodeJS
         private readonly FileChangedEventHandler _fileChangedEventHandler;
         private readonly NotifyFilters _notifyFilters;
 
-        private FileSystemWatcher _fileSystemWatcher;
+        private FileSystemWatcher? _fileSystemWatcher;
         private bool _disposed;
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Jering.Javascript.NodeJS
 
             if (disposing)
             {
-                _fileSystemWatcher.Dispose();
+                _fileSystemWatcher?.Dispose();
             }
 
             _disposed = true;

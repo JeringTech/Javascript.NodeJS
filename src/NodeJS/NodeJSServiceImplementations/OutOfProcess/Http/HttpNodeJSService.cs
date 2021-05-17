@@ -13,8 +13,7 @@ namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>An implementation of <see cref="OutOfProcessNodeJSService"/> that uses Http for inter-process communication.</para>
-    /// <para>The NodeJS child process starts a Http server on an arbitrary port (unless otherwise specified
-    /// using <see cref="NodeJSProcessOptions.Port"/>) and receives invocation requests as Http requests.</para>
+    /// <para>NodeJS child processes start Http servers to receive invocation requests over Http.</para>
     /// </summary>
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
@@ -28,21 +27,21 @@ namespace Jering.Javascript.NodeJS
         private bool _disposed;
         // Volatile since it may be updated by different threads and we always
         // want to use the most recent instance
-        internal volatile Uri _endpoint;
+        internal volatile Uri? _endpoint;
 
         /// <summary>
-        /// Creates a <see cref="HttpNodeJSService"/>.
+        /// Creates an <see cref="HttpNodeJSService"/>.
         /// </summary>
-        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
-        /// <param name="httpContentFactory"></param>
-        /// <param name="embeddedResourcesService"></param>
-        /// <param name="fileWatcherFactory"></param>
-        /// <param name="monitorService"></param>
-        /// <param name="taskService"></param>
-        /// <param name="httpClientService"></param>
-        /// <param name="jsonService"></param>
-        /// <param name="nodeJSProcessFactory"></param>
-        /// <param name="logger"></param>
+        /// <param name="outOfProcessNodeJSServiceOptionsAccessor">The <see cref="OutOfProcessNodeJSServiceOptions"/> accessor.</param>
+        /// <param name="httpContentFactory">The factory for creating <see cref="HttpContent"/>s.</param>
+        /// <param name="embeddedResourcesService">The service for retrieving NodeJS Http server scripts.</param>
+        /// <param name="fileWatcherFactory">The service for creating <see cref="IFileWatcher"/>s</param>
+        /// <param name="monitorService">The service for lock-based thread synchronization.</param>
+        /// <param name="taskService">The service for utilizing tasks.</param>
+        /// <param name="httpClientService">The service for utilizing <see cref="HttpClient"/>.</param>
+        /// <param name="jsonService">The service for JSON serialization and deserialization.</param>
+        /// <param name="nodeJSProcessFactory">The factory for creating <see cref="NodeJSProcess"/>s.</param>
+        /// <param name="logger">The logger for the instance.</param>
         public HttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
@@ -70,7 +69,7 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        protected override async Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+        protected override async Task<(bool, T?)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken) where T : default // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/unconstrained-type-parameter-annotations#default-constraint, https://github.com/dotnet/csharplang/issues/3297
         {
             using HttpContent httpContent = _httpContentFactory.Create(invocationRequest);
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
@@ -90,7 +89,7 @@ namespace Jering.Javascript.NodeJS
             // and returned. In most cases below, StreamReader is used to read the read-only stream, upon disposal of the StreamReader, the underlying stream and thus the NetworkStream
             // are disposed. If HttpStatusCode is NotFound or an exception is thrown, we manually call HttpResponseMessage.Dispose. If we return the stream, we pass on the responsibility 
             // for disposing it to the caller.
-            HttpResponseMessage httpResponseMessage = null;
+            HttpResponseMessage? httpResponseMessage = null;
             try
             {
                 httpResponseMessage = await _httpClientService.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
@@ -98,14 +97,18 @@ namespace Jering.Javascript.NodeJS
                 if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
                 {
                     httpResponseMessage.Dispose();
-                    return (false, default(T));
+                    return (false, default);
                 }
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
                 {
+#if NET5_0
+                    using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#else
                     using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    InvocationError invocationError = await _jsonService.DeserializeAsync<InvocationError>(stream, cancellationToken).ConfigureAwait(false);
-                    throw new InvocationException(invocationError.ErrorMessage, invocationError.ErrorStack);
+#endif
+                    InvocationError? invocationError = await _jsonService.DeserializeAsync<InvocationError>(stream, cancellationToken).ConfigureAwait(false);
+                    throw new InvocationException(invocationError?.ErrorMessage ?? "Unexpected error", invocationError?.ErrorStack);
                 }
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.OK)
@@ -114,22 +117,32 @@ namespace Jering.Javascript.NodeJS
                     {
                         return (true, default);
                     }
-
-                    if (typeof(T) == typeof(string))
+                    else if (typeof(T) == typeof(string))
                     {
+#if NET5_0
+                        string result = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#else
                         string result = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+#endif
                         return (true, (T)(object)result);
                     }
-
-                    if (typeof(T) == typeof(Stream))
+                    else if (typeof(T) == typeof(Stream))
                     {
+#if NET5_0
+                        Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#else
                         Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#endif
                         return (true, (T)(object)stream); // User's reponsibility to handle disposal
                     }
-
-                    using (Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                    else
                     {
-                        T result = await _jsonService.DeserializeAsync<T>(stream, cancellationToken).ConfigureAwait(false);
+#if NET5_0
+                        using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+#else
+                        using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#endif
+                        T? result = await _jsonService.DeserializeAsync<T>(stream, cancellationToken).ConfigureAwait(false);
                         return (true, result);
                     }
                 }
