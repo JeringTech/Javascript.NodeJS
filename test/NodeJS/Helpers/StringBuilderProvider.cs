@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
-    public class StringBuilderProvider : ILoggerProvider
+    public sealed class StringBuilderProvider : ILoggerProvider
     {
         private readonly StringBuilder _stringBuilder;
 
@@ -19,6 +19,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         public void Dispose()
         {
+            // Do nothing
         }
     }
 }

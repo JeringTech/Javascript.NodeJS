@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -20,17 +21,17 @@ namespace Jering.Javascript.NodeJS.Tests
     /// <see cref="HttpNodeJSPoolService"/> is a pool of <see cref="HttpNodeJSService"/> instances. It's purpose is to delegate invocations to
     /// NodeJS processes evenly, so that is what we test here.
     /// </summary>
-    public class HttpNodeJSPoolServiceIntegrationTests : IDisposable
+    public sealed class HttpNodeJSPoolServiceIntegrationTests : IDisposable
     {
-        private IServiceProvider _serviceProvider;
+        private IServiceProvider? _serviceProvider;
         // Set to true to break in NodeJS (see CreateHttpNodeJSPoolService)
         private const bool DEBUG_NODEJS = false;
         // Set to -1 when debugging in NodeJS
         private const int TIMEOUT_MS = 60000;
 
         // File watching
-        private static readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSPoolServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
-        private Uri _tempWatchDirectoryUri;
+        private readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSPoolServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
+        private Uri? _tempWatchDirectoryUri;
 
         private readonly ITestOutputHelper _testOutputHelper;
 
@@ -90,9 +91,9 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const int dummyNumProcesses = 5;
-            RecreateWatchDirectory();
+            Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
-            string dummylongRunningTriggerPath = new Uri(_tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
@@ -105,7 +106,7 @@ namespace Jering.Javascript.NodeJS.Tests
         );
     }}
 }}";
-            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
@@ -169,13 +170,12 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const int dummyNumProcesses = 5;
-            RecreateWatchDirectory();
             // Create initial module
             const string dummyInitialModule = @"module.exports = {
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
 }";
-            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").AbsolutePath;
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
             var resultStringBuilder = new StringBuilder();
             var dummyServices = new ServiceCollection();
@@ -244,7 +244,7 @@ namespace Jering.Javascript.NodeJS.Tests
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        private HttpNodeJSPoolService CreateHttpNodeJSPoolService(int numProcesses, ServiceCollection services = default, StringBuilder loggerStringBuilder = default)
+        private HttpNodeJSPoolService CreateHttpNodeJSPoolService(int numProcesses, ServiceCollection? services = default, StringBuilder? loggerStringBuilder = default)
         {
             services ??= new ServiceCollection();
             services.AddNodeJS();
@@ -264,7 +264,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 {
                     lb.
                         AddProvider(new StringBuilderProvider(loggerStringBuilder)).
-                        AddFilter<StringBuilderProvider>((LogLevel LogLevel) => LogLevel >= LogLevel.Information);
+                        AddFilter<StringBuilderProvider>((LogLevel logLevel) => logLevel >= LogLevel.Information);
                 }
             });
 
@@ -274,30 +274,38 @@ namespace Jering.Javascript.NodeJS.Tests
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
             }
 
-            _serviceProvider = services.BuildServiceProvider();
-
-            return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSPoolService;
+            return (HttpNodeJSPoolService)(_serviceProvider = services.BuildServiceProvider()).GetRequiredService<INodeJSService>();
         }
 
         public void Dispose()
         {
-            ((IDisposable)_serviceProvider).Dispose();
-
-            if (_tempWatchDirectoryUri != null)
+            if (_serviceProvider != null)
             {
-                TryDeleteWatchDirectory();
+                ((IDisposable)_serviceProvider).Dispose();
             }
+
+            TryDeleteWatchDirectory();
         }
 
-        private void RecreateWatchDirectory()
+        private Uri CreateWatchDirectoryUri()
         {
-            TryDeleteWatchDirectory();
-            Directory.CreateDirectory(_tempWatchDirectory);
+            if (_tempWatchDirectoryUri != null)
+            {
+                return _tempWatchDirectoryUri;
+            }
+
             _tempWatchDirectoryUri = new Uri(_tempWatchDirectory);
+            Directory.CreateDirectory(_tempWatchDirectory);
+            return _tempWatchDirectoryUri;
         }
 
         private void TryDeleteWatchDirectory()
         {
+            if (_tempWatchDirectoryUri == null)
+            {
+                return;
+            }
+
             try
             {
                 Directory.Delete(_tempWatchDirectory, true);

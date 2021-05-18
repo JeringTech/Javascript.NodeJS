@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
@@ -9,7 +10,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class FileWatcherFactoryUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public void Create_CreatesFileWatcher()
@@ -18,7 +19,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyDirectoryPath = "dummyDirectoryPath";
             const string dummyResolvedDirectoryPath = "dummyResolvedDirectoryPath";
             const bool dummyIncludeSubdirectories = false;
-            var dummyFileNamePatterns = new string[0];
+            string[] dummyFileNamePatterns = Array.Empty<string>();
             var dummyNodeJSProcessOptions = new NodeJSProcessOptions();
             Mock<IOptions<NodeJSProcessOptions>> mockNodeJSProcessOptionsAccessor = _mockRepository.Create<IOptions<NodeJSProcessOptions>>();
             mockNodeJSProcessOptionsAccessor.Setup(n => n.Value).Returns(dummyNodeJSProcessOptions);
@@ -51,18 +52,18 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(expectedResult, result);
         }
 
-        public static IEnumerable<object[]> ResolveDirectoryPath_ResolvesDirectoryPath_Data()
+        public static IEnumerable<object?[]> ResolveDirectoryPath_ResolvesDirectoryPath_Data()
         {
             const string dummyDirectoryPath = "dummyDirectoryPath";
             const string dummyProjectPath = "dummyProjectPath";
 
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{dummyDirectoryPath, dummyProjectPath, dummyDirectoryPath},
+                new object?[]{dummyDirectoryPath, dummyProjectPath, dummyDirectoryPath},
                 // Project path if directory path is null, whitespace or an empty string
-                new object[]{null, dummyProjectPath, dummyProjectPath},
-                new object[]{" ", dummyProjectPath, dummyProjectPath},
-                new object[]{string.Empty, dummyProjectPath, dummyProjectPath}
+                new object?[]{null, dummyProjectPath, dummyProjectPath},
+                new object?[]{" ", dummyProjectPath, dummyProjectPath},
+                new object?[]{string.Empty, dummyProjectPath, dummyProjectPath}
             };
         }
 
@@ -159,17 +160,17 @@ namespace Jering.Javascript.NodeJS.Tests
                     "$+*.js",
                     @"^\$\+.*\.js$",
                     new[]{ "$+test.js" },
-                    new string[]{}
+                    Array.Empty<string>()
                 }
             };
         }
 
-        private Mock<FileWatcherFactory> CreateMockFileWatcherFactory(IOptions<NodeJSProcessOptions> nodeJSProcessOptionsAccessor = null)
+        private Mock<FileWatcherFactory> CreateMockFileWatcherFactory(IOptions<NodeJSProcessOptions>? nodeJSProcessOptionsAccessor = null)
         {
             return _mockRepository.Create<FileWatcherFactory>(nodeJSProcessOptionsAccessor ?? _mockRepository.Create<IOptions<NodeJSProcessOptions>>().Object);
         }
 
-        private FileWatcherFactory CreateFileWatcherFactory(IOptions<NodeJSProcessOptions> nodeJSProcessOptionsAccessor = null)
+        private FileWatcherFactory CreateFileWatcherFactory(IOptions<NodeJSProcessOptions>? nodeJSProcessOptionsAccessor = null)
         {
             return new FileWatcherFactory(nodeJSProcessOptionsAccessor ?? _mockRepository.Create<IOptions<NodeJSProcessOptions>>().Object);
         }

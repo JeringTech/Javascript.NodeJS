@@ -6,7 +6,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class StringBuilderLogger : ILogger
     {
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private readonly StringBuilder _stringBuilder;
 
         public StringBuilderLogger(StringBuilder stringBuilder)
@@ -16,7 +16,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         public IDisposable BeginScope<TState>(TState state)
         {
-            return null;
+            return null!; // We're not using scopes
         }
 
         public bool IsEnabled(LogLevel logLevel)

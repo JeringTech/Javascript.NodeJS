@@ -10,7 +10,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class HttpClientServiceUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Theory]
         [MemberData(nameof(Constructor_SetsTimeout_Data))]

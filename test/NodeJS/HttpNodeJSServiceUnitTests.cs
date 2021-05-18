@@ -16,7 +16,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class HttpNodeJSServiceUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public async Task TryInvokeAsync_ReturnsTupleContainingFalseAndDefaultIfHttpResponseHas404StatusCode()
@@ -35,7 +35,7 @@ namespace Jering.Javascript.NodeJS.Tests
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(httpContentFactory: mockHttpContentFactory.Object, httpClientService: mockHttpClientService.Object);
 
             // Act
-            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+            (bool success, string? value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -88,7 +88,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 httpClientService: mockHttpClientService.Object);
 
             // Act
-            (bool success, Void value) = await testSubject.ExposedTryInvokeAsync<Void>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+            (bool success, Void? value) = await testSubject.ExposedTryInvokeAsync<Void>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -114,7 +114,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 httpClientService: mockHttpClientService.Object);
 
             // Act
-            (bool success, Stream value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+            (bool success, Stream? value) = await testSubject.ExposedTryInvokeAsync<Stream>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -142,7 +142,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 httpClientService: mockHttpClientService.Object);
 
             // Act
-            (bool success, string value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+            (bool success, string? value) = await testSubject.ExposedTryInvokeAsync<string>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -172,7 +172,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 jsonService: mockJsonService.Object);
 
             // Act
-            (bool success, DummyClass value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
+            (bool success, DummyClass? value) = await testSubject.ExposedTryInvokeAsync<DummyClass>(dummyInvocationRequest, CancellationToken.None).ConfigureAwait(false);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -211,15 +211,15 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             var loggerStringBuilder = new StringBuilder();
-            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: Listening on IP - {dummyIP} Port - {dummyPort}]";
+            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: HttpVersion - HTTP/1.1 Listening on IP - {dummyIP} Port - {dummyPort}]";
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(loggerStringBuilder: loggerStringBuilder);
 
             // Act
             testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
 
             // Assert
-            Assert.Equal(expectedResult, testSubject._endpoint.AbsoluteUri);
-            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, expectedResult), loggerStringBuilder.ToString());
+            Assert.Equal(expectedResult, testSubject._endpoint?.AbsoluteUri);
+            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, "HTTP/1.1", expectedResult), loggerStringBuilder.ToString());
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
@@ -235,17 +235,18 @@ namespace Jering.Javascript.NodeJS.Tests
         {
         }
 
-        private ExposedHttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
-            IHttpContentFactory httpContentFactory = null,
-            IEmbeddedResourcesService embeddedResourcesService = null,
-            IFileWatcherFactory fileWatcherFactory = null,
-            IMonitorService monitorService = null,
-            ITaskService taskService = null,
-            IHttpClientService httpClientService = null,
-            IJsonService jsonService = null,
-            INodeJSProcessFactory nodeProcessFactory = null,
-            ILogger<HttpNodeJSService> logger = null,
-            StringBuilder loggerStringBuilder = null)
+        private ExposedHttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions>? outOfProcessNodeHostOptionsAccessor = null,
+            IOptions<HttpNodeJSServiceOptions>? httpNodeJSServiceOptionsAccessor = null,
+            IHttpContentFactory? httpContentFactory = null,
+            IEmbeddedResourcesService? embeddedResourcesService = null,
+            IFileWatcherFactory? fileWatcherFactory = null,
+            IMonitorService? monitorService = null,
+            ITaskService? taskService = null,
+            IHttpClientService? httpClientService = null,
+            IJsonService? jsonService = null,
+            INodeJSProcessFactory? nodeProcessFactory = null,
+            ILogger<HttpNodeJSService>? logger = null,
+            StringBuilder? loggerStringBuilder = null)
         {
             if (logger == null)
             {
@@ -268,21 +269,40 @@ namespace Jering.Javascript.NodeJS.Tests
                 }
             }
 
+            // We call optionsAccessor.Value in constructors, so options accessors must be mocked with Value property setup
+            if(httpNodeJSServiceOptionsAccessor == null)
+            {
+                Mock<IOptions<HttpNodeJSServiceOptions>> mockHttpNodeJSServiceOptionsAccessor = _mockRepository.Create<IOptions<HttpNodeJSServiceOptions>>();
+#if NETCOREAPP3_1 || NET5_0
+                mockHttpNodeJSServiceOptionsAccessor.Setup(m => m.Value).Returns(new HttpNodeJSServiceOptions());
+#endif
+                httpNodeJSServiceOptionsAccessor = mockHttpNodeJSServiceOptionsAccessor.Object;
+            }
+
+            if(outOfProcessNodeHostOptionsAccessor == null)
+            {
+                Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOutOfProcessNodeJSServiceOptions = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+                mockOutOfProcessNodeJSServiceOptions.Setup(m => m.Value).Returns(new OutOfProcessNodeJSServiceOptions());
+                outOfProcessNodeHostOptionsAccessor = mockOutOfProcessNodeJSServiceOptions.Object;
+            }
+
             return new ExposedHttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
-                httpContentFactory,
-                embeddedResourcesService,
-                fileWatcherFactory,
-                monitorService,
-                taskService,
-                httpClientService,
-                jsonService,
-                nodeProcessFactory,
+                httpNodeJSServiceOptionsAccessor,
+                httpContentFactory ?? _mockRepository.Create<IHttpContentFactory>().Object,
+                embeddedResourcesService ?? _mockRepository.Create<IEmbeddedResourcesService>().Object,
+                fileWatcherFactory ?? _mockRepository.Create<IFileWatcherFactory>().Object,
+                monitorService ?? _mockRepository.Create<IMonitorService>().Object,
+                taskService ?? _mockRepository.Create<ITaskService>().Object,
+                httpClientService ?? _mockRepository.Create<IHttpClientService>().Object,
+                jsonService ?? _mockRepository.Create<IJsonService>().Object,
+                nodeProcessFactory ?? _mockRepository.Create<INodeJSProcessFactory>().Object,
                 logger);
         }
 
         private class ExposedHttpNodeJSService : HttpNodeJSService
         {
             public ExposedHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor,
+            IOptions<HttpNodeJSServiceOptions> httpNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
             IFileWatcherFactory fileWatcherFactory,
@@ -293,6 +313,7 @@ namespace Jering.Javascript.NodeJS.Tests
             INodeJSProcessFactory nodeJSProcessFactory,
             ILogger<HttpNodeJSService> logger) :
                 base(outOfProcessNodeJSServiceOptionsAccessor,
+                    httpNodeJSServiceOptionsAccessor,
                     httpContentFactory,
                     embeddedResourcesService,
                     fileWatcherFactory,
@@ -305,7 +326,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
             }
 
-            public Task<(bool, T)> ExposedTryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
+            public Task<(bool, T?)> ExposedTryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
             {
                 return TryInvokeAsync<T>(invocationRequest, cancellationToken);
             }

@@ -7,10 +7,10 @@ using Xunit;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
-    public class FileWatcherUnitTests : IDisposable
+    public sealed class FileWatcherUnitTests : IDisposable
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
-        private string _tempWatchDirectory;
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
+        private string? _tempWatchDirectory; // Only set if we actually create a directory so Dispose knows when to delete
 
         [Theory]
         [MemberData(nameof(Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString_Data))]
@@ -20,13 +20,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Throws<ArgumentException>(() => new FileWatcher(dummyDirectoryPath, false, new[] { new Regex(".") }, DummyFileChangedHandler));
         }
 
-        public static IEnumerable<object[]> Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString_Data()
+        public static IEnumerable<object?[]> Constructor_ThrowsArgumentExceptionIfDirectoryPathIsNullWhitespaceOrAnEmptyString_Data()
         {
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{null},
-                new object[]{" "},
-                new object[]{string.Empty}
+                new object?[]{null},
+                new object?[]{" "},
+                new object?[]{string.Empty}
             };
         }
 
@@ -34,21 +34,21 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_ThrowsArgumentNullExceptionIfFiltersIsNull()
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, null, DummyFileChangedHandler));
+            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, null!, DummyFileChangedHandler)); // Testing situation where user ignores nullable reference type warnings
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentExceptionIfFiltersIsEmpty()
         {
             // Act and assert
-            Assert.Throws<ArgumentException>(() => new FileWatcher("dummyDirectoryPath", false, new Regex[0], DummyFileChangedHandler));
+            Assert.Throws<ArgumentException>(() => new FileWatcher("dummyDirectoryPath", false, Array.Empty<Regex>(), DummyFileChangedHandler));
         }
 
         [Fact]
         public void Constructor_ThrowsArgumentNullExceptionIfFileChangedEventHandlerIsNull()
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, new[] { new Regex(".") }, null));
+            Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, new[] { new Regex(".") }, null!)); // Testing situation where user ignores nullable reference type warnings
         }
 
         // TODO verify that events are registered
@@ -56,8 +56,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Start_CreatesNewFileSystemWatcher()
         {
             // Arrange
-            RecreateWatchDirectory();
-            using var dummyFileSystemWatcher = new FileSystemWatcher(_tempWatchDirectory);
+            using var dummyFileSystemWatcher = new FileSystemWatcher(CreateWatchDirectory());
             Mock<FileWatcher> mockTestSubject = CreateMockFileWatcher();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.CreateFileSystemWatcher()).Returns(dummyFileSystemWatcher);
@@ -76,14 +75,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyDirectory = "dummyDirectory";
             const string dummyName = "dummyName";
             string dummyFullPath = Path.Combine(dummyDirectory, dummyName);
-            string result = null;
+            string? result = null;
             var dummyFileSystemEventArgs = new FileSystemEventArgs(WatcherChangeTypes.Changed, dummyDirectory, dummyName);
             Mock<FileWatcher> mockFileWatcher = CreateMockFileWatcher(fileChangedEventHandler: (path) => result = path);
             mockFileWatcher.CallBase = true;
             mockFileWatcher.Setup(f => f.IsPathWatched(dummyFullPath)).Returns(true);
 
             // Act
-            mockFileWatcher.Object.InternalFileChangedHandler(null, dummyFileSystemEventArgs);
+            mockFileWatcher.Object.InternalFileChangedHandler(new object(), dummyFileSystemEventArgs);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -96,14 +95,14 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyDirectory = "dummyDirectory";
             const string dummyName = "dummyName";
-            string result = null;
+            string? result = null;
             var dummyFileSystemEventArgs = new FileSystemEventArgs(WatcherChangeTypes.Changed, dummyDirectory, dummyName);
             Mock<FileWatcher> mockFileWatcher = CreateMockFileWatcher(fileChangedEventHandler: (path) => result = path);
             mockFileWatcher.CallBase = true;
             mockFileWatcher.Setup(f => f.IsPathWatched(Path.Combine(dummyDirectory, dummyName))).Returns(false);
 
             // Act
-            mockFileWatcher.Object.InternalFileChangedHandler(null, dummyFileSystemEventArgs);
+            mockFileWatcher.Object.InternalFileChangedHandler(new object(), dummyFileSystemEventArgs);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -117,14 +116,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyDirectory = "dummyDirectory";
             const string dummyNewName = "dummyNewName";
             string dummyNewPath = Path.Combine(dummyDirectory, dummyNewName);
-            string result = null;
+            string? result = null;
             var dummyFileSystemEventArgs = new RenamedEventArgs(WatcherChangeTypes.Changed, dummyDirectory, dummyNewName, "dummyOldName");
             Mock<FileWatcher> mockFileWatcher = CreateMockFileWatcher(fileChangedEventHandler: (path) => result = path);
             mockFileWatcher.CallBase = true;
             mockFileWatcher.Setup(f => f.IsPathWatched(dummyNewPath)).Returns(true);
 
             // Act
-            mockFileWatcher.Object.InternalFileRenamedHandler(null, dummyFileSystemEventArgs);
+            mockFileWatcher.Object.InternalFileRenamedHandler(new object(), dummyFileSystemEventArgs);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -139,7 +138,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyOldName = "dummyOldName";
             const string dummyNewName = "dummyNewName";
             string dummyOldPath = Path.Combine(dummyDirectory, dummyOldName);
-            string result = null;
+            string? result = null;
             var dummyFileSystemEventArgs = new RenamedEventArgs(WatcherChangeTypes.Changed, dummyDirectory, dummyNewName, dummyOldName);
             Mock<FileWatcher> mockFileWatcher = CreateMockFileWatcher(fileChangedEventHandler: (path) => result = path);
             mockFileWatcher.CallBase = true;
@@ -147,7 +146,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockFileWatcher.Setup(f => f.IsPathWatched(Path.Combine(dummyDirectory, dummyNewName))).Returns(false); // New path not watched
 
             // Act
-            mockFileWatcher.Object.InternalFileRenamedHandler(null, dummyFileSystemEventArgs);
+            mockFileWatcher.Object.InternalFileRenamedHandler(new object(), dummyFileSystemEventArgs);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -161,7 +160,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyDirectory = "dummyDirectory";
             const string dummyOldName = "dummyOldName";
             const string dummyNewName = "dummyNewName";
-            string result = null;
+            string? result = null;
             var dummyFileSystemEventArgs = new RenamedEventArgs(WatcherChangeTypes.Changed, dummyDirectory, dummyNewName, dummyOldName);
             Mock<FileWatcher> mockFileWatcher = CreateMockFileWatcher(fileChangedEventHandler: (path) => result = path);
             mockFileWatcher.CallBase = true;
@@ -169,7 +168,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockFileWatcher.Setup(f => f.IsPathWatched(Path.Combine(dummyDirectory, dummyNewName))).Returns(false);
 
             // Act
-            mockFileWatcher.Object.InternalFileRenamedHandler(null, dummyFileSystemEventArgs);
+            mockFileWatcher.Object.InternalFileRenamedHandler(new object(), dummyFileSystemEventArgs);
 
             // Assert
             _mockRepository.VerifyAll();
@@ -190,13 +189,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.False(result);
         }
 
-        public static IEnumerable<object[]> IsPathWatched_ReturnsFalseIfPathIsNullWhitespaceOrAnEmptyString_Data()
+        public static IEnumerable<object?[]> IsPathWatched_ReturnsFalseIfPathIsNullWhitespaceOrAnEmptyString_Data()
         {
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{ null },
-                new object[]{ " " },
-                new object[]{ string.Empty }
+                new object?[]{ null },
+                new object?[]{ " " },
+                new object?[]{ string.Empty }
             };
         }
 
@@ -252,10 +251,10 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName, result.NotifyFilter);
         }
 
-        private Mock<FileWatcher> CreateMockFileWatcher(string directoryPath = null,
+        private Mock<FileWatcher> CreateMockFileWatcher(string? directoryPath = null,
             bool includeSubdirectories = false,
-            IEnumerable<Regex> filters = null,
-            FileChangedEventHandler fileChangedEventHandler = null)
+            IEnumerable<Regex>? filters = null,
+            FileChangedEventHandler? fileChangedEventHandler = null)
         {
             return _mockRepository.Create<FileWatcher>(directoryPath ?? "dummyDirectoryPath",
                 includeSubdirectories,
@@ -263,10 +262,10 @@ namespace Jering.Javascript.NodeJS.Tests
                 fileChangedEventHandler ?? DummyFileChangedHandler);
         }
 
-        private FileWatcher CreateFileWatcher(string directoryPath = null,
+        private FileWatcher CreateFileWatcher(string? directoryPath = null,
             bool includeSubdirectories = false,
-            IEnumerable<Regex> filters = null,
-            FileChangedEventHandler fileChangedEventHandler = null)
+            IEnumerable<Regex>? filters = null,
+            FileChangedEventHandler? fileChangedEventHandler = null)
         {
             return new FileWatcher(directoryPath ?? "dummyDirectoryPath",
                 includeSubdirectories,
@@ -278,25 +277,32 @@ namespace Jering.Javascript.NodeJS.Tests
         {
         }
 
-        private void RecreateWatchDirectory()
+        private string CreateWatchDirectory()
         {
+            if(_tempWatchDirectory != null)
+            {
+                return _tempWatchDirectory;
+            }
+
             _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(FileWatcherUnitTests));
             Directory.CreateDirectory(_tempWatchDirectory);
+
+            return _tempWatchDirectory;
         }
 
         public void Dispose()
         {
-            if (_tempWatchDirectory != null)
-            {
-                TryDeleteWatchDirectory();
-            }
+            TryDeleteWatchDirectory();
         }
 
         private void TryDeleteWatchDirectory()
         {
             try
             {
-                Directory.Delete(_tempWatchDirectory, true);
+                if (_tempWatchDirectory != null)
+                {
+                    Directory.Delete(_tempWatchDirectory, true);
+                }
             }
             catch
             {

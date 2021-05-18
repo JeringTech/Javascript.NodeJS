@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Xunit;
@@ -8,7 +9,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class NodeJSProcessFactoryUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public void CreateStartInfo_CreatesStartInfo()
@@ -36,14 +37,18 @@ namespace Jering.Javascript.NodeJS.Tests
             ProcessStartInfo result = testSubject.CreateStartInfo(dummyNodeServerScript);
 
             // Assert
+#if NET5_0
+            int currentProcessPid = Environment.ProcessId;
+#else
             int currentProcessPid = Process.GetCurrentProcess().Id;
+#endif
             Assert.Equal($"{dummyNodeAndV8Options} -e \"{dummyNodeServerScript}\" -- --parentPid {currentProcessPid} --port {dummyPort}", result.Arguments);
             Assert.False(result.UseShellExecute);
             Assert.True(result.RedirectStandardInput);
             Assert.True(result.RedirectStandardOutput);
             Assert.True(result.RedirectStandardError);
             Assert.Equal(dummyProjectPath, result.WorkingDirectory);
-            result.Environment.TryGetValue(dummyEnvironmentVariable, out string resultEnvironmentVariableValue);
+            result.Environment.TryGetValue(dummyEnvironmentVariable, out string? resultEnvironmentVariableValue);
             Assert.NotNull(resultEnvironmentVariableValue);
             Assert.Equal(dummyEnvironmentVariableValue, resultEnvironmentVariableValue);
         }
@@ -52,11 +57,8 @@ namespace Jering.Javascript.NodeJS.Tests
         [MemberData(nameof(EscapeCommandLineArg_EscapesCommandLineArgs_Data))]
         public void EscapeCommandLineArg_EscapesCommandLineArgs(string dummyArg, string expectedResult)
         {
-            // Arrange
-            NodeJSProcessFactory testSubject = CreateNodeJSProcessFactory();
-
             // Act
-            string result = testSubject.EscapeCommandLineArg(dummyArg);
+            string result = NodeJSProcessFactory.EscapeCommandLineArg(dummyArg);
 
             // Assert
             Assert.Equal(expectedResult, result);
@@ -73,9 +75,9 @@ namespace Jering.Javascript.NodeJS.Tests
             };
         }
 
-        private NodeJSProcessFactory CreateNodeJSProcessFactory(IOptions<NodeJSProcessOptions> optionsAccessor = null)
+        private NodeJSProcessFactory CreateNodeJSProcessFactory(IOptions<NodeJSProcessOptions>? optionsAccessor = null)
         {
-            return new NodeJSProcessFactory(optionsAccessor);
+            return new NodeJSProcessFactory(optionsAccessor ?? _mockRepository.Create<IOptions<NodeJSProcessOptions>>().Object);
         }
     }
 }

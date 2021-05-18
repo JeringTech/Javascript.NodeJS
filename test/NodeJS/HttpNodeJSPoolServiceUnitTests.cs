@@ -18,7 +18,7 @@ namespace Jering.Javascript.NodeJS.Tests
     public class HttpNodeJSPoolServiceUnitTests
     {
         private const int TIMEOUT_MS = 60000;
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
@@ -27,7 +27,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -49,7 +49,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -71,7 +71,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -94,7 +94,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.Setup(t => t.InvokeFromStringAsync(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken));
@@ -115,7 +115,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyModuleFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -138,7 +138,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyModuleFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -160,7 +160,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -183,7 +183,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.Setup(t => t.InvokeFromStreamAsync(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken));
@@ -204,7 +204,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyModuleFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -227,7 +227,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyModuleFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -248,7 +248,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -271,7 +271,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<HttpNodeJSService> mockHttpNodeJSService = CreateMockHttpNodeJSService();
             mockHttpNodeJSService.
@@ -331,21 +331,22 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(expectedNumPerHttpNodeJSService, results.Count(httpNodeJSService => httpNodeJSService == dummyHttpNodeJSServices[4]));
         }
 
-        private HttpNodeJSPoolService CreateHttpNodeJSPoolService(HttpNodeJSService[] httpNodeJSServices)
+        private static HttpNodeJSPoolService CreateHttpNodeJSPoolService(HttpNodeJSService[] httpNodeJSServices)
         {
             return new HttpNodeJSPoolService(new ReadOnlyCollection<HttpNodeJSService>(httpNodeJSServices));
         }
 
-        private Mock<HttpNodeJSService> CreateMockHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
-            IHttpContentFactory httpContentFactory = null,
-            IEmbeddedResourcesService embeddedResourcesService = null,
-            IFileWatcherFactory fileWatcherFactory = null,
-            IMonitorService monitorService = null,
-            ITaskService taskService = null,
-            IHttpClientService httpClientService = null,
-            IJsonService jsonService = null,
-            INodeJSProcessFactory nodeProcessFactory = null,
-            ILogger<HttpNodeJSService> logger = null)
+        private Mock<HttpNodeJSService> CreateMockHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions>? outOfProcessNodeHostOptionsAccessor = null,
+            IOptions<HttpNodeJSServiceOptions>? httpNodeJSServiceOptionsAccessor = null,
+            IHttpContentFactory? httpContentFactory = null,
+            IEmbeddedResourcesService? embeddedResourcesService = null,
+            IFileWatcherFactory? fileWatcherFactory = null,
+            IMonitorService? monitorService = null,
+            ITaskService? taskService = null,
+            IHttpClientService? httpClientService = null,
+            IJsonService? jsonService = null,
+            INodeJSProcessFactory? nodeProcessFactory = null,
+            ILogger<HttpNodeJSService>? logger = null)
         {
             if (logger == null)
             {
@@ -353,7 +354,24 @@ namespace Jering.Javascript.NodeJS.Tests
                 logger = mockLogger.Object;
             }
 
+            if (httpNodeJSServiceOptionsAccessor == null)
+            {
+                Mock<IOptions<HttpNodeJSServiceOptions>> mockHttpNodeJSServiceOptionsAccessor = _mockRepository.Create<IOptions<HttpNodeJSServiceOptions>>();
+#if NETCOREAPP3_1 || NET5_0
+                mockHttpNodeJSServiceOptionsAccessor.Setup(m => m.Value).Returns(new HttpNodeJSServiceOptions());
+#endif
+                httpNodeJSServiceOptionsAccessor = mockHttpNodeJSServiceOptionsAccessor.Object;
+            }
+
+            if (outOfProcessNodeHostOptionsAccessor == null)
+            {
+                Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOutOfProcessNodeJSServiceOptions = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+                mockOutOfProcessNodeJSServiceOptions.Setup(m => m.Value).Returns(new OutOfProcessNodeJSServiceOptions());
+                outOfProcessNodeHostOptionsAccessor = mockOutOfProcessNodeJSServiceOptions.Object;
+            }
+
             return _mockRepository.Create<HttpNodeJSService>(outOfProcessNodeHostOptionsAccessor,
+                httpNodeJSServiceOptionsAccessor,
                 httpContentFactory,
                 embeddedResourcesService,
                 fileWatcherFactory,
@@ -365,16 +383,17 @@ namespace Jering.Javascript.NodeJS.Tests
                 logger);
         }
 
-        private HttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeHostOptionsAccessor = null,
-            IHttpContentFactory httpContentFactory = null,
-            IEmbeddedResourcesService embeddedResourcesService = null,
-            IFileWatcherFactory fileWatcherFactory = null,
-            IMonitorService monitorService = null,
-            ITaskService taskService = null,
-            IHttpClientService httpClientService = null,
-            IJsonService jsonService = null,
-            INodeJSProcessFactory nodeProcessFactory = null,
-            ILogger<HttpNodeJSService> logger = null)
+        private HttpNodeJSService CreateHttpNodeJSService(IOptions<OutOfProcessNodeJSServiceOptions>? outOfProcessNodeHostOptionsAccessor = null,
+            IOptions<HttpNodeJSServiceOptions>? httpNodeJSServiceOptionsAccessor = null,
+            IHttpContentFactory? httpContentFactory = null,
+            IEmbeddedResourcesService? embeddedResourcesService = null,
+            IFileWatcherFactory? fileWatcherFactory = null,
+            IMonitorService? monitorService = null,
+            ITaskService? taskService = null,
+            IHttpClientService? httpClientService = null,
+            IJsonService? jsonService = null,
+            INodeJSProcessFactory? nodeProcessFactory = null,
+            ILogger<HttpNodeJSService>? logger = null)
         {
             if (logger == null)
             {
@@ -382,15 +401,31 @@ namespace Jering.Javascript.NodeJS.Tests
                 logger = mockLogger.Object;
             }
 
+            // We call optionsAccessor.Value in constructors, so options accessors must be mocked with Value property setup
+            if (httpNodeJSServiceOptionsAccessor == null)
+            {
+                Mock<IOptions<HttpNodeJSServiceOptions>> mockHttpNodeJSServiceOptionsAccessor = _mockRepository.Create<IOptions<HttpNodeJSServiceOptions>>();
+                mockHttpNodeJSServiceOptionsAccessor.Setup(m => m.Value).Returns(new HttpNodeJSServiceOptions());
+                httpNodeJSServiceOptionsAccessor = mockHttpNodeJSServiceOptionsAccessor.Object;
+            }
+
+            if (outOfProcessNodeHostOptionsAccessor == null)
+            {
+                Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOutOfProcessNodeJSServiceOptions = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
+                mockOutOfProcessNodeJSServiceOptions.Setup(m => m.Value).Returns(new OutOfProcessNodeJSServiceOptions());
+                outOfProcessNodeHostOptionsAccessor = mockOutOfProcessNodeJSServiceOptions.Object;
+            }
+
             return new HttpNodeJSService(outOfProcessNodeHostOptionsAccessor,
-                httpContentFactory,
-                embeddedResourcesService,
-                fileWatcherFactory,
-                monitorService,
-                taskService,
-                httpClientService,
-                jsonService,
-                nodeProcessFactory,
+                httpNodeJSServiceOptionsAccessor,
+                httpContentFactory ?? _mockRepository.Create<IHttpContentFactory>().Object,
+                embeddedResourcesService ?? _mockRepository.Create<IEmbeddedResourcesService>().Object,
+                fileWatcherFactory ?? _mockRepository.Create<IFileWatcherFactory>().Object,
+                monitorService ?? _mockRepository.Create<IMonitorService>().Object,
+                taskService ?? _mockRepository.Create<ITaskService>().Object,
+                httpClientService ?? _mockRepository.Create<IHttpClientService>().Object,
+                jsonService ?? _mockRepository.Create<IJsonService>().Object,
+                nodeProcessFactory ?? _mockRepository.Create<INodeJSProcessFactory>().Object,
                 logger);
         }
     }
