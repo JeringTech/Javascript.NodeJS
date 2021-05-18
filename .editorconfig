@@ -14,3 +14,46 @@ tab_width = 4
 # New line preferences
 end_of_line = lf
 insert_final_newline = true
+
+# Analyzers
+dotnet_diagnostic.RS2000.severity = none
+dotnet_diagnostic.RS2008.severity = none
+
+# Substring
+dotnet_diagnostic.IDE0057.severity = none
+
+# var
+dotnet_diagnostic.IDE0007.severity = error
+dotnet_diagnostic.IDE0008.severity = error
+csharp_style_var_when_type_is_apparent = true
+csharp_style_var_elsewhere = false
+
+# ConfigureAwait
+dotnet_diagnostic.CA2007.severity = error
+
+# Naming
+dotnet_naming_symbols.const_fields.applicable_kinds = field
+dotnet_naming_symbols.const_fields.applicable_accessibilities = *
+dotnet_naming_symbols.const_fields.required_modifiers = const
+
+dotnet_naming_style.uppercase_snake.required_prefix = 
+dotnet_naming_style.uppercase_snake.required_suffix = 
+dotnet_naming_style.uppercase_snake.word_separator = _
+dotnet_naming_style.uppercase_snake.capitalization = all_upper
+
+dotnet_naming_rule.const_fields_should_be_uppercase_snake.severity = error
+dotnet_naming_rule.const_fields_should_be_uppercase_snake.symbols = const_fields
+dotnet_naming_rule.const_fields_should_be_uppercase_snake.style = uppercase_snake
+
+dotnet_naming_symbols.private_or_internal_field.applicable_kinds = field
+dotnet_naming_symbols.private_or_internal_field.applicable_accessibilities = internal, private, private_protected
+dotnet_naming_symbols.private_or_internal_field.required_modifiers = 
+
+dotnet_naming_style._fieldname.required_prefix = _
+dotnet_naming_style._fieldname.required_suffix = 
+dotnet_naming_style._fieldname.word_separator = 
+dotnet_naming_style._fieldname.capitalization = camel_case
+
+dotnet_naming_rule.private_or_internal_field_should_be__fieldname.severity = error
+dotnet_naming_rule.private_or_internal_field_should_be__fieldname.symbols = private_or_internal_field
+dotnet_naming_rule.private_or_internal_field_should_be__fieldname.style = _fieldname

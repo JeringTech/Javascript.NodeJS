@@ -19,7 +19,6 @@
         <RepositoryType>git</RepositoryType>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
-        <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
         <Http11ServerFileName>Http11Server.js</Http11ServerFileName>
         <Http20ServerFileName>Http20Server.js</Http20ServerFileName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
@@ -66,7 +65,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>

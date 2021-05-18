@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		azure-pipelines.yml = azure-pipelines.yml
 		Changelog.md = Changelog.md
 		codecov.yml = codecov.yml
-		Jering.Javascript.NodeJS.ruleset = Jering.Javascript.NodeJS.ruleset
 		keypair.snk = keypair.snk
 		License.md = License.md
 		NuGet.Config = NuGet.Config
@@ -25,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS.Performance", "perf\NodeJS\Jering.Javascript.NodeJS.Performance.csproj", "{248EFBD7-AD1B-4543-8FFC-4C1E5D13F8FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jering.Javascript.NodeJS.Generators", "generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj", "{773E09BE-5546-48B5-91F1-FBED170546DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jering.Javascript.NodeJS.Generators", "generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj", "{773E09BE-5546-48B5-91F1-FBED170546DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
