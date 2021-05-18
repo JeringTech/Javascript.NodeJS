@@ -27,18 +27,18 @@ namespace Jering.Javascript.NodeJS
         /// <summary>The number of new NodeJS processes created to retry an invocation.</summary>
         /// <remarks>
         /// <para>A NodeJS process retries invocations <see cref="NumRetries"/> times. Once a process's retries are exhausted,
-        /// if any <b>process retries</b> remain, we create a new process that then retries invocations <see cref="NumRetries"/> times.</para>
+        /// if any <b>process retries</b> remain, the library creates a new process that then retries invocations <see cref="NumRetries"/> times.</para>
         /// <para>For example, consider the situation where <see cref="NumRetries"/> and this value are both 1. The existing process first attempts the invocation.
-        /// If it fails, it retries the invocation once. If it fails again, we create a new process that retries the invocation once. In total, we
+        /// If it fails, it retries the invocation once. If it fails again, the library creates a new process that retries the invocation once. In total, the library
         /// attempt the invocation 3 times.</para>
-        /// <para>If this value is negative, we create new NodeJS processes indefinitely.</para>
+        /// <para>If this value is negative, the library creates new NodeJS processes indefinitely.</para>
         /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
         /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
         /// <para>Defaults to 1.</para>
         /// </remarks>
         public int NumProcessRetries { get; set; } = 1;
 
-        /// <summary>Number of times we retry NodeJS connection attempts.</summary>
+        /// <summary>Number of times the library retries NodeJS connection attempts.</summary>
         /// <remarks>
         /// <para>If this value is negative, connection attempts are retried indefinitely.</para>
         /// <para>Defaults to 1.</para>
@@ -67,8 +67,8 @@ namespace Jering.Javascript.NodeJS
 
         /// <summary>The value specifying whether file watching is enabled.</summary>
         /// <remarks>
-        /// <para>If file watching is enabled, we watch files in <see cref="WatchPath"/> with file name matching a pattern in <see cref="WatchFileNamePatterns"/>. 
-        /// We restart NodeJS when a watched file changes.</para>
+        /// <para>If file watching is enabled, the library watches files in <see cref="WatchPath"/> with file name matching a pattern in <see cref="WatchFileNamePatterns"/>. 
+        /// The library restarts NodeJS when a watched file changes.</para>
         /// <para>Works with all <see cref="Concurrency"/> modes.</para>
         /// <para>Defaults to <c>false</c>.</para>
         /// </remarks>
@@ -101,7 +101,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>The value specifying whether NodeJS processes shutdown gracefully when a file changes or an invocation is retried in a new process.</summary>
         /// <remarks>
         /// <para>If this value is true, NodeJS processes shutdown gracefully. Otherwise they're killed immediately.</para>
-        /// <para>What's a graceful shutdown? When we create a new NodeJS process, the old NodeJS process
+        /// <para>What's a graceful shutdown? When the library creates a new NodeJS process, the old NodeJS process
         /// might still be handling earlier invocations. If graceful shutdown is enabled, the old NodeJS process is killed <b>after</b> its
         /// invocations complete. If graceful shutdown is disabled, the old NodeJS process is killed immediately and existing
         /// invocations are retried in the new NodeJS process (assuming they have remaining retries, see <see cref="NumRetries"/>).</para>

@@ -26,7 +26,7 @@ namespace Jering.Javascript.NodeJS
         /// </remarks>
         public string? ExecutablePath { get; set; }
 
-        /// <summary>NodeJS and V8 options in the form [NodeJS options] [V8 options].</summary>
+        /// <summary>NodeJS and V8 options in the form &lt;NodeJS options&gt; &lt;V8 options&gt;.</summary>
         /// <remarks>
         /// <para>You can find the full list of NodeJS options <a href="https://nodejs.org/api/cli.html#cli_options">here</a>.</para>
         /// </remarks>

@@ -21,8 +21,8 @@ namespace Jering.Javascript.NodeJS
         /// <para>If <paramref name="moduleSourceType"/> is not <see cref="ModuleSourceType.Stream"/>, this value must not be <c>null</c>. Additionally, if <paramref name="moduleSourceType"/> 
         /// is <see cref="ModuleSourceType.File"/> or <see cref="ModuleSourceType.String"/>, this value must not be an empty string or whitespace.</para>
         /// </param>
-        /// <param name="cacheIdentifier">The module's cache identifier. If this value is <c>null</c>, no attempt is made to retrieve or cache the module's exports.</param>
-        /// <param name="exportName">The name of the function in the module's exports to invoke. If this value is <c>null</c>, the module's exports is assumed to be a function and is invoked.</param>
+        /// <param name="cacheIdentifier">The module's cache identifier. If this value is <c>null</c>, no attempt is made to retrieve or cache <c>module.exports</c>.</param>
+        /// <param name="exportName">The name of the function in <c>module.exports</c> to invoke. If this value is <c>null</c>, <c>module.exports</c> is assumed to be a function and is invoked.</param>
         /// <param name="args">The sequence of JSON-serializable arguments to pass to the function to invoke. If this value is <c>null</c>, no arguments are passed.</param>
         /// <param name="moduleStreamSource">The module as a <see cref="Stream"/>.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="moduleSourceType"/> is <see cref="ModuleSourceType.Stream"/> but <paramref name="moduleStreamSource"/> is <c>null</c>.</exception>
@@ -33,7 +33,7 @@ namespace Jering.Javascript.NodeJS
             string? moduleSource = null,
             string? cacheIdentifier = null,
             string? exportName = null,
-            object[]? args = null,
+            object?[]? args = null,
             Stream? moduleStreamSource = null)
         {
             if (moduleSourceType == ModuleSourceType.Stream)
@@ -126,14 +126,14 @@ namespace Jering.Javascript.NodeJS
         public string? CacheIdentifier { get; }
 
         /// <summary>
-        /// Gets the name of the function in the module's exports to invoke.
+        /// Gets the name of the function in <c>module.exports</c> to invoke.
         /// </summary>
         public string? ExportName { get; }
 
         /// <summary>
         /// Gets the sequence of JSON-serializable arguments to pass to the function to invoke.
         /// </summary>
-        public object[]? Args { get; }
+        public object?[]? Args { get; }
 
         /// <summary>
         /// Gets the module as a <see cref="Stream"/>.

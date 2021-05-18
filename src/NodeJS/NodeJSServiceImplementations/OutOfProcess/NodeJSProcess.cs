@@ -9,9 +9,8 @@ namespace Jering.Javascript.NodeJS
     /// <para>Represents the method that will handle the message received event of a process.</para>
     /// <para>This method is a convenience-alternative to <see cref="DataReceivedEventHandler"/> which handles each line of a message.</para>
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
     /// <param name="message">The message.</param>
-    public delegate void MessageReceivedEventHandler(object sender, string message);
+    public delegate void MessageReceivedEventHandler(string message);
 
     /// <summary>
     /// The default implementation of <see cref="INodeJSProcess"/>.
@@ -192,19 +191,18 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void InternalOutputDataReceivedHandler(object sender, DataReceivedEventArgs dataReceivedEventArgs)
+        internal virtual void InternalOutputDataReceivedHandler(object _, DataReceivedEventArgs dataReceivedEventArgs)
         {
-            DataReceivedHandler(_outputDataStringBuilder, _outputReceivedHandler!, sender, dataReceivedEventArgs); // _outputReceivedHandler is assigned a value before this method is called
+            DataReceivedHandler(_outputDataStringBuilder, _outputReceivedHandler!, dataReceivedEventArgs); // _outputReceivedHandler is assigned a value before this method is called
         }
 
-        internal virtual void InternalErrorDataReceivedHandler(object sender, DataReceivedEventArgs dataReceivedEventArgs)
+        internal virtual void InternalErrorDataReceivedHandler(object _, DataReceivedEventArgs dataReceivedEventArgs)
         {
-            DataReceivedHandler(_errorDataStringBuilder, _errorReceivedHandler!, sender, dataReceivedEventArgs); // _errorReceivedHandler is assigned a value before this method is called
+            DataReceivedHandler(_errorDataStringBuilder, _errorReceivedHandler!, dataReceivedEventArgs); // _errorReceivedHandler is assigned a value before this method is called
         }
 
         internal virtual void DataReceivedHandler(StringBuilder stringBuilder,
             MessageReceivedEventHandler messageReceivedEventHandler,
-            object sender,
             DataReceivedEventArgs dataReceivedEventArgs)
         {
             string? data = dataReceivedEventArgs.Data;
@@ -213,7 +211,7 @@ namespace Jering.Javascript.NodeJS
             // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
             if (TryCreateMessage(stringBuilder, data, out string? result))
             {
-                messageReceivedEventHandler(sender, result);
+                messageReceivedEventHandler(result);
             }
         }
 
