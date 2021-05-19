@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Moq;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -9,6 +10,8 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class InvocationContentIntegrationTests
     {
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
+
         [Theory]
         [MemberData(nameof(SerializeToStreamAsync_SerializesNonModuleSourceTypeStreamInvocationRequestsAsync_Data))]
         public async Task SerializeToStreamAsync_SerializesNonModuleSourceTypeStreamInvocationRequestsAsync(ModuleSourceType dummyModuleSourceType)
@@ -59,7 +62,11 @@ namespace Jering.Javascript.NodeJS.Tests
             resultMemoryStream.Position = 0;
             using var resultReader = new StreamReader(resultMemoryStream);
             string result = resultReader.ReadToEnd();
+#if NET461
             Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent._boundaryBytes)}{dummyModuleSource}", result);
+#else
+            Assert.Equal($"{{\"moduleSourceType\":{(int)dummyModuleSourceType}}}{Encoding.UTF8.GetString(InvocationContent._boundaryBytes.Span)}{dummyModuleSource}", result);
+#endif
         }
 
         [Theory]
@@ -67,34 +74,36 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_SetsContentTypeDependingOnModuleSourceType(InvocationRequest dummyInvocationRequest, string expectedMediaType)
         {
             // Act
-            using var result = new InvocationContent(null, dummyInvocationRequest);
+            using var result = new InvocationContent(_mockRepository.Create<IJsonService>().Object, dummyInvocationRequest);
+
             // Assert
             Assert.Equal(expectedMediaType, result.Headers.ContentType?.MediaType);
+            _mockRepository.VerifyAll(); // No calls should have been made on IJsonService
         }
 
-        public static IEnumerable<object[]> Constructor_SetsContentTypeDependingOnModuleSourceType_Data()
+        public static IEnumerable<object?[]> Constructor_SetsContentTypeDependingOnModuleSourceType_Data()
         {
-            return new object[][]{
-                new object[]{
+            return new object?[][]{
+                new object?[]{
                     new InvocationRequest(ModuleSourceType.Cache, "dummyModuleSource"),
                     null
                 },
-                new object[]{
+                new object?[]{
                     new InvocationRequest(ModuleSourceType.File, "dummyModuleSource"),
                     null
                 },
-                new object[]{
+                new object?[]{
                     new InvocationRequest(ModuleSourceType.String, "dummyModuleSource"),
                     null
                 },
-                new object[]{
+                new object?[]{
                     new InvocationRequest(ModuleSourceType.Stream, moduleStreamSource: new MemoryStream()),
                     "multipart/mixed"
                 }
             };
         }
 
-        private ExposedInvocationContent CreateInvocationContent(IJsonService jsonService = null, InvocationRequest invocationRequest = null)
+        private static ExposedInvocationContent CreateInvocationContent(IJsonService jsonService, InvocationRequest invocationRequest)
         {
             return new ExposedInvocationContent(jsonService, invocationRequest);
         }
@@ -107,7 +116,7 @@ namespace Jering.Javascript.NodeJS.Tests
             {
             }
 
-            public async Task ExposedSerializeToStreamAsync(Stream stream, TransportContext context)
+            public async Task ExposedSerializeToStreamAsync(Stream stream, TransportContext? context)
             {
                 await SerializeToStreamAsync(stream, context).ConfigureAwait(false);
             }

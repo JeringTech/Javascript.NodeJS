@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Creates an <see cref="InvocationContentFactory"/>.
         /// </summary>
-        /// <param name="jsonService"></param>
+        /// <param name="jsonService">The service for serializing and deserializing JSON.</param>
         public InvocationContentFactory(IJsonService jsonService)
         {
             _jsonService = jsonService;

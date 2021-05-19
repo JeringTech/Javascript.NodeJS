@@ -20,7 +20,7 @@ namespace Jering.Javascript.NodeJS
         /// Creates a <see cref="HttpClientService"/>.
         /// </summary>
         /// <param name="httpClient">The <see cref="HttpClient"/> to send HTTP requests with.</param>
-        /// <param name="outOfProcessNodeJSServiceOptionsAccessor"></param>
+        /// <param name="outOfProcessNodeJSServiceOptionsAccessor">The <see cref="OutOfProcessNodeJSServiceOptions"/> accessor.</param>
         public HttpClientService(HttpClient httpClient,
             IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor)
         {

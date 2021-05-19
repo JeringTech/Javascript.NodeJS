@@ -10,7 +10,7 @@ namespace Jering.Javascript.NodeJS.Tests
     [Collection(nameof(StaticNodeJSService))]
     public class StaticNodeJSServiceUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public async void InvokeFromFileAsync_WithTypeParameter_InvokesFromFile()
@@ -19,7 +19,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -43,7 +43,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModulePath = "dummyModulePath";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -67,7 +67,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -92,7 +92,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyModuleString = "dummyModuleString";
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.Setup(t => t.InvokeFromStringAsync(dummyModuleString, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken));
@@ -115,7 +115,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyModuleFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -140,7 +140,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<string> dummyModuleFactory = () => "dummyModule";
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -164,7 +164,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -189,7 +189,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyModuleStream = new MemoryStream();
             const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.Setup(t => t.InvokeFromStreamAsync(dummyModuleStream, dummyNewCacheIdentifier, dummyExportName, dummyArgs, dummyCancellationToken));
@@ -212,7 +212,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyModuleFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -237,7 +237,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Func<Stream> dummyModuleFactory = () => new MemoryStream();
             const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -260,7 +260,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyResult = 1;
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.
@@ -285,7 +285,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyModuleCacheIdentifier = "dummyModuleCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             var dummyCancellationToken = new CancellationToken();
             Mock<INodeJSService> mockNodeJSService = _mockRepository.Create<INodeJSService>();
             mockNodeJSService.

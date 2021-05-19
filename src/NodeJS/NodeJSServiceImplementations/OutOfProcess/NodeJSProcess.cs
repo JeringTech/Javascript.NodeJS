@@ -1,16 +1,16 @@
 using System;
 using System.Diagnostics;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Jering.Javascript.NodeJS
 {
     /// <summary>
     /// <para>Represents the method that will handle the message received event of a process.</para>
-    /// <para>This method is a convenient alternative to <see cref="DataReceivedEventHandler"/> which handles each line of a message.</para>
+    /// <para>This method is a convenience-alternative to <see cref="DataReceivedEventHandler"/> which handles each line of a message.</para>
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
     /// <param name="message">The message.</param>
-    public delegate void MessageReceivedEventHandler(object sender, string message);
+    public delegate void MessageReceivedEventHandler(string message);
 
     /// <summary>
     /// The default implementation of <see cref="INodeJSProcess"/>.
@@ -21,14 +21,14 @@ namespace Jering.Javascript.NodeJS
         internal const string EXIT_STATUS_DISPOSED = "Process has been disposed";
 
         private readonly Process _process;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private bool _connected;
         private volatile bool _disposed; // Used in double checked lock
         private readonly StringBuilder _outputDataStringBuilder;
-        private MessageReceivedEventHandler _outputReceivedHandler;
+        private MessageReceivedEventHandler? _outputReceivedHandler;
         private bool _internalOutputDataReceivedHandlerAdded;
         private readonly StringBuilder _errorDataStringBuilder;
-        private MessageReceivedEventHandler _errorReceivedHandler;
+        private MessageReceivedEventHandler? _errorReceivedHandler;
         private bool _internalErrorDataReceivedHandlerAdded;
 
         /// <summary>
@@ -191,35 +191,34 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        internal virtual void InternalOutputDataReceivedHandler(object sender, DataReceivedEventArgs dataReceivedEventArgs)
+        internal virtual void InternalOutputDataReceivedHandler(object _, DataReceivedEventArgs dataReceivedEventArgs)
         {
-            DataReceivedHandler(_outputDataStringBuilder, _outputReceivedHandler, sender, dataReceivedEventArgs);
+            DataReceivedHandler(_outputDataStringBuilder, _outputReceivedHandler!, dataReceivedEventArgs); // _outputReceivedHandler is assigned a value before this method is called
         }
 
-        internal virtual void InternalErrorDataReceivedHandler(object sender, DataReceivedEventArgs dataReceivedEventArgs)
+        internal virtual void InternalErrorDataReceivedHandler(object _, DataReceivedEventArgs dataReceivedEventArgs)
         {
-            DataReceivedHandler(_errorDataStringBuilder, _errorReceivedHandler, sender, dataReceivedEventArgs);
+            DataReceivedHandler(_errorDataStringBuilder, _errorReceivedHandler!, dataReceivedEventArgs); // _errorReceivedHandler is assigned a value before this method is called
         }
 
         internal virtual void DataReceivedHandler(StringBuilder stringBuilder,
             MessageReceivedEventHandler messageReceivedEventHandler,
-            object sender,
             DataReceivedEventArgs dataReceivedEventArgs)
         {
-            string data = dataReceivedEventArgs.Data;
+            string? data = dataReceivedEventArgs.Data;
 
             // Process output is received line by line. The last line of a message ends with a \0 (null character),
             // so we accumulate lines in a StringBuilder till the \0, then log the entire message in one go.
-            if (TryCreateMessage(stringBuilder, data, out string result))
+            if (TryCreateMessage(stringBuilder, data, out string? result))
             {
-                messageReceivedEventHandler(sender, result);
+                messageReceivedEventHandler(result);
             }
         }
 
         // OutputDataReceivedHandler and ErrorDataReceivedHandler are called every time a newline character is read in the stdout and stderr streams respectively.
         // The event data supplied to callbacks is a string containing all the characters between the previous newline character and the most recent one.
         // In other words, streams are read line by line. The last line in each message ends with a null terminating character (see HttpServer.ts).
-        internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string data, out string message)
+        internal virtual bool TryCreateMessage(StringBuilder stringBuilder, string? data, [NotNullWhen(true)] out string? message)
         {
             message = null;
 

@@ -3,7 +3,7 @@ using Xunit.Abstractions;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
-    public class TestOutputProvider : ILoggerProvider
+    public sealed class TestOutputProvider : ILoggerProvider
     {
         private readonly ITestOutputHelper _testOutputHelper;
 
@@ -19,6 +19,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         public void Dispose()
         {
+            // Do nothing
         }
     }
 }

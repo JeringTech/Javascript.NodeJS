@@ -15,6 +15,6 @@ namespace Jering.Javascript.NodeJS
         /// <param name="watchFileNamesPatterns">The file name patterns to watch.</param>
         /// <param name="fileChangedEventHandler">The method that will handle file changed events.</param>
         /// <returns></returns>
-        IFileWatcher Create(string watchPath, bool watchSubdirectories, IEnumerable<string> watchFileNamesPatterns, FileChangedEventHandler fileChangedEventHandler);
+        IFileWatcher Create(string? watchPath, bool watchSubdirectories, IEnumerable<string> watchFileNamesPatterns, FileChangedEventHandler fileChangedEventHandler);
     }
 }

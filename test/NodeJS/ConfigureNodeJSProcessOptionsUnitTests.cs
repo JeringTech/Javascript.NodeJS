@@ -9,7 +9,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class ConfigureNodeJSProcessOptionsUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Theory]
         [MemberData(nameof(Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString_Data))]
@@ -32,13 +32,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal("node", dummyOptions.ExecutablePath);
         }
 
-        public static IEnumerable<object[]> Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString_Data()
+        public static IEnumerable<object?[]> Configure_SetsExecutablePathIfItIsNullWhitespaceOrAnEmptyString_Data()
         {
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{null},
-                new object[]{" "},
-                new object[]{string.Empty}
+                new object?[]{null},
+                new object?[]{" "},
+                new object?[]{string.Empty}
             };
         }
 
@@ -113,13 +113,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyContentRootPath, dummyOptions.ProjectPath);
         }
 
-        public static IEnumerable<object[]> Configure_ConfiguresProjectPathIfItIsNullWhitespaceOrAnEmptyString_Data()
+        public static IEnumerable<object?[]> Configure_ConfiguresProjectPathIfItIsNullWhitespaceOrAnEmptyString_Data()
         {
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{null},
-                new object[]{" "},
-                new object[]{string.Empty}
+                new object ?[]{null},
+                new object ?[]{" "},
+                new object ?[]{string.Empty}
             };
         }
 
@@ -139,7 +139,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyOptions = new NodeJSProcessOptions
             {
                 ProjectPath = dummyProjectPath,
-                EnvironmentVariables = null // So we don't return early
+                EnvironmentVariables = null! // So we don't return early
             };
             ConfigureNodeJSProcessOptions testSubject = CreateConfigureNodeJSProcessOptions(mockServiceScopeFactory.Object);
 
@@ -177,7 +177,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(expectedEnvironmentVariables, dummyOptions.EnvironmentVariables);
         }
 
-        public static IEnumerable<object[]> Configure_ConfiguresNodeEnvIfItIsUnspecified_Data()
+        public static IEnumerable<object?[]> Configure_ConfiguresNodeEnvIfItIsUnspecified_Data()
         {
             const string nodeEnvVarName = "NODE_ENV";
             const string expectedProductionNodeEnvValue = "production";
@@ -185,28 +185,28 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyEnvVarName = "DUMMY_ENV_VAR";
             const string dummyEnvVarValue = "dummyEnvVarValue";
 
-            return new object[][]
+            return new object?[][]
             {
                 // Sets NODE_ENV to development if EnvironmentName is Development
-                new object[]{
+                new object ?[]{
                     null,
                     EnvironmentName.Development,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedDevelopmentNodeEnvValue } }
                 },
                 // Sets NODE_ENV to production if EnvironmentName is Production
-                new object[]{
+                new object ?[]{
                     null,
                     EnvironmentName.Production,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedProductionNodeEnvValue } }
                 },
                 // Defaults to "production"
-                new object[]{
+                new object ?[]{
                     null,
                     EnvironmentName.Staging,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedProductionNodeEnvValue } }
                 },
                 // Keeps existing environment variables
-                new object[]{
+                new object ?[]{
                     new Dictionary<string, string> { { dummyEnvVarName, dummyEnvVarValue } },
                     EnvironmentName.Development,
                     new Dictionary<string, string>
@@ -235,7 +235,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockServiceScopeFactory.Setup(s => s.CreateScope()).Returns(mockServiceScope.Object);
             var dummyOptions = new NodeJSProcessOptions
             {
-                ProjectPath = null, // So we don't return early
+                ProjectPath = null!, // Project path should not be null, but user can still specify null. We're testing the situation where nullable reference type warning are ignored.
                 EnvironmentVariables = dummyEnvironmentVariables
             };
             ConfigureNodeJSProcessOptions testSubject = CreateConfigureNodeJSProcessOptions(mockServiceScopeFactory.Object);
@@ -248,9 +248,9 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(dummyNodeEnvValue, dummyOptions.EnvironmentVariables[nodeEnvVarName]); // Unchanged
         }
 
-        private ConfigureNodeJSProcessOptions CreateConfigureNodeJSProcessOptions(IServiceScopeFactory serviceScopeFactory = null)
+        private ConfigureNodeJSProcessOptions CreateConfigureNodeJSProcessOptions(IServiceScopeFactory? serviceScopeFactory = null)
         {
-            return new ConfigureNodeJSProcessOptions(serviceScopeFactory);
+            return new ConfigureNodeJSProcessOptions(serviceScopeFactory ?? _mockRepository.Create<IServiceScopeFactory>().Object);
         }
     }
 }

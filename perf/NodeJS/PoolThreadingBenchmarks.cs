@@ -12,8 +12,8 @@ namespace Jering.Javascript.NodeJS.Performance
     [MemoryDiagnoser]
     public class PoolThreadingBenchmarks
     {
-        private LockFreeMethod _lockFree;
-        private LockMethod _lock;
+        private LockFreeMethod? _lockFree;
+        private LockMethod? _lock;
 
         private readonly IEnumerable<int> _source = Enumerable.Range(0, 2000);
 
@@ -31,13 +31,13 @@ namespace Jering.Javascript.NodeJS.Performance
         [Benchmark]
         public void Lock()
         {
-            _lock.GetDummyObject();
+            _lock!.GetDummyObject();
         }
 
         [Benchmark]
         public void LockFree()
         {
-            _lockFree.GetDummyObject();
+            _lockFree!.GetDummyObject();
         }
 
         [Benchmark]
@@ -48,7 +48,7 @@ namespace Jering.Javascript.NodeJS.Performance
 
         private void LockFree_GetDummyObject(int _)
         {
-            _lockFree.GetDummyObject();
+            _lockFree!.GetDummyObject();
         }
 
         [Benchmark]
@@ -59,7 +59,7 @@ namespace Jering.Javascript.NodeJS.Performance
 
         private void Lock_GetDummyObject(int _)
         {
-            _lock.GetDummyObject();
+            _lock!.GetDummyObject();
         }
 
         private class LockMethod
@@ -67,7 +67,7 @@ namespace Jering.Javascript.NodeJS.Performance
             private readonly ReadOnlyCollection<object> _dummyObjects;
 
             private readonly int _maxIndex;
-            private readonly object _dummyObjectsLock = new object();
+            private readonly object _dummyObjectsLock = new();
             private int _nextIndex;
 
             public int Size { get; }

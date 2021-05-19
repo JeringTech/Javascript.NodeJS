@@ -3,8 +3,25 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.3...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0...HEAD)
 
+## [6.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.3...6.0.0) - May 19, 2021
+All additions and changes can be found here: [#108](https://github.com/JeringTech/Javascript.NodeJS/pull/108)
+
+### Additions
+- Added `HttpNodeJSServiceOptions.Version` option. Allows for selecting of HTTP version.
+- Added source generators for `StaticNodeJSService`, `HttpNodeJSPoolService`, and API documentation.
+### Changes
+- Bumped dependencies.
+- **Major Breaking Changes**:
+  - Enabled nullable reference types.
+  - Renamed `newCacheIdentifier` parameter in `INodeJSService`, `StaticNodeJSService` and `HttpNodeJSPoolService` methods to `cacheIdentifier`.
+- **Minor Breaking Changes**:
+  - Renamed `newCacheIdentifier` parameter in `OutOfProcessNodeJSService` methods to `cacheIdentifier`.
+  - Removed obsolete `OutOfProcessNodeJSService` constructor.
+  - Renamed `InvocationRequest.NewCacheIdentifier` to `CacheIdentifier`.
+  - Added `httpNodeJSServiceOptionsAccessor` parameter to `HttpNodeJSService`.
+  - Removed redundant `sender` parameter from `MessageReceivedEventHandler`.
 ## [6.0.0-beta.3](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.2...6.0.0-beta.3) - Mar 31, 2021
 ### Additions
 - Added `NodeJSProcessOptions.ExecutablePath` option. ([#106](https://github.com/JeringTech/Javascript.NodeJS/pull/106)).
@@ -103,7 +120,7 @@ change only matters if you're using a custom implementation of `IJsonService`. (
 
 ## [4.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/4.2.2...4.3.0) - Nov 16, 2019
 ### Fixes
-- Fixed `TypeError [ERR_INVALID_ARG_TYPE]: The “path” argument must be of type string` error when using newer NodeJS versions. ([6cd3b3f](https://github.com/JeringTech/Javascript.NodeJS/commit/6cd3b3f088321e02d51450aebe43a7b55ce3922d))
+- Fixed `TypeError [ERR_INVALID_ARG_TYPE]: The ï¿½pathï¿½ argument must be of type string` error when using newer NodeJS versions. ([6cd3b3f](https://github.com/JeringTech/Javascript.NodeJS/commit/6cd3b3f088321e02d51450aebe43a7b55ce3922d))
 ### Changes
 - Bumped several dependencies. ([f9e0dfc](https://github.com/JeringTech/Javascript.NodeJS/commit/f9e0dfcc8b0d6d808c52e8a550d85f81d53ed194))
 

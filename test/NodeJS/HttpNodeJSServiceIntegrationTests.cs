@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,7 +20,7 @@ namespace Jering.Javascript.NodeJS.Tests
     /// <summary>
     /// These tests are de facto tests for HttpServer.ts. They also verify <see cref="OutOfProcessNodeJSService"/> logic.
     /// </summary>
-    public class HttpNodeJSServiceIntegrationTests : IDisposable
+    public sealed class HttpNodeJSServiceIntegrationTests : IDisposable
     {
         // Set to true to break in NodeJS (see CreateHttpNodeJSService)
         private const bool DEBUG_NODEJS = false;
@@ -36,10 +37,10 @@ namespace Jering.Javascript.NodeJS.Tests
 
         // File watching
         private static readonly string _tempWatchDirectory = Path.Combine(Path.GetTempPath(), nameof(HttpNodeJSServiceIntegrationTests) + "/"); // Dummy directory to watch for file changes
-        private Uri _tempWatchDirectoryUri;
+        private Uri? _tempWatchDirectoryUri;
 
         private readonly ITestOutputHelper _testOutputHelper;
-        private IServiceProvider _serviceProvider;
+        private IServiceProvider? _serviceProvider;
 
         public HttpNodeJSServiceIntegrationTests(ITestOutputHelper testOutputHelper)
         {
@@ -56,11 +57,11 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: absoluteExecutablePath);
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -74,11 +75,11 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: relativeExecutablePath);
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -89,11 +90,11 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath, executablePath: "node");
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -104,11 +105,11 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromFileAsync<DummyResult>(DUMMY_RETURNS_ARG_MODULE_FILE, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -119,7 +120,7 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            var results = new ConcurrentQueue<DummyResult>();
+            var results = new ConcurrentQueue<DummyResult?>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
@@ -136,9 +137,9 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
+            foreach (DummyResult? result in results)
             {
-                Assert.Equal(dummyArg, result.Result);
+                Assert.Equal(dummyArg, result?.Result);
             }
         }
 
@@ -152,9 +153,9 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromFileAsync(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromFileAsync<DummyResult>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "getString").ConfigureAwait(false);
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -191,11 +192,11 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -206,7 +207,7 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            var results = new ConcurrentQueue<DummyResult>();
+            var results = new ConcurrentQueue<DummyResult?>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
@@ -223,9 +224,9 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
+            foreach (DummyResult? result in results)
             {
-                Assert.Equal(dummyArg, result.Result);
+                Assert.Equal(dummyArg, result?.Result);
             }
         }
 
@@ -239,9 +240,9 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromStringAsync<DummyResult>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -279,11 +280,11 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStringAsync(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
-            DummyResult result = await testSubject.
-                InvokeFromStringAsync<DummyResult>(() => null, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+            DummyResult? result = await testSubject.
+                InvokeFromStringAsync<DummyResult>(() => string.Empty, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -295,15 +296,15 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             // Module hasn't been cached, so if this returns the expected value, string was sent over
-            DummyResult result1 = await testSubject.
+            DummyResult? result1 = await testSubject.
                 InvokeFromStringAsync<DummyResult>(() => _dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             // Ensure module was cached
-            (bool success, DummyResult result2) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
-            Assert.Equal(dummyArg, result1.Result);
+            (bool success, DummyResult? result2) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            Assert.Equal(dummyArg, result1?.Result);
             Assert.True(success);
-            Assert.Equal(dummyArg, result2.Result);
+            Assert.Equal(dummyArg, result2?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -331,7 +332,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             Assert.Equal(numThreads, results.Count);
             // Module shouldn't get cached more than once, we should get exactly [1,2,3,4,5]
-            List<int> resultsList = results.ToList();
+            var resultsList = results.ToList();
             resultsList.Sort();
             for (int i = 0; i < numThreads; i++)
             {
@@ -348,7 +349,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             await testSubject.
-                InvokeFromStringAsync(() => null, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+                InvokeFromStringAsync(() => string.Empty, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Assert
             int result = await testSubject.InvokeFromStringAsync<int>(_dummyExportsMultipleFunctionsModule, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
@@ -408,10 +409,10 @@ namespace Jering.Javascript.NodeJS.Tests
             MemoryStream memoryStream = CreateMemoryStream(_dummyReturnsArgModule);
 
             // Act
-            DummyResult result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).ConfigureAwait(false);
+            DummyResult? result = await testSubject.InvokeFromStreamAsync<DummyResult>(memoryStream, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -422,7 +423,7 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            var results = new ConcurrentQueue<DummyResult>();
+            var results = new ConcurrentQueue<DummyResult?>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
@@ -442,9 +443,9 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach (DummyResult result in results)
+            foreach (DummyResult? result in results)
             {
-                Assert.Equal(dummyArg, result.Result);
+                Assert.Equal(dummyArg, result?.Result);
             }
         }
 
@@ -460,9 +461,9 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromStreamAsync<DummyResult>(memoryStream, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -505,11 +506,11 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStreamAsync(memoryStream, DUMMY_CACHE_IDENTIFIER, "setString", new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
-            DummyResult result = await testSubject.
-                InvokeFromStreamAsync<DummyResult>(() => null, DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
+            DummyResult? result = await testSubject.
+                InvokeFromStreamAsync<DummyResult>(() => new MemoryStream(), DUMMY_CACHE_IDENTIFIER, "getString").ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -522,16 +523,16 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             // Module hasn't been cached, so if this returns the expected value, stream was sent over
-            DummyResult result1 = await testSubject.
+            DummyResult? result1 = await testSubject.
                 InvokeFromStreamAsync<DummyResult>(() => memoryStream, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             // Ensure module was cached
-            (bool success, DummyResult result2) = await testSubject.
+            (bool success, DummyResult? result2) = await testSubject.
                 TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
-            Assert.Equal(dummyArg, result1.Result);
+            Assert.Equal(dummyArg, result1?.Result);
             Assert.True(success);
-            Assert.Equal(dummyArg, result2.Result);
+            Assert.Equal(dummyArg, result2?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -562,7 +563,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             Assert.Equal(numThreads, results.Count);
             // Module shouldn't get cached more than once, we should get exactly [1,2,3,4,5]
-            List<int> resultsList = results.ToList();
+            var resultsList = results.ToList();
             resultsList.Sort();
             for (int i = 0; i < numThreads; i++)
             {
@@ -580,7 +581,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Act
             await testSubject.
-                InvokeFromStreamAsync(() => null, DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
+                InvokeFromStreamAsync(() => new MemoryStream(), DUMMY_CACHE_IDENTIFIER, "incrementNumber").ConfigureAwait(false);
 
             // Assert
             int result = await testSubject.InvokeFromStreamAsync<int>(memoryStream, DUMMY_CACHE_IDENTIFIER, "getNumber").ConfigureAwait(false);
@@ -644,11 +645,11 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
-            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
+            (bool success, DummyResult? value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
             Assert.True(success);
-            Assert.Equal(dummyArg, value.Result);
+            Assert.Equal(dummyArg, value?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -658,7 +659,7 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            (bool success, DummyResult value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { "success" }).ConfigureAwait(false);
+            (bool success, DummyResult? value) = await testSubject.TryInvokeFromCacheAsync<DummyResult>(DUMMY_CACHE_IDENTIFIER, args: new[] { "success" }).ConfigureAwait(false);
 
             // Assert
             Assert.False(success);
@@ -674,7 +675,7 @@ namespace Jering.Javascript.NodeJS.Tests
             await testSubject.InvokeFromStringAsync<DummyResult>(_dummyReturnsArgModule, DUMMY_CACHE_IDENTIFIER, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Act
-            var results = new ConcurrentQueue<(bool, DummyResult)>();
+            var results = new ConcurrentQueue<(bool, DummyResult?)>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)
@@ -691,10 +692,10 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(numThreads, results.Count);
-            foreach ((bool success, DummyResult value) in results)
+            foreach ((bool success, DummyResult? value) in results)
             {
                 Assert.True(success);
-                Assert.Equal(dummyArg, value.Result);
+                Assert.Equal(dummyArg, value?.Result);
             }
         }
 
@@ -765,7 +766,7 @@ namespace Jering.Javascript.NodeJS.Tests
             HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
 
             // Act
-            string result = await testSubject.InvokeFromStringAsync<string>(@"const prismjs = require('prismjs');
+            string? result = await testSubject.InvokeFromStringAsync<string>(@"const prismjs = require('prismjs');
 require('prismjs/components/prism-csharp');
 
 module.exports = (callback, code) => {
@@ -775,7 +776,7 @@ module.exports = (callback, code) => {
 };", args: new[] { dummyCode }).ConfigureAwait(false);
 
             // Assert
-            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token keyword"">string</span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token keyword"">string</span> arg<span class=""token punctuation"">)</span>
+            const string expectedResult = @"<span class=""token keyword"">public</span> <span class=""token return-type class-name""><span class=""token keyword"">string</span></span> <span class=""token function"">ExampleFunction</span><span class=""token punctuation"">(</span><span class=""token class-name""><span class=""token keyword"">string</span></span> arg<span class=""token punctuation"">)</span>
 <span class=""token punctuation"">{</span>
     <span class=""token comment"">// Example comment</span>
     <span class=""token keyword"">return</span> arg <span class=""token operator"">+</span> <span class=""token string"">""dummyString""</span><span class=""token punctuation"">;</span>
@@ -903,11 +904,11 @@ module.exports = (callback) => {
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromStringAsync<DummyResult>("module.exports = async (resultString) => {return {result: resultString};}", args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
@@ -919,17 +920,19 @@ module.exports = (callback) => {
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
             // Act
-            DummyResult result = await testSubject.
+            DummyResult? result = await testSubject.
                 InvokeFromStringAsync<DummyResult>($"module.exports = {{ {dummyExportName}: (callback, resultString) => callback(null, {{result: resultString}}) }};", exportName: dummyExportName, args: new[] { dummyArg }).ConfigureAwait(false);
 
             // Assert
-            Assert.Equal(dummyArg, result.Result);
+            Assert.Equal(dummyArg, result?.Result);
         }
 
-        // TODO doesn't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
+        // TODO doesn't pass reliably because Node.js randomly truncates stdout/stderr - https://github.com/nodejs/node/issues/6456.
         // Still useful for diagnosing issues with output piping.
         // We're using Thread.Sleep(1000) to minimize issues, but it doesn't work all the time.
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Theory(Timeout = TIMEOUT_MS, Skip = "Node.js randomly truncates stdout/stderr")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStdoutOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStdoutOutput(string dummyLogArgument, string expectedResult)
         {
@@ -950,7 +953,7 @@ module.exports = (callback) => {
     // process.stdout.write('', 'utf8', () => callback());
 }}").ConfigureAwait(false);
             Thread.Sleep(1000);
-            ((IDisposable)_serviceProvider).Dispose();
+            ((IDisposable)_serviceProvider!).Dispose();
             string result = resultStringBuilder.ToString();
 
             // Assert
@@ -975,7 +978,9 @@ module.exports = (callback) => {
         // TODO doesn't pass reliably because Node.js randomly truncates stdout/stderr  - https://github.com/nodejs/node/issues/6456.
         // Still useful for diagnosing issues with output piping.
         // We're using Thread.Sleep(1000) to minimize issues, but it doesn't work all the time.
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Theory(Timeout = TIMEOUT_MS, Skip = "Node.js randomly truncates stdout/stderr")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         [MemberData(nameof(AllInvokeMethods_ReceiveAndLogStderrOutput_Data))]
         public async void AllInvokeMethods_ReceiveAndLogStderrOutput(string dummyLogArgument, string expectedResult)
         {
@@ -990,7 +995,7 @@ module.exports = (callback) => {
             callback();
         }}").ConfigureAwait(false);
             Thread.Sleep(1000);
-            ((IDisposable)_serviceProvider).Dispose();
+            ((IDisposable)_serviceProvider!).Dispose(); // _serviceProvider created by CreateHttpNodeJSService
             string result = resultStringBuilder.ToString();
 
             // Assert
@@ -1027,10 +1032,10 @@ module.exports = (callback) => {{
 }}";
             HttpNodeJSService testSubject = CreateHttpNodeJSService();
 
-            // Act
-            using Stream resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false);
-            using var streamReader = new StreamReader(resultStream);
-            // Assert
+            // Act and assert
+            using Stream? resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false);
+            Assert.NotNull(resultStream);
+            using var streamReader = new StreamReader(resultStream!); // Assert.NotNull throws if resultStream is null
             string result = streamReader.ReadToEnd();
             Assert.Equal(dummyData, result);
         }
@@ -1043,9 +1048,9 @@ module.exports = (callback) => {{
         public async void FileWatching_RespectsGracefulShutdownOptionWhenItsTrue()
         {
             // Arrange
-            RecreateWatchDirectory();
+            Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
-            string dummylongRunningTriggerPath = new Uri(_tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
@@ -1058,7 +1063,7 @@ module.exports = (callback) => {{
         );
     }}
 }}";
-            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
@@ -1071,7 +1076,7 @@ module.exports = (callback) => {{
 
             // Act
             int initialProcessID1 = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
-            Process initialProcess = Process.GetProcessById(initialProcessID1); // Create Process instance for initial process so we can verify that it gets killed
+            var initialProcess = Process.GetProcessById(initialProcessID1); // Create Process instance for initial process so we can verify that it gets killed
             Task<int> longRunningTask = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
             File.WriteAllText(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }"); // Trigger shift to new process
             int newProcessID;
@@ -1094,13 +1099,12 @@ module.exports = (callback) => {{
         public async void FileWatching_RespectsGracefulShutdownOptionWhenItsFalse()
         {
             // Arrange
-            RecreateWatchDirectory();
             // Create initial module
             const string dummyInitialModule = @"module.exports = {
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
 }";
-            string dummyModuleFilePath = new Uri(_tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").AbsolutePath;
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
             var resultStringBuilder = new StringBuilder();
             var dummyServices = new ServiceCollection();
@@ -1114,7 +1118,7 @@ module.exports = (callback) => {{
 
             // Act
             int initialProcessID = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
-            Process initialProcess = Process.GetProcessById(initialProcessID); // Create Process instance for initial process so we can verify that it gets killed later on
+            var initialProcess = Process.GetProcessById(initialProcessID); // Create Process instance for initial process so we can verify that it gets killed later on
             Task<int> longRunningTask = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
             const string dummyNewModule = @"module.exports = {
     getPid: (callback) => callback(null, process.pid),
@@ -1162,16 +1166,46 @@ module.exports = (callback) => {{
             Assert.NotEqual(firstExceptionProcessID, thirdExceptionProcessID); // Invocation invoked in new process
         }
 
+#if NET5_0 || NETCOREAPP3_1
+        [Theory]
+        [MemberData(nameof(HttpVersion_IsConfigurable_Data))]
+        public async void HttpVersion_IsConfigurable(Version dummyHttpVersion, string expectedHttpVersionString)
+        {
+            // Arrange
+            var resultStringBuilder = new StringBuilder();
+
+            // Act
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, httpVersion: dummyHttpVersion);
+            await testSubject.InvokeFromStringAsync("module.exports = (callback) => callback()").ConfigureAwait(false); // Invoke so process starts
+
+            // Assert
+            string log = resultStringBuilder.ToString();
+            Assert.Contains(expectedHttpVersionString, log);
+        }
+
+        public static IEnumerable<object[]> HttpVersion_IsConfigurable_Data()
+        {
+            return new object[][]
+            {
+                new object[] { HttpVersion.Version11, "HTTP/1.1" },
+                new object[] { HttpVersion.Version20, "HTTP/2.0" }
+            };
+        }
+#endif
+
         /// <summary>
         /// Specify <paramref name="loggerStringBuilder"/> for access to all logging output.
         /// </summary>
-        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder loggerStringBuilder = default,
-            string projectPath = default,
-            string executablePath = default,
-            ServiceCollection services = default)
+        private HttpNodeJSService CreateHttpNodeJSService(StringBuilder? loggerStringBuilder = default,
+            string? projectPath = default,
+            string? executablePath = default,
+#if NETCOREAPP3_1 || NET5_0
+            Version? httpVersion = default,
+#endif
+            ServiceCollection? services = default)
         {
             services ??= new ServiceCollection();
-            services.AddNodeJS(); // Default INodeService is HttpNodeService
+            services.AddNodeJS(); // Default INodeJSService is HttpNodeService
             if (projectPath != null)
             {
                 services.Configure<NodeJSProcessOptions>(options => options.ProjectPath = projectPath);
@@ -1180,6 +1214,9 @@ module.exports = (callback) => {{
             {
                 services.Configure<NodeJSProcessOptions>(options => options.ExecutablePath = executablePath);
             }
+#if NETCOREAPP3_1 || NET5_0
+            services.Configure<HttpNodeJSServiceOptions>(options => options.Version = httpVersion ?? HttpVersion.Version11);
+#endif
             services.AddLogging(lb =>
             {
                 lb.
@@ -1202,10 +1239,10 @@ module.exports = (callback) => {{
 
             _serviceProvider = services.BuildServiceProvider();
 
-            return _serviceProvider.GetRequiredService<INodeJSService>() as HttpNodeJSService;
+            return (HttpNodeJSService)_serviceProvider.GetRequiredService<INodeJSService>();
         }
 
-        private MemoryStream CreateMemoryStream(string value)
+        private static MemoryStream CreateMemoryStream(string value)
         {
             var memoryStream = new MemoryStream();
             var streamWriter = new StreamWriter(memoryStream);
@@ -1218,28 +1255,38 @@ module.exports = (callback) => {{
 
         private class DummyResult
         {
-            public string Result { get; set; }
+            public string? Result { get; set; }
         }
 
         public void Dispose()
         {
-            ((IDisposable)_serviceProvider).Dispose();
-
-            if (_tempWatchDirectoryUri != null)
+            if (_serviceProvider != null)
             {
-                TryDeleteWatchDirectory();
+                ((IDisposable)_serviceProvider).Dispose();
             }
+
+            TryDeleteWatchDirectory();
         }
 
-        private void RecreateWatchDirectory()
+        private Uri CreateWatchDirectoryUri()
         {
-            TryDeleteWatchDirectory();
-            Directory.CreateDirectory(_tempWatchDirectory);
+            if (_tempWatchDirectoryUri != null)
+            {
+                return _tempWatchDirectoryUri;
+            }
+
             _tempWatchDirectoryUri = new Uri(_tempWatchDirectory);
+            Directory.CreateDirectory(_tempWatchDirectory);
+            return _tempWatchDirectoryUri;
         }
 
         private void TryDeleteWatchDirectory()
         {
+            if(_tempWatchDirectoryUri == null)
+            {
+                return;
+            }
+
             try
             {
                 Directory.Delete(_tempWatchDirectory, true);
@@ -1250,7 +1297,7 @@ module.exports = (callback) => {{
             }
         }
 
-        private string GetNodeAbsolutePath()
+        private static string GetNodeAbsolutePath()
         {
 #if NETCOREAPP3_1 || NET5_0
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -1267,9 +1314,15 @@ module.exports = (callback) => {{
 #endif
         }
 
-        private string GetNodeAbsolutePathCore(string environmentVariableName, char pathSeparator, string executableFile)
+        private static string GetNodeAbsolutePathCore(string environmentVariableName, char pathSeparator, string executableFile)
         {
-            string pathEnvironmentVariable = Environment.GetEnvironmentVariable(environmentVariableName);
+            string? pathEnvironmentVariable = Environment.GetEnvironmentVariable(environmentVariableName);
+
+            if (pathEnvironmentVariable == null)
+            {
+                throw new InvalidOperationException("System has no path environment varirable, unable to retrieve node absolute path.");
+            }
+
             string[] directories = pathEnvironmentVariable.Split(new char[] { pathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string directory in directories)
@@ -1281,10 +1334,10 @@ module.exports = (callback) => {{
                 }
             }
 
-            return null;
+            throw new InvalidOperationException("System's path variable has no directory containing a node executable, unable to retrieve node absolute path.");
         }
 
-        private string GetRelativePath(string directoryRelativeTo, string path)
+        private static string GetRelativePath(string directoryRelativeTo, string path)
         {
 #if NETCOREAPP3_1 || NET5_0
             return Path.GetRelativePath(directoryRelativeTo, path);

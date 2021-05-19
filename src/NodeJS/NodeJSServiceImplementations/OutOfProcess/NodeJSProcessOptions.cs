@@ -9,42 +9,43 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class NodeJSProcessOptions
     {
-        /// <summary>
-        /// <para>The base path for resolving paths of NodeJS modules on disk.</para>
+        /// <summary>The base path for resolving NodeJS module paths.</summary>
+        /// <remarks>
         /// <para>If this value is <c>null</c>, whitespace or an empty string and the application is an ASP.NET Core application, 
         /// project path is <see cref="IHostingEnvironment.ContentRootPath"/>.</para>
-        /// </summary>
+        /// </remarks>
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
-        /// <summary>
-        /// <para>The value used to locate the NodeJS executable.</para>
+        /// <summary>The value used to locate the NodeJS executable.</summary>
+        /// <remarks>
         /// <para>This value may be an absolute path, a relative path, or a file name.</para>
         /// <para>If this value is a relative path, the executable's path is resolved relative to <see cref="Directory.GetCurrentDirectory"/>.</para>
         /// <para>If this value is a file name, the executable's path is resolved using the path environment variable.</para>
         /// <para>If this value is <c>null</c>, whitespace or an empty string, it is overridden with the file name "node".</para>
         /// <para>Defaults to <c>null</c>.</para>
-        /// </summary>
-        public string ExecutablePath { get; set; }
+        /// </remarks>
+        public string? ExecutablePath { get; set; }
 
-        /// <summary>
-        /// <para>NodeJS and V8 options in the form [NodeJS options] [V8 options].</para>
-        /// <para>The full list of NodeJS options can be found here: https://nodejs.org/api/cli.html#cli_options.</para>
-        /// </summary>
-        public string NodeAndV8Options { get; set; }
+        /// <summary>NodeJS and V8 options in the form &lt;NodeJS options&gt; &lt;V8 options&gt;.</summary>
+        /// <remarks>
+        /// <para>You can find the full list of NodeJS options <a href="https://nodejs.org/api/cli.html#cli_options">here</a>.</para>
+        /// </remarks>
+        public string? NodeAndV8Options { get; set; }
 
-        /// <summary>
-        /// <para>The port that the server running on NodeJS will listen on.</para>
-        /// <para>If set to 0, the OS will choose the port. This value defaults to 0.</para>
-        /// </summary>
+        /// <summary>The NodeJS server will listen on this port.</summary>
+        /// <remarks>
+        /// <para>If this value is 0, the OS will choose the port.</para>
+        /// <para>Defaults to 0.</para>
+        /// </remarks>
         public int Port { get; set; }
 
-        /// <summary>
-        /// <para>The environment variables for the NodeJS process.</para>
-        /// <para>The full list of NodeJS environment variables can be found here: https://nodejs.org/api/cli.html#cli_environment_variables.</para>
+        /// <summary>The NodeJS process's environment variables.</summary>
+        /// <remarks>
+        /// <para>You can configure NodeJS by specifying environment variables for it. Find the full list of environment variables <a href="https://nodejs.org/api/cli.html#cli_environment_variables">here</a>.</para>
         /// <para>If this value doesn't contain an element with key "NODE_ENV" and the application is an ASP.NET Core application,
         /// an element with key "NODE_ENV" is added. The added element's value is "development" if <see cref="IHostingEnvironment.EnvironmentName"/> is <see cref="EnvironmentName.Development"/>,
         /// and "production" otherwise.</para>
-        /// </summary>
+        /// </remarks>
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
     }
 }

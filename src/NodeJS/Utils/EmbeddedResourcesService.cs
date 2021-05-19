@@ -12,9 +12,21 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public string ReadAsString(Assembly embeddedResourceAssembly, string name)
         {
-            using Stream stream = embeddedResourceAssembly.GetManifestResourceStream(name);
-            using var streamReader = new StreamReader(stream);
-            return streamReader.ReadToEnd();
+            Stream? stream = null;
+            StreamReader? streamReader = null;
+            try
+            {
+                stream = embeddedResourceAssembly.GetManifestResourceStream(name) ?? 
+                    throw new InvalidOperationException(string.Format(Strings.InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName, name));
+                streamReader = new StreamReader(stream);
+
+                return streamReader.ReadToEnd();
+            }
+            finally
+            {
+                stream?.Dispose();
+                streamReader?.Dispose();
+            }
         }
 
         /// <inheritdoc />
@@ -28,7 +40,8 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public Stream ReadAsStream(Assembly embeddedResourceAssembly, string name)
         {
-            return embeddedResourceAssembly.GetManifestResourceStream(name);
+            return embeddedResourceAssembly.GetManifestResourceStream(name) ?? 
+                throw new InvalidOperationException(string.Format(Strings.InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName, name));
         }
 
         /// <inheritdoc />

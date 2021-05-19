@@ -15,7 +15,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
         public IDisposable BeginScope<TState>(TState state)
         {
-            return null;
+            return null!; // We're not using scopes
         }
 
         public bool IsEnabled(LogLevel logLevel)

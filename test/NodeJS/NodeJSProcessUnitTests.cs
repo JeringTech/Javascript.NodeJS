@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Options;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace Jering.Javascript.NodeJS.Tests
     /// </summary>
     public class NodeJSProcessUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
         private const string DUMMY_LONG_RUNNING_SCRIPT_NAME = "dummyLongRunningScript.js";
         private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
         private static readonly string _dummyLongRunningScript = File.ReadAllText(Path.Combine(_projectPath, DUMMY_LONG_RUNNING_SCRIPT_NAME));
@@ -24,7 +25,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public void Constructor_ThrowsArgumentNullExceptionIfProcessIsNull()
         {
             // Act and assert
-            Assert.Throws<ArgumentNullException>(() => new NodeJSProcess(null));
+            Assert.Throws<ArgumentNullException>(() => new NodeJSProcess(null!)); // Testing situation where nullable reference type warnings are ignored
         }
 
         [Fact]
@@ -74,20 +75,19 @@ namespace Jering.Javascript.NodeJS.Tests
         public void AddOutputReceivedHandler_AddsHandlers()
         {
             // Arrange
-            var dummySender = new object();
             var dummyStringBuilder = new StringBuilder();
             DataReceivedEventArgs dummyDataReceivedEventArgs = CreateDataReceivedEventArgs();
-            MessageReceivedEventHandler dummyHandler = (object _, string __) => { };
+            MessageReceivedEventHandler dummyHandler = (string message) => { };
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess(outputDataStringBuilder: dummyStringBuilder);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(n => n.DataReceivedHandler(dummyStringBuilder, dummyHandler, dummySender, dummyDataReceivedEventArgs)); // Output received handler added
+            mockTestSubject.Setup(n => n.DataReceivedHandler(dummyStringBuilder, dummyHandler, dummyDataReceivedEventArgs)); // Output received handler added
             mockTestSubject.Setup(n => n.AddOutputDataReceivedHandler(mockTestSubject.Object.InternalOutputDataReceivedHandler)); // Output data received handler added
 
             // Act
             mockTestSubject.Object.AddOutputReceivedHandler(dummyHandler);
 
             // Assert
-            mockTestSubject.Object.InternalOutputDataReceivedHandler(dummySender, dummyDataReceivedEventArgs);
+            mockTestSubject.Object.InternalOutputDataReceivedHandler(new object(), dummyDataReceivedEventArgs);
             mockTestSubject.VerifyAll();
         }
 
@@ -99,7 +99,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.AddOutputDataReceivedHandler(mockTestSubject.Object.InternalOutputDataReceivedHandler));
 
-            static void dummyHandler(object _, string __) { }
+            static void dummyHandler(string message) { }
 
             // Act
             mockTestSubject.Object.AddOutputReceivedHandler(dummyHandler);
@@ -114,20 +114,19 @@ namespace Jering.Javascript.NodeJS.Tests
         public void AddErrorReceivedHandler_AddsHandlers()
         {
             // Arrange
-            var dummySender = new object();
             var dummyStringBuilder = new StringBuilder();
             DataReceivedEventArgs dummyDataReceivedEventArgs = CreateDataReceivedEventArgs();
-            MessageReceivedEventHandler dummyHandler = (object _, string __) => { };
+            MessageReceivedEventHandler dummyHandler = (string message) => { };
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess(errorDataStringBuilder: dummyStringBuilder);
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(n => n.DataReceivedHandler(dummyStringBuilder, dummyHandler, dummySender, dummyDataReceivedEventArgs)); // Error received handler added
+            mockTestSubject.Setup(n => n.DataReceivedHandler(dummyStringBuilder, dummyHandler, dummyDataReceivedEventArgs)); // Error received handler added
             mockTestSubject.Setup(n => n.AddErrorDataReceivedHandler(mockTestSubject.Object.InternalErrorDataReceivedHandler)); // Error data received handler added
 
             // Act
             mockTestSubject.Object.AddErrorReceivedHandler(dummyHandler);
 
             // Assert
-            mockTestSubject.Object.InternalErrorDataReceivedHandler(dummySender, dummyDataReceivedEventArgs);
+            mockTestSubject.Object.InternalErrorDataReceivedHandler(new object(), dummyDataReceivedEventArgs);
             mockTestSubject.VerifyAll();
         }
 
@@ -138,7 +137,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.AddErrorDataReceivedHandler(mockTestSubject.Object.InternalErrorDataReceivedHandler));
-            static void dummyHandler(object _, string __) { }
+            static void dummyHandler(string message) { }
 
             // Act
             mockTestSubject.Object.AddErrorReceivedHandler(dummyHandler);
@@ -151,7 +150,7 @@ namespace Jering.Javascript.NodeJS.Tests
         [Fact]
         public void ExitStatus_ReturnsExitStatusNotExitedMessageIfProcessHasNotExited()
         {
-            Process dummyProcess = null;
+            Process? dummyProcess = null;
             try
             {
                 // Arrange
@@ -197,7 +196,7 @@ namespace Jering.Javascript.NodeJS.Tests
         [Fact]
         public void ExitStatus_ReturnsExitCodeIfProcessHasExitedButNotBeenDisposedOf()
         {
-            Process dummyProcess = null;
+            Process? dummyProcess = null;
             try
             {
                 // Arrange
@@ -239,10 +238,10 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             var sb = new StringBuilder();
             string capturedMessage = "__NOTCALLED__";
-            mockTestSubject.Object.DataReceivedHandler(sb, (object _, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
+            mockTestSubject.Object.DataReceivedHandler(sb, (string message) => capturedMessage = message, CreateDataReceivedEventArgs());
 
             // Assert
-            string dummyOutMessage = null;
+            string? dummyOutMessage = null;
             mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), It.IsAny<string>(), out dummyOutMessage), Times.Once());
             Assert.Equal("__NOTCALLED__", capturedMessage);
         }
@@ -257,11 +256,11 @@ namespace Jering.Javascript.NodeJS.Tests
             // Act
             var sb = new StringBuilder();
             sb.Append("test message");
-            string capturedMessage = null;
-            mockTestSubject.Object.DataReceivedHandler(sb, (object _, string message) => capturedMessage = message, null, CreateDataReceivedEventArgs());
+            string? capturedMessage = null;
+            mockTestSubject.Object.DataReceivedHandler(sb, (string message) => capturedMessage = message, CreateDataReceivedEventArgs());
 
             // Assert
-            string dummyOutMessage = null;
+            string? dummyOutMessage = null;
             mockTestSubject.Verify(t => t.TryCreateMessage(It.IsAny<StringBuilder>(), It.IsAny<string>(), out dummyOutMessage), Times.Once());
             Assert.Equal("test message", capturedMessage);
         }
@@ -270,23 +269,20 @@ namespace Jering.Javascript.NodeJS.Tests
         public void DataReceivedHandler_IfDataIsNotNullAndMessageIsCreatedCallsMessageReceivedEventHandler()
         {
             // Arrange
-            var dummySender = new object();
             const string dummyData = "dummyData";
             var dummyStringBuilder = new StringBuilder();
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
-            string dummyMessage = "dummyMessage";
+            string? dummyMessage = "dummyMessage";
             mockTestSubject.Setup(t => t.TryCreateMessage(dummyStringBuilder, dummyData, out dummyMessage)).Returns(true);
-            object resultSender = null;
-            string resultMessage = null;
-            void dummyMessageReceivedEventHandler(object sender, string message) { resultSender = sender; resultMessage = message; }
+            string? resultMessage = null;
+            void dummyMessageReceivedEventHandler(string message) { resultMessage = message; }
 
             // Act
-            mockTestSubject.Object.DataReceivedHandler(dummyStringBuilder, dummyMessageReceivedEventHandler, dummySender, CreateDataReceivedEventArgs(dummyData));
+            mockTestSubject.Object.DataReceivedHandler(dummyStringBuilder, dummyMessageReceivedEventHandler, CreateDataReceivedEventArgs(dummyData));
 
             // Assert
             _mockRepository.VerifyAll();
-            Assert.Same(dummySender, resultSender);
             Assert.Equal(dummyMessage, resultMessage);
         }
 
@@ -294,16 +290,15 @@ namespace Jering.Javascript.NodeJS.Tests
         public void DataReceivedHandler_IfDataIsNotNullButMessageIsNotCreatedDoesNotCallMessageReceivedEventHandler()
         {
             // Arrange
-            var dummySender = new object();
             const string dummyData = "dummyData";
             var dummyStringBuilder = new StringBuilder();
             Mock<NodeJSProcess> mockTestSubject = CreateMockNodeJSProcess();
             mockTestSubject.CallBase = true;
-            string dummyMessage = null;
+            string? dummyMessage = null;
             mockTestSubject.Setup(t => t.TryCreateMessage(dummyStringBuilder, dummyData, out dummyMessage)).Returns(false);
 
             // Act
-            mockTestSubject.Object.DataReceivedHandler(dummyStringBuilder, null, dummySender, CreateDataReceivedEventArgs(dummyData));
+            mockTestSubject.Object.DataReceivedHandler(dummyStringBuilder, (string message) => { }, CreateDataReceivedEventArgs(dummyData));
 
             // Assert
             _mockRepository.VerifyAll();
@@ -318,7 +313,7 @@ namespace Jering.Javascript.NodeJS.Tests
             NodeJSProcess testSubject = CreateNodeJSProcess();
 
             // Act
-            bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyData, out string resultMessage);
+            bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyData, out string? resultMessage);
 
             // Assert
             Assert.False(result);
@@ -345,7 +340,7 @@ namespace Jering.Javascript.NodeJS.Tests
             NodeJSProcess testSubject = CreateNodeJSProcess();
 
             // Act
-            bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string resultMessage);
+            bool result = testSubject.TryCreateMessage(dummyStringBuilder, dummyDataWithNullTerminatingCharacter, out string? resultMessage);
 
             // Assert
             Assert.True(result);
@@ -354,7 +349,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         // https://stackoverflow.com/questions/1354308/how-to-instantiate-datareceivedeventargs-or-be-able-to-fill-it-with-data
-        private DataReceivedEventArgs CreateDataReceivedEventArgs(string TestData = null)
+        private static DataReceivedEventArgs CreateDataReceivedEventArgs(string? TestData = null)
         {
             var MockEventArgs =
                 (DataReceivedEventArgs)System.Runtime.Serialization.FormatterServices
@@ -373,23 +368,27 @@ namespace Jering.Javascript.NodeJS.Tests
 
         private Process CreateProcess()
         {
-            var dummyNodeJSProcessFactory = new NodeJSProcessFactory(null);
+            Mock<IOptions<NodeJSProcessOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<NodeJSProcessOptions>>();
+            mockOptionsAccessor.Setup(o => o.Value).Returns(new NodeJSProcessOptions());
+            var dummyNodeJSProcessFactory = new NodeJSProcessFactory(mockOptionsAccessor.Object);
             ProcessStartInfo dummyProcessStartInfo = dummyNodeJSProcessFactory.CreateStartInfo(_dummyLongRunningScript);
             dummyProcessStartInfo.FileName = "node";
 
-            return dummyNodeJSProcessFactory.CreateProcess(dummyProcessStartInfo);
+            return NodeJSProcessFactory.CreateProcess(dummyProcessStartInfo);
         }
 
-        private NodeJSProcess CreateNodeJSProcess(Process dummyProcess = null,
-            StringBuilder outputDataStringBuilder = null,
-            StringBuilder errorDataStringBuilder = null)
+        private static NodeJSProcess CreateNodeJSProcess(Process? dummyProcess = null,
+            StringBuilder? outputDataStringBuilder = null,
+            StringBuilder? errorDataStringBuilder = null)
         {
-            return new NodeJSProcess(dummyProcess, outputDataStringBuilder, errorDataStringBuilder);
+            return new NodeJSProcess(dummyProcess!, // Accept null for testing, difficult to create dummy Process instances
+                outputDataStringBuilder ?? new StringBuilder(), 
+                errorDataStringBuilder ?? new StringBuilder());
         }
 
-        private Mock<NodeJSProcess> CreateMockNodeJSProcess(Process dummyProcess = null,
-            StringBuilder outputDataStringBuilder = null,
-            StringBuilder errorDataStringBuilder = null)
+        private Mock<NodeJSProcess> CreateMockNodeJSProcess(Process? dummyProcess = null,
+            StringBuilder? outputDataStringBuilder = null,
+            StringBuilder? errorDataStringBuilder = null)
         {
             return _mockRepository.Create<NodeJSProcess>(dummyProcess, outputDataStringBuilder, errorDataStringBuilder);
         }

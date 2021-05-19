@@ -8,7 +8,7 @@ namespace Jering.Javascript.NodeJS.Tests
 {
     public class InvocationRequestUnitTests
     {
-        private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Default);
+        private readonly MockRepository _mockRepository = new(MockBehavior.Default);
 
         [Fact]
         public void Constructor_ThrowsArgumentNullExceptionIfModuleSourceTypeIsStreamButModuleStreamSourceIsNull()
@@ -25,16 +25,16 @@ namespace Jering.Javascript.NodeJS.Tests
             ArgumentException result = Assert.Throws<ArgumentException>(() => new InvocationRequest(dummyModuleSourceType, dummyModuleSource));
         }
 
-        public static IEnumerable<object[]> Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsFileOrStringButModuleSourceIsNullWhitespaceOrAnEmptyString_Data()
+        public static IEnumerable<object?[]> Constructor_ThrowsArgumentExceptionIfModuleSourceTypeIsFileOrStringButModuleSourceIsNullWhitespaceOrAnEmptyString_Data()
         {
-            return new object[][]
+            return new object?[][]
             {
-                new object[]{ModuleSourceType.File, null},
-                new object[]{ModuleSourceType.File, string.Empty},
-                new object[]{ModuleSourceType.File, " "},
-                new object[]{ModuleSourceType.String, null},
-                new object[]{ModuleSourceType.String, string.Empty},
-                new object[]{ModuleSourceType.String, " "}
+                new object?[]{ModuleSourceType.File, null},
+                new object?[]{ModuleSourceType.File, string.Empty},
+                new object?[]{ModuleSourceType.File, " "},
+                new object?[]{ModuleSourceType.String, null},
+                new object?[]{ModuleSourceType.String, string.Empty},
+                new object?[]{ModuleSourceType.String, " "}
             };
         }
 
@@ -50,18 +50,18 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyModuleSource = "dummyModuleSource";
-            const string dummyNewCacheIdentifier = "dummyNewCacheIdentifier";
+            const string dummyCacheIdentifier = "dummyCacheIdentifier";
             const string dummyExportName = "dummyExportName";
-            var dummyArgs = new object[0];
+            object[] dummyArgs = Array.Empty<object>();
             const ModuleSourceType dummyModuleSourceType = ModuleSourceType.String;
 
             // Act
-            var invocationRequest = new InvocationRequest(dummyModuleSourceType, dummyModuleSource, dummyNewCacheIdentifier, dummyExportName, dummyArgs);
+            var invocationRequest = new InvocationRequest(dummyModuleSourceType, dummyModuleSource, dummyCacheIdentifier, dummyExportName, dummyArgs);
 
             // Assert
             Assert.Equal(dummyModuleSourceType, invocationRequest.ModuleSourceType);
             Assert.Equal(dummyModuleSource, invocationRequest.ModuleSource);
-            Assert.Equal(dummyNewCacheIdentifier, invocationRequest.NewCacheIdentifier);
+            Assert.Equal(dummyCacheIdentifier, invocationRequest.CacheIdentifier);
             Assert.Equal(dummyExportName, invocationRequest.ExportName);
             Assert.Same(dummyArgs, invocationRequest.Args);
         }

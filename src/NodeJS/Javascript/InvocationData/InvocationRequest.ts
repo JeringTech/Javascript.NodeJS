@@ -3,7 +3,7 @@
 interface InvocationRequest {
     moduleSource: string;
     moduleSourceType: ModuleSourceType;
-    newCacheIdentifier?: string;
+    cacheIdentifier?: string;
     exportName?: string;
     args?: object[];
 }

@@ -19,14 +19,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyTestVariableName = "TEST_VARIABLE";
             const string dummyTestVariableValue = "testVariableValue";
             StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue));
-            string result1 = await StaticNodeJSService.
+            string? result1 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
 
             // Act
             StaticNodeJSService.DisposeServiceProvider(); // Dispose, environment variable should not be set in the next call
 
             // Assert
-            string result2 = await StaticNodeJSService.
+            string? result2 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
             Assert.Equal(dummyTestVariableValue, result1);
             Assert.Equal(string.Empty, result2);
@@ -40,14 +40,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyTestVariableValue1 = "testVariableValue1";
             const string dummyTestVariableValue2 = "testVariableValue2";
             StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue1));
-            string result1 = await StaticNodeJSService.
+            string? result1 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
 
             // Act
             StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue2));
 
             // Assert
-            string result2 = await StaticNodeJSService.
+            string? result2 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
             Assert.Equal(dummyTestVariableValue1, result1);
             Assert.Equal(dummyTestVariableValue2, result2);
@@ -61,7 +61,7 @@ namespace Jering.Javascript.NodeJS.Tests
             const string dummyTestVariableValue1 = "testVariableValue1";
             const string dummyTestVariableValue2 = "testVariableValue2";
             StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.EnvironmentVariables.Add(dummyTestVariableName, dummyTestVariableValue1));
-            string result1 = await StaticNodeJSService.
+            string? result1 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
             var dummyServices = new ServiceCollection();
             dummyServices.
@@ -72,7 +72,7 @@ namespace Jering.Javascript.NodeJS.Tests
             StaticNodeJSService.SetServices(dummyServices);
 
             // Assert
-            string result2 = await StaticNodeJSService.
+            string? result2 = await StaticNodeJSService.
                 InvokeFromStringAsync<string>($"module.exports = (callback) => callback(null, process.env.{dummyTestVariableName});").ConfigureAwait(false);
             Assert.Equal(dummyTestVariableValue1, result1);
             Assert.Equal(dummyTestVariableValue2, result2);
@@ -86,7 +86,7 @@ namespace Jering.Javascript.NodeJS.Tests
             StaticNodeJSService.DisposeServiceProvider(); // In case previous test registered a custom service
 
             // Act
-            var results = new ConcurrentQueue<string>();
+            var results = new ConcurrentQueue<string?>();
             const int numThreads = 5;
             var threads = new List<Thread>();
             for (int i = 0; i < numThreads; i++)

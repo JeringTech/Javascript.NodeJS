@@ -43,7 +43,7 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(expectedSize, result.Size);
+            Assert.Equal(expectedSize, result?.Size);
         }
 
         public static IEnumerable<object[]> INodeJSServiceFactory_CreatesAHttpNodeJSPoolServiceIfConcurrencyIsMultiProcessAndMoreThan1ProcessesIsRequested_Data()

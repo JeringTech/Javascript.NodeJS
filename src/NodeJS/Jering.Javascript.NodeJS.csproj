@@ -6,7 +6,7 @@
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
-        <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can use javascript libraries and scripts from C# projects.</Description>
+        <Description>Jering.Javascript.NodeJS enables you to invoke javascript in NodeJS, from C#. With this ability, you can use NodeJS javascript libraries and scripts from C# projects.</Description>
         <Copyright>© 2018-2021 Jering. All rights reserved.</Copyright>
         <PackageProjectUrl>https://www.jering.tech/utilities/jering.javascript.nodejs/index</PackageProjectUrl>
         <RepositoryUrl>https://github.com/JeringTech/Javascript.NodeJS</RepositoryUrl>
@@ -17,13 +17,10 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <RepositoryType>git</RepositoryType>
-        <LangVersion>8.0</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
-        <CodeAnalysisRuleSet>../../Jering.Javascript.NodeJS.ruleset</CodeAnalysisRuleSet>
-		<HttpServerSourceName Condition="'$(TargetFramework)' == 'netcoreapp3.1' Or '$(TargetFramework)' == 'net5.0'">Http20Server.js</HttpServerSourceName>
-		<HttpServerSourceName Condition="'$(TargetFramework)' != 'netcoreapp3.1' And '$(TargetFramework)' != 'net5.0'">Http11Server.js</HttpServerSourceName>
-		<HttpServerBundleName>HttpServer.js</HttpServerBundleName>
+        <Http11ServerFileName>Http11Server.js</Http11ServerFileName>
+        <Http20ServerFileName>Http20Server.js</Http20ServerFileName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -31,38 +28,46 @@
         <AssemblyOriginatorKeyFile>../../keypair.snk</AssemblyOriginatorKeyFile>
         <SignAssembly>true</SignAssembly>
         <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+        <Nullable>enable</Nullable>
+        <!-- So we can use generators -->
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <JavascriptInputs Include="Javascript\**" Exclude="$(DefaultItemExcludes)" />
-        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(HttpServerBundleName)" />
+        <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName);Javascript\bin\$(Configuration)\$(Http20ServerFileName)" />
         <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
         <UpToDateCheckInput Include="@(JavascriptInputs)" />
-		<EmbeddedResource Include="Javascript\bin\$(Configuration)\$(HttpServerSourceName)" LogicalName="$(HttpServerBundleName)" />
+        <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName)" LogicalName="$(Http11ServerFileName)" />
+        <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http20ServerFileName)" LogicalName="$(Http20ServerFileName)" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19554-01">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Roslynator.Analyzers" Version="2.2.0" PrivateAssets="all" ExcludeAssets="Runtime">
-            <IncludeAssets>build; native; contentfiles; analyzers</IncludeAssets>
+        <PackageReference Include="Nullable" Version="1.3.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Roslynator.CodeFixes" Version="2.0.0" PrivateAssets="all" ExcludeAssets="Runtime">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-        </PackageReference>
-		<!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
-        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.0" />
-        <PackageReference Include="Yarn.MSBuild" Version="1.22.0" PrivateAssets="all" ExcludeAssets="Runtime">
+        <!-- TODO builds fail on linux and mac if we don't explicitly reference this -->
+        <PackageReference Include="System.Text.Encodings.Web" Version="5.0.1" />
+        <PackageReference Include="Yarn.MSBuild" Version="1.22.10" PrivateAssets="all" ExcludeAssets="Runtime">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="System.Text.Json" Version="5.0.1" />
+        <PackageReference Include="System.Text.Json" Version="5.0.2" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
         <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.CodeGenerators\Jering.Javascript.NodeJS.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <!-- Documentation only needs to be generated once, for the latest framework -->
+        <ProjectReference Condition=" '$(TargetFramework)' == 'net5.0' " Include="..\..\generators\Jering.Javascript.NodeJS.DocumentationGenerators\Jering.Javascript.NodeJS.DocumentationGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>
@@ -88,8 +93,8 @@
         If we aren't multi-targeting, JavascriptBuild runs before PreBuildEvent.
     -->
     <Target Name="JavascriptBuildWindows" BeforeTargets="DispatchToInnerBuilds" Inputs="@(JavascriptInputs)" Outputs="@(JavascriptOutputs)">
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http11Server.ts" />
-		<Yarn WorkingDirectory=".\Javascript" Command="run build --env.mode=$(Configuration) --env.entry=.\Servers\OutOfProcess\Http\Http20Server.ts" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http11Server.ts" />
+        <Yarn WorkingDirectory=".\Javascript" Command="run build --env mode=$(Configuration) --env entry=./Servers/OutOfProcess/Http/Http20Server.ts" />
     </Target>
 
 </Project>
