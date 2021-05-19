@@ -14,7 +14,7 @@ using System.Xml.Linq;
 
 #nullable enable
 
-namespace Jering.Javascript.NodeJS.Generators
+namespace Jering.Javascript.NodeJS.DocumentationGenerators
 {
     /// <summary>
     /// <para>Generates API documenation and inserts it into ReadMe.</para>
@@ -578,7 +578,7 @@ namespace Jering.Javascript.NodeJS.Generators
                 }
                 else
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(_missingTypeSymbol, null, crefValue));
+                    context.ReportDiagnostic(Diagnostic.Create(_crefValueWithUnexpectedPrefix, null, crefValue));
                     return;
                 }
 

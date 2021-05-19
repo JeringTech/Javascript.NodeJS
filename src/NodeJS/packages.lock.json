@@ -183,7 +183,7 @@
         "resolved": "5.0.0",
         "contentHash": "ZD9TMpsmYJLrxbbmdvhwt9YEgG5WntEnZ/d1eH8JBX9LBp+Ju8BSBhUGbZMNVHHomWo2KVImJhTDl2hIgw/6MA=="
       },
-      "jering.javascript.nodejs.generators": {
+      "jering.javascript.nodejs.documentationgenerators": {
         "type": "Project"
       }
     },
@@ -432,7 +432,7 @@
         "resolved": "4.5.0",
         "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       },
-      "jering.javascript.nodejs.generators": {
+      "jering.javascript.nodejs.documentationgenerators": {
         "type": "Project"
       }
     },
@@ -688,7 +688,7 @@
           "System.Runtime.CompilerServices.Unsafe": "4.5.3"
         }
       },
-      "jering.javascript.nodejs.generators": {
+      "jering.javascript.nodejs.documentationgenerators": {
         "type": "Project"
       }
     },
@@ -859,7 +859,7 @@
         "resolved": "1.0.0",
         "contentHash": "G8DuQY8/DK5NN+3jm5wcMcd9QYD90UV7MiLmdljSJixi3U/vNaeBKmmXUqI4DJCOeWizIUEh4ALhSt58mR+5eg=="
       },
-      "jering.javascript.nodejs.generators": {
+      "jering.javascript.nodejs.documentationgenerators": {
         "type": "Project"
       }
     }

@@ -65,7 +65,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.Generators\Jering.Javascript.NodeJS.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\generators\Jering.Javascript.NodeJS.CodeGenerators\Jering.Javascript.NodeJS.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <!-- Documentation only needs to be generated once, for the latest framework -->
+        <ProjectReference Condition=" '$(TargetFramework)' == 'net5.0' " Include="..\..\generators\Jering.Javascript.NodeJS.DocumentationGenerators\Jering.Javascript.NodeJS.DocumentationGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>
