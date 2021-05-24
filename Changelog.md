@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.1...HEAD)
+
+## [6.0.1](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0...6.0.1) - May 24, 2021
+### Fixes
+- Fixed `InvocationException` message. ([#110](https://github.com/JeringTech/Javascript.NodeJS/pull/110)).
 
 ## [6.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.3...6.0.0) - May 19, 2021
 All additions and changes can be found here: [#108](https://github.com/JeringTech/Javascript.NodeJS/pull/108)
@@ -22,6 +26,7 @@ All additions and changes can be found here: [#108](https://github.com/JeringTec
   - Renamed `InvocationRequest.NewCacheIdentifier` to `CacheIdentifier`.
   - Added `httpNodeJSServiceOptionsAccessor` parameter to `HttpNodeJSService`.
   - Removed redundant `sender` parameter from `MessageReceivedEventHandler`.
+
 ## [6.0.0-beta.3](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0-beta.2...6.0.0-beta.3) - Mar 31, 2021
 ### Additions
 - Added `NodeJSProcessOptions.ExecutablePath` option. ([#106](https://github.com/JeringTech/Javascript.NodeJS/pull/106)).
