@@ -29,8 +29,7 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <param name="message">The NodeJS error's description.</param>
         /// <param name="stack">The NodeJS error's stack trace.</param>
-        public InvocationException(string message, string? stack)
-            : base(message + Environment.NewLine + (stack ?? string.Empty))
+        public InvocationException(string message, string? stack) : base(message == null && stack == null ? null : string.Join("\n", message, stack).Trim())
         {
         }
 
