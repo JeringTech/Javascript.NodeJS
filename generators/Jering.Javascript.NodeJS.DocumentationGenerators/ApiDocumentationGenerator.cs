@@ -131,10 +131,8 @@ namespace Jering.Javascript.NodeJS.DocumentationGenerators
             {
                 return;
             }
-            lock (this)
-            {
-                File.WriteAllText(_readMeFilePath, newReadMeContents);
-            }
+
+            File.WriteAllText(_readMeFilePath, newReadMeContents);
         }
     }
 
@@ -429,7 +427,7 @@ namespace Jering.Javascript.NodeJS.DocumentationGenerators
 
                     if (paramXmlElement != null)
                     {
-                        stringBuilder.AppendXmlDocumentation(paramXmlElement, compilation, ref context );
+                        stringBuilder.AppendXmlDocumentation(paramXmlElement, compilation, ref context);
                     }
                 }
 

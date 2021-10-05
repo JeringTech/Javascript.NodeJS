@@ -1540,7 +1540,18 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 View source [here](https://github.com/JeringTech/Javascript.NodeJS/blob/master/perf/NodeJS/FileWatchingBenchmarks.cs).
 
 ## Building and Testing
-You can build and test this project in Visual Studio 2019.
+You can build and test this project in Visual Studio 2019/2022.  
+
+This project uses [source generators](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/). They have a critical limitation - Visual Studio only loads 
+source generator dlls once, at startup.  
+
+This means for builds to succeed, you have to: 
+
+1. Build the solution once (outputs the source generator project dlls)
+2. Restart Visual Studio 
+3. Rebuild (this should succeed)
+
+Thereafter, if you make changes to the source generator projects, you'll have to build, restart Visual Studio, and rebuild.
 
 ## Projects Using this Library
 [Jering.Web.SyntaxHighlighters.HighlightJS](https://github.com/JeringTech/Web.SyntaxHighlighters.HighlightJS) - Use the Syntax Highlighter, HighlightJS, from C#.
