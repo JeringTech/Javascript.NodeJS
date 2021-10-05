@@ -4,6 +4,6 @@
         "build": "echo ------ Yarn Install ------ && yarn install"
     },
     "dependencies": {
-        "prismjs": "^1.23.0"
+        "prismjs": "^1.25.0"
     }
 }
