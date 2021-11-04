@@ -103,16 +103,16 @@ namespace Jering.Javascript.NodeJS
             ImmutableArray<ISymbol> memberSymbols = interfaceSymbol.GetMembers();
             foreach(ISymbol memberSymbol in memberSymbols)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested || memberSymbol is not IMethodSymbol methodSymbol)
                 {
                     return;
                 }
 
                 // Get leading trivia
-                SyntaxReference? syntaxReference = memberSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+                SyntaxReference? syntaxReference = methodSymbol.DeclaringSyntaxReferences.FirstOrDefault();
                 if(syntaxReference == null)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(_missingMemberDeclaration, null, memberSymbol.Name));
+                    context.ReportDiagnostic(Diagnostic.Create(_missingMemberDeclaration, null, methodSymbol.Name));
                     continue;
                 }
                 string leadingTrivia = syntaxReference.GetSyntax().GetLeadingTrivia().ToFullString();
@@ -121,10 +121,18 @@ namespace Jering.Javascript.NodeJS
                 classBuilder.
                     Append(leadingTrivia).
                     Append("public static ").
-                    AppendLine(memberSymbol.ToDisplayString(_declarationSymbolDisplayFormat)).
+                    AppendLine(methodSymbol.ToDisplayString(_declarationSymbolDisplayFormat)).
                     Append(@"        {
-            return GetOrCreateNodeJSService().").
-                    Append(memberSymbol.ToDisplayString(_invocationSymbolDisplayFormat)).
+            ");
+
+                if (methodSymbol.ReturnType.SpecialType != SpecialType.System_Void)
+                {
+                    classBuilder.Append("return ");
+                }
+
+                classBuilder.
+                    Append("GetOrCreateNodeJSService().").
+                    Append(methodSymbol.ToDisplayString(_invocationSymbolDisplayFormat)).
                     AppendLine(@";
         }");
             }

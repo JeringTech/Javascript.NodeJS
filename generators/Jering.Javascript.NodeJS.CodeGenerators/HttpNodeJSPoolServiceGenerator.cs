@@ -102,7 +102,7 @@ namespace Jering.Javascript.NodeJS
             ImmutableArray<ISymbol> memberSymbols = interfaceSymbol.GetMembers();
             foreach (ISymbol memberSymbol in memberSymbols)
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (cancellationToken.IsCancellationRequested || memberSymbol is not IMethodSymbol methodSymbol)
                 {
                     return;
                 }
@@ -112,10 +112,18 @@ namespace Jering.Javascript.NodeJS
                     AppendLine().
                     AppendLine("        /// <inheritdoc />").
                     Append("        public ").
-                    AppendLine(memberSymbol.ToDisplayString(_declarationSymbolDisplayFormat)).
+                    AppendLine(methodSymbol.ToDisplayString(_declarationSymbolDisplayFormat)).
                     Append(@"        {
-            return GetHttpNodeJSService().").
-                    Append(memberSymbol.ToDisplayString(_invocationSymbolDisplayFormat)).
+            ");
+
+                if (methodSymbol.ReturnType.SpecialType != SpecialType.System_Void)
+                {
+                    classBuilder.Append("return ");
+                }
+
+                classBuilder.
+                    Append("GetHttpNodeJSService().").
+                    Append(methodSymbol.ToDisplayString(_invocationSymbolDisplayFormat)).
                     AppendLine(@";
         }");
             }
