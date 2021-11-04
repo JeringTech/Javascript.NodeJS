@@ -1218,6 +1218,20 @@ Thrown if this instance is disposed or if it attempts to use a disposed dependen
 `OperationCanceledException`  
 Thrown if `cancellationToken` is cancelled.  
 
+##### INodeJSService.MoveToNewProcess()
+Moves subsequent invocations to a new NodeJS process.  
+```csharp
+void MoveToNewProcess()
+```
+###### Remarks
+This method exposes the system used by file watching (see `OutOfProcessNodeJSServiceOptions.EnableFileWatching`) and process retries 
+(see `OutOfProcessNodeJSServiceOptions.NumProcessRetries`) to move to new processes.  
+
+When is access to this system useful? Consider the situation where your application uses file watching.
+If your application knows when files change (e.g. your application is the actor changing files) you can manually invoke this method instead of using file 
+watching. This enables you to avoid the overhead of file watching.  
+
+The method respects `OutOfProcessNodeJSServiceOptions.GracefulProcessShutdown`.  
 <!-- INodeJSService generated docs -->
 <!-- NodeJSProcessOptions generated docs -->
 
@@ -1409,7 +1423,7 @@ This value does nothing if `OutOfProcessNodeJSServiceOptions.EnableFileWatching`
 
 Defaults to "*.js", "*.jsx", "*.ts", "*.tsx", "*.json" and "*.html".  
 ##### OutOfProcessNodeJSServiceOptions.GracefulProcessShutdown
-The value specifying whether NodeJS processes shutdown gracefully when a file changes or an invocation is retried in a new process.  
+The value specifying whether NodeJS processes shutdown gracefully when moving to a new process.  
 ```csharp
 public bool GracefulProcessShutdown { get; set; }
 ```

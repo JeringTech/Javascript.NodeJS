@@ -98,7 +98,7 @@ namespace Jering.Javascript.NodeJS
         /// </remarks>
         public IEnumerable<string> WatchFileNamePatterns { get; set; } = new[] { "*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.html" };
 
-        /// <summary>The value specifying whether NodeJS processes shutdown gracefully when a file changes or an invocation is retried in a new process.</summary>
+        /// <summary>The value specifying whether NodeJS processes shutdown gracefully when moving to a new process.</summary>
         /// <remarks>
         /// <para>If this value is true, NodeJS processes shutdown gracefully. Otherwise they're killed immediately.</para>
         /// <para>What's a graceful shutdown? When the library creates a new NodeJS process, the old NodeJS process

@@ -309,5 +309,16 @@ namespace Jering.Javascript.NodeJS
         /// <exception cref="ObjectDisposedException">Thrown if this instance is disposed or if it attempts to use a disposed dependency.</exception>
         /// <exception cref="OperationCanceledException">Thrown if <paramref name="cancellationToken"/> is cancelled.</exception>
         Task<bool> TryInvokeFromCacheAsync(string cacheIdentifier, string? exportName = null, object?[]? args = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Moves subsequent invocations to a new NodeJS process.</summary>
+        /// <remarks>
+        /// <para>This method exposes the system used by file watching (see <see cref="OutOfProcessNodeJSServiceOptions.EnableFileWatching"/>) and process retries 
+        /// (see <see cref="OutOfProcessNodeJSServiceOptions.NumProcessRetries"/>) to move to new processes.</para>
+        /// <para>When is access to this system useful? Consider the situation where your application uses file watching.
+        /// If your application knows when files change (e.g. your application is the actor changing files) you can manually invoke this method instead of using file 
+        /// watching. This enables you to avoid the overhead of file watching.</para>
+        /// <para>The method respects <see cref="OutOfProcessNodeJSServiceOptions.GracefulProcessShutdown"/>.</para>
+        /// </remarks>
+        void MoveToNewProcess();
     }
 }

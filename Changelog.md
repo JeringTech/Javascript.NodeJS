@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.1.0...HEAD)
+
+## [6.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.1...6.1.0) - Nov 4, 2021
+### Additions
+- Added `INodeJSService.MoveToNewProcess` method. ([#122](https://github.com/JeringTech/Javascript.NodeJS/pull/122)).
 
 ## [6.0.1](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.0...6.0.1) - May 24, 2021
 ### Fixes
