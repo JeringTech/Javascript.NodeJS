@@ -1142,6 +1142,25 @@ module.exports = (callback) => {{
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
+        public async void MoveToNewProcess_MovesToNewProcess()
+        {
+            // Arrange
+            // Create initial module
+            const string dummyModule = @"module.exports = (callback) => callback(null, process.pid)";
+            HttpNodeJSService testSubject = CreateHttpNodeJSService();
+
+            // Act
+            int initialProcessID = await testSubject.InvokeFromStringAsync<int>(dummyModule).ConfigureAwait(false);
+            var initialProcess = Process.GetProcessById(initialProcessID); // Create Process instance for initial process so we can verify that it gets killed
+            testSubject.MoveToNewProcess();
+            initialProcess.WaitForExit(); // If we don't successfully shift to a new process, test will timeout.
+            int newProcessID = await testSubject.InvokeFromStringAsync<int>(dummyModule).ConfigureAwait(false);
+
+            // Assert
+            Assert.NotEqual(initialProcessID, newProcessID); // Long running invocation should complete in new process
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
         public async void NewProcessRetries_RetriesFailedInvocationInNewProcess()
         {
             // Arrange

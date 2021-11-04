@@ -230,6 +230,12 @@ namespace Jering.Javascript.NodeJS
             return (await TryInvokeFromCacheAsync<Void>(moduleCacheIdentifier, exportName, args, cancellationToken).ConfigureAwait(false)).Item1;
         }
 
+        /// <inheritdoc />
+        public virtual void MoveToNewProcess()
+        {
+            MoveToNewProcess(true);
+        }
+
         internal virtual async Task<(bool, T?)> TryInvokeCoreAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
         {
             if (_disposed)
