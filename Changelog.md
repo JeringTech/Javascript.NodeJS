@@ -3,7 +3,15 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.1.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.2.0...HEAD)
+
+## [6.2.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.1.0...6.2.0) - Nov 26, 2021
+### Additions
+- Added `OutOfProcessNodeJSServiceOptions.EnableProcessRetriesForJavascriptErrors` option. Enables users to choose whether process retries occur for 
+  invocations that fail due to Javascript errors. ([#124](https://github.com/JeringTech/Javascript.NodeJS/pull/124)).
+### Fixes
+- Fixed infinite process retries bug. ([#124](https://github.com/JeringTech/Javascript.NodeJS/pull/124)).
+- Fixed missing log entry for last retry. ([#124](https://github.com/JeringTech/Javascript.NodeJS/pull/124)).
 
 ## [6.1.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.0.1...6.1.0) - Nov 4, 2021
 ### Additions

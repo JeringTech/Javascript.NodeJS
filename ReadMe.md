@@ -1338,10 +1338,23 @@ attempt the invocation 3 times.
 
 If this value is negative, the library creates new NodeJS processes indefinitely.  
 
+By default, process retries are disabled for invocation failures caused by javascript errors. See `OutOfProcessNodeJSServiceOptions.EnableProcessRetriesForJavascriptErrors` for more information.  
+
 If the module source of an invocation is an unseekable stream, the invocation is not retried.
 If you require retries for such streams, copy their contents to a `MemoryStream`.  
 
 Defaults to 1.  
+##### OutOfProcessNodeJSServiceOptions.EnableProcessRetriesForJavascriptErrors
+Whether invocation failures caused by Javascript errors are retried in new processes.  
+```csharp
+public bool EnableProcessRetriesForJavascriptErrors { get; set; }
+```
+###### Remarks
+Process retries were introduced to deal with process-level issues. For example, when a NodeJS process becomes unresponsive the only solution is to start a new process.  
+
+If this value is `true`, process retries also occur on Javascript errors. If it is `false`, they only occur for process-level issues.  
+
+Defaults to `false`.  
 ##### OutOfProcessNodeJSServiceOptions.NumConnectionRetries
 Number of times the library retries NodeJS connection attempts.  
 ```csharp
