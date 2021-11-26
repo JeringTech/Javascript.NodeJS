@@ -1161,13 +1161,13 @@ module.exports = (callback) => {{
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void NewProcessRetries_RetriesFailedInvocationInNewProcess()
+        public async void NewProcessRetries_RetriesInvocationThatFailedDueToJavascriptErrorsInNewProcessIfSuchRetriesAreEnabled()
         {
             // Arrange
             const string dummyErrorMessagePrefix = "Error in process with ID: ";
             string dummyErrorThrowingModule = $"module.exports = (callback) => {{throw new Error('{dummyErrorMessagePrefix}' + process.pid);}}";
             var resultStringBuilder = new StringBuilder();
-            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder);
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, enableProcessRetriesForJavascriptErrors: true);
 
             // Act and assert
             InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.InvokeFromStringAsync(dummyErrorThrowingModule)).ConfigureAwait(false);
@@ -1183,6 +1183,29 @@ module.exports = (callback) => {{
             MatchCollection exceptionMessageMatches = Regex.Matches(result.Message, $"^{dummyErrorMessagePrefix}(\\d+)");
             string thirdExceptionProcessID = exceptionMessageMatches[0].Groups[1].Captures[0].Value;
             Assert.NotEqual(firstExceptionProcessID, thirdExceptionProcessID); // Invocation invoked in new process
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void NewProcessRetries_DoesNotRetryInvocationThatFailedDueToJavascriptErrorsInNewProcessIfSuchRetriesAreDisabled()
+        {
+            // Arrange
+            const string dummyErrorMessagePrefix = "Error in process with ID: ";
+            string dummyErrorThrowingModule = $"module.exports = (callback) => {{throw new Error('{dummyErrorMessagePrefix}' + process.pid);}}";
+            var resultStringBuilder = new StringBuilder();
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(resultStringBuilder, enableProcessRetriesForJavascriptErrors: false);
+
+            // Act and assert
+            InvocationException result = await Assert.ThrowsAsync<InvocationException>(() => testSubject.InvokeFromStringAsync(dummyErrorThrowingModule)).ConfigureAwait(false);
+            // Process ID of NodeJS process first two errors were thrown in
+            string resultLog = resultStringBuilder.ToString();
+            MatchCollection logMatches = Regex.Matches(resultLog, $"{typeof(InvocationException).FullName}: {dummyErrorMessagePrefix}(\\d+)");
+            string firstExceptionProcessID = logMatches[0].Groups[1].Captures[0].Value;
+            string secondExceptionProcessID = logMatches[1].Groups[1].Captures[0].Value;
+            Assert.Equal(firstExceptionProcessID, secondExceptionProcessID);
+            // Process ID of NodeJS process last error was thrown in
+            MatchCollection exceptionMessageMatches = Regex.Matches(result.Message, $"^{dummyErrorMessagePrefix}(\\d+)");
+            string thirdExceptionProcessID = exceptionMessageMatches[0].Groups[1].Captures[0].Value;
+            Assert.Equal(firstExceptionProcessID, thirdExceptionProcessID); // Invocation not invoked in new process
         }
 
 #if NET5_0 || NETCOREAPP3_1
@@ -1221,7 +1244,8 @@ module.exports = (callback) => {{
 #if NETCOREAPP3_1 || NET5_0
             Version? httpVersion = default,
 #endif
-            ServiceCollection? services = default)
+            ServiceCollection? services = default,
+            bool enableProcessRetriesForJavascriptErrors = false)
         {
             services ??= new ServiceCollection();
             services.AddNodeJS(); // Default INodeJSService is HttpNodeService
@@ -1255,6 +1279,8 @@ module.exports = (callback) => {{
                 services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk"); // An easy way to step through NodeJS code is to use Chrome. Consider option 1 from this list https://nodejs.org/en/docs/guides/debugging-getting-started/#chrome-devtools-55.
                 services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
             }
+
+            services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.EnableProcessRetriesForJavascriptErrors = enableProcessRetriesForJavascriptErrors);
 
             _serviceProvider = services.BuildServiceProvider();
 

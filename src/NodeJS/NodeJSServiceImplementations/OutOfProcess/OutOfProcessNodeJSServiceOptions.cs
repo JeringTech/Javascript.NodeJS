@@ -32,11 +32,20 @@ namespace Jering.Javascript.NodeJS
         /// If it fails, it retries the invocation once. If it fails again, the library creates a new process that retries the invocation once. In total, the library
         /// attempt the invocation 3 times.</para>
         /// <para>If this value is negative, the library creates new NodeJS processes indefinitely.</para>
+        /// <para>By default, process retries are disabled for invocation failures caused by javascript errors. See <see cref="EnableProcessRetriesForJavascriptErrors"/> for more information.</para>
         /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
         /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
         /// <para>Defaults to 1.</para>
         /// </remarks>
         public int NumProcessRetries { get; set; } = 1;
+
+        /// <summary>Whether invocation failures caused by Javascript errors are retried in new processes.</summary>
+        /// <remarks>
+        /// <para>Process retries were introduced to deal with process-level issues. For example, when a NodeJS process becomes unresponsive the only solution is to start a new process.</para>
+        /// <para>If this value is <c>true</c>, process retries also occur on Javascript errors. If it is <c>false</c>, they only occur for process-level issues.</para>
+        /// <para>Defaults to <c>false</c>.</para>
+        /// </remarks>
+        public bool EnableProcessRetriesForJavascriptErrors { get; set; } = false;
 
         /// <summary>Number of times the library retries NodeJS connection attempts.</summary>
         /// <remarks>

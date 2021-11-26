@@ -47,6 +47,7 @@ namespace Jering.Javascript.NodeJS
         private readonly int _numRetries;
         private readonly int _numProcessRetries;
         private readonly int _numConnectionRetries;
+        private readonly bool _enableProcessRetriesForJavascriptErrors;
         private readonly int _timeoutMS;
         private readonly ConcurrentDictionary<Task, object?> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
         private readonly CountdownEvent _invokeTaskCreationCountdown;
@@ -97,6 +98,7 @@ namespace Jering.Javascript.NodeJS
             _numProcessRetries = _options.NumProcessRetries;
             _numConnectionRetries = _options.NumConnectionRetries;
             _timeoutMS = _options.TimeoutMS;
+            _enableProcessRetriesForJavascriptErrors = _options.EnableProcessRetriesForJavascriptErrors;
 
             (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
         }
@@ -108,7 +110,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="invocationRequest">The invocation request to send to the NodeJS process.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the invocation.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        protected abstract Task<(bool, T?)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken); 
+        protected abstract Task<(bool, T?)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
 
         /// <summary>
         /// <para>This method is called when the connection established message from the NodeJS process is received.</para>
@@ -300,32 +302,39 @@ namespace Jering.Javascript.NodeJS
                     {
                         Logger.LogWarning(string.Format(Strings.LogWarning_InvocationAttemptFailed, numRetries < 0 ? "infinity" : numRetries.ToString(), exception.ToString()));
                     }
+
+                    if (numRetries == 0 && exception is InvocationException && !_enableProcessRetriesForJavascriptErrors)
+                    {
+                        // Don't retry in new process if exception is caused by JS error and process retries for JS errors is not enabled
+                        throw;
+                    }
+                }
+                catch (Exception exception) when (_warningLoggingEnabled) // numRetries == 0 && numProcessRetries == 0
+                {
+                    Logger.LogWarning(string.Format(Strings.LogWarning_InvocationAttemptFailed, numRetries < 0 ? "infinity" : numRetries.ToString(), exception.ToString()));
+                    throw;
                 }
                 finally
                 {
                     cancellationTokenSource?.Dispose();
                 }
 
-                if (numRetries == 0)
+                if (numRetries == 0) // If we get here, numProcessRetries != 0
                 {
-                    // If retries in the existing process have been exhausted but process retries remain,
-                    // move to new process and reset numRetries.
-                    if (numProcessRetries > 0)
+                    // If retries in the existing process have been exhausted but process retries remain, move to new process and reset numRetries.
+                    if (_warningLoggingEnabled)
                     {
-                        if (_warningLoggingEnabled)
-                        {
-                            Logger.LogWarning(string.Format(Strings.LogWarning_RetriesInExistingProcessExhausted, numProcessRetries < 0 ? "infinity" : numProcessRetries.ToString()));
-                        }
-
-                        numProcessRetries = numProcessRetries > 0 ? numProcessRetries - 1 : numProcessRetries;
-                        numRetries = _numRetries - 1;
-
-                        MoveToNewProcess(false);
+                        Logger.LogWarning(string.Format(Strings.LogWarning_RetriesInExistingProcessExhausted, numProcessRetries < 0 ? "infinity" : numProcessRetries.ToString()));
                     }
+
+                    numProcessRetries = numProcessRetries > 0 ? numProcessRetries - 1 : numProcessRetries; // numProcessRetries can be negative (retry indefinitely)
+                    numRetries = _numRetries - 1;
+
+                    MoveToNewProcess(false);
                 }
                 else
                 {
-                    numRetries = numRetries > 0 ? numRetries - 1 : numRetries;
+                    numRetries = numRetries > 0 ? numRetries - 1 : numRetries; // numRetries can be negative (retry indefinitely)
                 }
             }
         }
