@@ -8,7 +8,7 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class HttpNodeJSServiceOptions
     {
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
         /// <summary>The HTTP version to use.</summary>
         /// <remarks>
         /// <para>This value can be <see cref="HttpVersion.Version11"/> or <see cref="HttpVersion.Version20"/>. <see cref="HttpVersion.Version11"/> is faster than <see cref="HttpVersion.Version20"/>, 

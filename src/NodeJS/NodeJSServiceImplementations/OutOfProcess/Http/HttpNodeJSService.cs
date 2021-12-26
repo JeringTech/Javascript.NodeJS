@@ -24,7 +24,7 @@ namespace Jering.Javascript.NodeJS
         private readonly IJsonService _jsonService;
         private readonly ILogger<HttpNodeJSService> _logger;
         private readonly IHttpClientService _httpClientService;
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
         private readonly Version _httpVersion;
 #endif
 
@@ -66,7 +66,7 @@ namespace Jering.Javascript.NodeJS
                 monitorService,
                 taskService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
                 httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HTTP20_SERVER_SCRIPT_NAME : HTTP11_SERVER_SCRIPT_NAME)
 #else
                 HTTP11_SERVER_SCRIPT_NAME)
@@ -77,7 +77,7 @@ namespace Jering.Javascript.NodeJS
             _jsonService = jsonService;
             _logger = logger;
             _httpContentFactory = httpContentFactory;
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
             _httpVersion = httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HttpVersion.Version20 : HttpVersion.Version11;
 #endif
         }
@@ -88,10 +88,10 @@ namespace Jering.Javascript.NodeJS
             using HttpContent httpContent = _httpContentFactory.Create(invocationRequest);
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
             {
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
                 Version = _httpVersion,
 #endif
-#if NET5_0
+#if NET5_0_OR_GREATER
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
 #endif
                 Content = httpContent,
@@ -116,7 +116,7 @@ namespace Jering.Javascript.NodeJS
 
                 if (httpResponseMessage.StatusCode == HttpStatusCode.InternalServerError)
                 {
-#if NET5_0
+#if NET5_0_OR_GREATER
                     using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 #else
                     using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -133,7 +133,7 @@ namespace Jering.Javascript.NodeJS
                     }
                     else if (typeof(T) == typeof(string))
                     {
-#if NET5_0
+#if NET5_0_OR_GREATER
                         string result = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 #else
                         string result = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -142,7 +142,7 @@ namespace Jering.Javascript.NodeJS
                     }
                     else if (typeof(T) == typeof(Stream))
                     {
-#if NET5_0
+#if NET5_0_OR_GREATER
                         Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 #else
                         Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -151,7 +151,7 @@ namespace Jering.Javascript.NodeJS
                     }
                     else
                     {
-#if NET5_0
+#if NET5_0_OR_GREATER
                         using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 #else
                         using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);

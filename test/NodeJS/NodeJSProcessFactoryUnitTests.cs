@@ -37,7 +37,7 @@ namespace Jering.Javascript.NodeJS.Tests
             ProcessStartInfo result = testSubject.CreateStartInfo(dummyNodeServerScript);
 
             // Assert
-#if NET5_0
+#if NET5_0_OR_GREATER
             int currentProcessPid = Environment.ProcessId;
 #else
             int currentProcessPid = Process.GetCurrentProcess().Id;
