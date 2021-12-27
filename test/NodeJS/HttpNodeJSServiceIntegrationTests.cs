@@ -1208,7 +1208,7 @@ module.exports = (callback) => {{
             Assert.Equal(firstExceptionProcessID, thirdExceptionProcessID); // Invocation not invoked in new process
         }
 
-#if NET5_0 || NETCOREAPP3_1
+#if NET5_0_OR_GREATER || NETCOREAPP3_1
         [Theory]
         [MemberData(nameof(HttpVersion_IsConfigurable_Data))]
         public async void HttpVersion_IsConfigurable(Version dummyHttpVersion, string expectedHttpVersionString)
@@ -1241,7 +1241,7 @@ module.exports = (callback) => {{
         private HttpNodeJSService CreateHttpNodeJSService(StringBuilder? loggerStringBuilder = default,
             string? projectPath = default,
             string? executablePath = default,
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
             Version? httpVersion = default,
 #endif
             ServiceCollection? services = default,
@@ -1257,7 +1257,7 @@ module.exports = (callback) => {{
             {
                 services.Configure<NodeJSProcessOptions>(options => options.ExecutablePath = executablePath);
             }
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
             services.Configure<HttpNodeJSServiceOptions>(options => options.Version = httpVersion ?? HttpVersion.Version11);
 #endif
             services.AddLogging(lb =>
@@ -1344,7 +1344,7 @@ module.exports = (callback) => {{
 
         private static string GetNodeAbsolutePath()
         {
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return GetNodeAbsolutePathCore("Path", ';', "node.exe");
@@ -1384,7 +1384,7 @@ module.exports = (callback) => {{
 
         private static string GetRelativePath(string directoryRelativeTo, string path)
         {
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
             return Path.GetRelativePath(directoryRelativeTo, path);
 #else
 

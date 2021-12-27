@@ -70,6 +70,7 @@ Assert.Equal(8, result);
 - .NET Framework 4.6.1
 - .NET Core 3.1
 - .NET 5.0
+- .NET 6.0
 
 ## Platforms
 - Windows
@@ -1764,6 +1765,7 @@ Contributions are welcome!
 - [dustinsoftware](https://github.com/dustinsoftware)
 - [blushingpenguin](https://github.com/blushingpenguin)
 - [flcdrg](https://github.com/flcdrg)
+- [samcic](https://github.com/samcic)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.

@@ -273,7 +273,7 @@ namespace Jering.Javascript.NodeJS.Tests
             if(httpNodeJSServiceOptionsAccessor == null)
             {
                 Mock<IOptions<HttpNodeJSServiceOptions>> mockHttpNodeJSServiceOptionsAccessor = _mockRepository.Create<IOptions<HttpNodeJSServiceOptions>>();
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
                 mockHttpNodeJSServiceOptionsAccessor.Setup(m => m.Value).Returns(new HttpNodeJSServiceOptions());
 #endif
                 httpNodeJSServiceOptionsAccessor = mockHttpNodeJSServiceOptionsAccessor.Object;
