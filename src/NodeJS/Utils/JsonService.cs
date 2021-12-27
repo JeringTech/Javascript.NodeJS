@@ -3,6 +3,9 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+#if NET6_0_OR_GREATER
+using System.Text.Json.Serialization;
+#endif
 
 namespace Jering.Javascript.NodeJS
 {
@@ -16,7 +19,12 @@ namespace Jering.Javascript.NodeJS
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
 
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+
+#if NET6_0_OR_GREATER
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // https://docs.microsoft.com/en-sg/dotnet/fundamentals/syslib-diagnostics/syslib0020
+#else
             IgnoreNullValues = true,
+#endif
 
             PropertyNameCaseInsensitive = true
         };
