@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.2.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.0...HEAD)
+
+## [6.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.2.0...6.3.0) - Dec 27, 2021
+### Additions
+- Added net6.0 target. ([#128](https://github.com/JeringTech/Javascript.NodeJS/pull/128))
+### Fixes
+- Now supports HTTP2.0 for net6.0 and beyond. ([#128](https://github.com/JeringTech/Javascript.NodeJS/pull/128))
 
 ## [6.2.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.1.0...6.2.0) - Nov 26, 2021
 ### Additions
