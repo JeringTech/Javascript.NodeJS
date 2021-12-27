@@ -1765,6 +1765,7 @@ Contributions are welcome!
 - [dustinsoftware](https://github.com/dustinsoftware)
 - [blushingpenguin](https://github.com/blushingpenguin)
 - [flcdrg](https://github.com/flcdrg)
+- [samcic](https://github.com/samcic)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
