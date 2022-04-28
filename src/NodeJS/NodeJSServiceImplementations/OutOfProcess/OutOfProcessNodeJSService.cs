@@ -328,7 +328,7 @@ namespace Jering.Javascript.NodeJS
                     }
 
                     numProcessRetries = numProcessRetries > 0 ? numProcessRetries - 1 : numProcessRetries; // numProcessRetries can be negative (retry indefinitely)
-                    numRetries = _numRetries - 1;
+                    numRetries = _numRetries > 0 ? _numRetries - 1 : _numRetries;
 
                     MoveToNewProcess(false);
                 }
