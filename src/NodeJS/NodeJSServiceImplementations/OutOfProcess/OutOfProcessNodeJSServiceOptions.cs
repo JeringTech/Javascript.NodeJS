@@ -24,19 +24,20 @@ namespace Jering.Javascript.NodeJS
         /// </remarks>
         public int NumRetries { get; set; } = 1;
 
-        /// <summary>The number of new NodeJS processes created to retry an invocation.</summary>
-        /// <remarks>
-        /// <para>A NodeJS process retries invocations <see cref="NumRetries"/> times. Once a process's retries are exhausted,
-        /// if any <b>process retries</b> remain, the library creates a new process that then retries invocations <see cref="NumRetries"/> times.</para>
-        /// <para>For example, consider the situation where <see cref="NumRetries"/> and this value are both 1. The existing process first attempts the invocation.
-        /// If it fails, it retries the invocation once. If it fails again, the library creates a new process that retries the invocation once. In total, the library
-        /// attempt the invocation 3 times.</para>
-        /// <para>If this value is negative, the library creates new NodeJS processes indefinitely.</para>
-        /// <para>By default, process retries are disabled for invocation failures caused by javascript errors. See <see cref="EnableProcessRetriesForJavascriptErrors"/> for more information.</para>
-        /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
-        /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
-        /// <para>Defaults to 1.</para>
-        /// </remarks>
+         /// <summary>The number of NodeJS processes created to retry an invocation.</summary>
+         /// <remarks>
+         /// <para>A NodeJS process retries invocations <see cref="NumRetries"/> times. Once a process's retries are exhausted,
+         /// if any <b>retry-processes</b> remain, the library creates a new process and retries invocations <see cref="NumRetries"/> times.</para>
+         /// <para>For example, consider the situation where <see cref="NumRetries"/> and this value are both 1. The existing process first attempts the invocation.
+         /// If it fails, it retries the invocation once. If it fails again, the library creates a new process that retries the invocation once. In total, the library
+         /// attempts the invocation 3 times.</para>
+         /// <para>If this value is negative, the library creates new NodeJS processes indefinitely.</para>
+         /// <para>If this value is larger than 0 and <see cref="NumRetries"/> is 0, the invocation is retried once in each new process.</para>
+         /// <para>By default, process retries are disabled for invocation failures caused by javascript errors. See <see cref="EnableProcessRetriesForJavascriptErrors"/> for more information.</para>
+         /// <para>If the module source of an invocation is an unseekable stream, the invocation is not retried.
+         /// If you require retries for such streams, copy their contents to a <see cref="MemoryStream"/>.</para>
+         /// <para>Defaults to 1.</para>
+         /// </remarks>
         public int NumProcessRetries { get; set; } = 1;
 
         /// <summary>Whether invocation failures caused by Javascript errors are retried in new processes.</summary>
