@@ -591,13 +591,13 @@ namespace Jering.Javascript.NodeJS.Tests
             _mockRepository.VerifyAll();
             // Verify log
             string resultLog = loggerStringBuilder.ToString();
-            Assert.Equal(dummyNumRetries * (dummyNumProcessRetries + 1), Regex.Matches(resultLog, Strings.LogWarning_InvocationAttemptFailed.Substring(0, 30)).Count); // Logs after each retry
-            Assert.Equal(dummyNumProcessRetries, Regex.Matches(resultLog, Strings.LogWarning_RetriesInExistingProcessExhausted.Substring(0, 30)).Count); // Logs before each process swap
+            Assert.Equal(dummyNumRetries, Regex.Matches(resultLog, Strings.LogWarning_InvocationAttemptFailed.Substring(0, 30)).Count); // Logs after each retry
+            Assert.Empty(Regex.Matches(resultLog, Strings.LogWarning_RetriesInExistingProcessExhausted.Substring(0, 30))); // Logs before each process swap
             // Verify calls
             mockTestSubject.
                 Protected().
                 As<IOutOfProcessNodeJSServiceProtectedMembers>().
-                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(dummyNumRetries * (dummyNumProcessRetries + 1) + 1));
+                Verify(t => t.TryInvokeAsync<int>(dummyInvocationRequest, dummyCancellationToken), Times.Exactly(dummyNumRetries + 1));
             Assert.Equal(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
                     dummyTimeoutMS,
                     nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
