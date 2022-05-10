@@ -1768,6 +1768,7 @@ Contributions are welcome!
 - [blushingpenguin](https://github.com/blushingpenguin)
 - [flcdrg](https://github.com/flcdrg)
 - [samcic](https://github.com/samcic)
+- [johnrom](https://github.com/johnrom)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
