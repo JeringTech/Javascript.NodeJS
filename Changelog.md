@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.1...HEAD)
+
+## [6.3.1](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.0...6.3.1) - May 10, 2022
+### Fixes
+- Fixed infinite retries issue that occurs when `OutOfProcessNodeJSServiceOptions.NumProcessRetries` > 0 and `OutOfProcessNodeJSServiceOptions.NumProcessRetries` === 0. ([#135](https://github.com/JeringTech/Javascript.NodeJS/pull/135))
 
 ## [6.3.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.2.0...6.3.0) - Dec 27, 2021
 ### Additions

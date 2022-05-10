@@ -1325,19 +1325,21 @@ If you require retries for such streams, copy their contents to a `MemoryStream`
 
 Defaults to 1.  
 ##### OutOfProcessNodeJSServiceOptions.NumProcessRetries
-The number of new NodeJS processes created to retry an invocation.  
+The number of NodeJS processes created to retry an invocation.  
 ```csharp
 public int NumProcessRetries { get; set; }
 ```
 ###### Remarks
 A NodeJS process retries invocations `OutOfProcessNodeJSServiceOptions.NumRetries` times. Once a process's retries are exhausted,
-if any process retries remain, the library creates a new process that then retries invocations `OutOfProcessNodeJSServiceOptions.NumRetries` times.  
+if any retry-processes remain, the library creates a new process and retries invocations `OutOfProcessNodeJSServiceOptions.NumRetries` times.  
 
 For example, consider the situation where `OutOfProcessNodeJSServiceOptions.NumRetries` and this value are both 1. The existing process first attempts the invocation.
 If it fails, it retries the invocation once. If it fails again, the library creates a new process that retries the invocation once. In total, the library
-attempt the invocation 3 times.  
+attempts the invocation 3 times.  
 
 If this value is negative, the library creates new NodeJS processes indefinitely.  
+
+If this value is larger than 0 and `OutOfProcessNodeJSServiceOptions.NumRetries` is 0, the invocation is retried once in each new process.  
 
 By default, process retries are disabled for invocation failures caused by javascript errors. See `OutOfProcessNodeJSServiceOptions.EnableProcessRetriesForJavascriptErrors` for more information.  
 
@@ -1766,6 +1768,7 @@ Contributions are welcome!
 - [blushingpenguin](https://github.com/blushingpenguin)
 - [flcdrg](https://github.com/flcdrg)
 - [samcic](https://github.com/samcic)
+- [johnrom](https://github.com/johnrom)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
