@@ -1311,7 +1311,7 @@ public int TimeoutMS { get; set; }
 ###### Remarks
 If this value is negative, the maximum duration is infinite.  
 
-Defaults to 60000.  
+Defaults to 3000.  
 ##### OutOfProcessNodeJSServiceOptions.NumRetries
 The number of times a NodeJS process retries an invocation.  
 ```csharp
@@ -1366,7 +1366,7 @@ public int NumConnectionRetries { get; set; }
 ###### Remarks
 If this value is negative, connection attempts are retried indefinitely.  
 
-Defaults to 1.  
+Defaults to 2.  
 ##### OutOfProcessNodeJSServiceOptions.Concurrency
 The concurrency mode for invocations.  
 ```csharp

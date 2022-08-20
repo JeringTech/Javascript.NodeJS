@@ -44,7 +44,8 @@ namespace Jering.Javascript.NodeJS
         private readonly int _numProcessRetries;
         private readonly int _numConnectionRetries;
         private readonly bool _enableProcessRetriesForJavascriptErrors;
-        private readonly int _timeoutMS;
+        private readonly int _connectionTimeoutMS;
+        private readonly int _invocationTimeoutMS;
         private readonly ConcurrentDictionary<Task, object?> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
         private readonly CountdownEvent _invokeTaskCreationCountdown;
         private readonly bool _trackInvokeTasks;
@@ -99,7 +100,8 @@ namespace Jering.Javascript.NodeJS
             _numRetries = _options.NumRetries;
             _numProcessRetries = _options.NumProcessRetries;
             _numConnectionRetries = _options.NumConnectionRetries;
-            _timeoutMS = _options.TimeoutMS;
+            _connectionTimeoutMS = _options.ConnectionTimeoutMS;
+            _invocationTimeoutMS = _options.InvocationTimeoutMS;
             _enableProcessRetriesForJavascriptErrors = _options.EnableProcessRetriesForJavascriptErrors;
 
             (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
@@ -254,14 +256,12 @@ namespace Jering.Javascript.NodeJS
                 CancellationTokenSource? cancellationTokenSource = null;
                 try
                 {
-                    // If we haven't connected to a NodeJS process or we've been disconnected, connect to a new process.
+                    // If we aren't connected to a NodeJS process, connect to a new process.
                     // We want this within the while loop so if we disconnect between tries, we connect before retrying.
                     ConnectIfNotConnected();
 
                     // Create cancellation token so we can add a timeout 
-                    // TODO we're setting HttpClient.Timeout, is this token necessary?
-                    CancellationToken invokeCancellationToken;
-                    (invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken); // We need the CTS for disposal
+                    (CancellationToken invokeCancellationToken, cancellationTokenSource) = CreateCancellationToken(cancellationToken); // We need the CTS for disposal
 
                     return await (_trackInvokeTasks ?
                         TryTrackedInvokeAsync<T>(invocationRequest, _trackedInvokeTasks, _invokeTaskCreationCountdown, invokeCancellationToken) :
@@ -281,9 +281,9 @@ namespace Jering.Javascript.NodeJS
                 {
                     // Invocation timed out and no more retries
                     throw new InvocationException(string.Format(Strings.InvocationException_OutOfProcessNodeJSService_InvocationTimedOut,
-                        _timeoutMS,
-                        nameof(OutOfProcessNodeJSServiceOptions.TimeoutMS),
-                        nameof(OutOfProcessNodeJSServiceOptions)));
+                        _invocationTimeoutMS,
+                        nameof(OutOfProcessNodeJSServiceOptions),
+                        nameof(OutOfProcessNodeJSServiceOptions.InvocationTimeoutMS)));
                 }
                 catch (Exception exception) when (numRetries != 0 || numProcessRetries != 0)
                 {
@@ -343,9 +343,9 @@ namespace Jering.Javascript.NodeJS
 
         internal virtual (CancellationToken, CancellationTokenSource?) CreateCancellationToken(CancellationToken cancellationToken)
         {
-            if (_timeoutMS >= 0)
+            if (_invocationTimeoutMS >= 0)
             {
-                var cancellationTokenSource = new CancellationTokenSource(_timeoutMS);
+                var cancellationTokenSource = new CancellationTokenSource(_invocationTimeoutMS);
 
                 if (cancellationToken != CancellationToken.None)
                 {
@@ -410,7 +410,7 @@ namespace Jering.Javascript.NodeJS
                             Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_BeforeWait, Thread.CurrentThread.ManagedThreadId.ToString()));
                         }
 
-                        if (waitHandle.WaitOne(_timeoutMS < 0 ? -1 : _timeoutMS))
+                        if (waitHandle.WaitOne(_connectionTimeoutMS < 0 ? -1 : _connectionTimeoutMS))
                         {
                             // Start listening for file events before unblocking all threads.
                             //
@@ -427,9 +427,24 @@ namespace Jering.Javascript.NodeJS
                             // Kills and disposes
                             _nodeJSProcess.Dispose();
 
+                        // Connection attempt timed out
+                        //
+                        // We're unlikely to get to this point. If we do we want the issue to be logged.
+
+                        // Generate exception message. This must be done before disposing the process so HasExited and ExitStatus are meaningful.
+                        string exceptionMessage = string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
+                            _connectionTimeoutMS,
+                            processId,
+                            _nodeJSProcess.HasExited,
+                            _nodeJSProcess.ExitStatus);
+
+                        // Kills and disposes process
+                        _nodeJSProcess.Dispose();
+
+                        throw new ConnectionException(exceptionMessage);
                             // We're unlikely to get to this point. If we do we want the issue to be logged.
                             throw new ConnectionException(string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut,
-                                _timeoutMS,
+                                _connectionTimeoutMS,
                                 _nodeJSProcess.HasExited,
                                 _nodeJSProcess.ExitStatus));
                         }

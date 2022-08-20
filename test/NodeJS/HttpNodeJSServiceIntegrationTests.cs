@@ -1277,7 +1277,8 @@ module.exports = (callback) => {{
             if (Debugger.IsAttached && DEBUG_NODEJS)
             {
                 services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "--inspect-brk"); // An easy way to step through NodeJS code is to use Chrome. Consider option 1 from this list https://nodejs.org/en/docs/guides/debugging-getting-started/#chrome-devtools-55.
-                services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
+                services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.InvocationTimeoutMS = -1);
+                services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.ConnectionTimeoutMS = -1);
             }
 
             services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.EnableProcessRetriesForJavascriptErrors = enableProcessRetriesForJavascriptErrors);
