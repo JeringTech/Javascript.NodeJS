@@ -563,10 +563,11 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyTimeoutMS = 100;
             const int dummyNumRetries = 2;
             const int dummyNumProcessRetries = 0;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { 
-                TimeoutMS = dummyTimeoutMS, 
-                NumRetries = dummyNumRetries, 
-                NumProcessRetries = dummyNumProcessRetries 
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions
+            {
+                TimeoutMS = dummyTimeoutMS,
+                NumRetries = dummyNumRetries,
+                NumProcessRetries = dummyNumProcessRetries
             };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
@@ -614,10 +615,11 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyTimeoutMS = 100;
             const int dummyNumRetries = 0;
             const int dummyNumProcessRetries = 2;
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { 
-                TimeoutMS = dummyTimeoutMS, 
-                NumRetries = dummyNumRetries, 
-                NumProcessRetries = dummyNumProcessRetries 
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions
+            {
+                TimeoutMS = dummyTimeoutMS,
+                NumRetries = dummyNumRetries,
+                NumProcessRetries = dummyNumProcessRetries
             };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
@@ -1789,10 +1791,10 @@ namespace Jering.Javascript.NodeJS.Tests
             var task1 = Task.Run(() => testSubject.TryTrackedInvokeAsync<int>(dummyInvocationRequest, dummyTrackedInvokeTasks, dummyInvokeTaskCreationCountdown, dummyCancellationToken));
             // Simulates a file event thread. Blocked at _invokeTaskCreationCountdown.Wait() in SwapProcesses.
             var task2 = Task.Run(() =>
-             {
-                 dummyEventWaitHandle2.WaitOne();
-                 testSubject.SwapProcesses();
-             });
+            {
+                dummyEventWaitHandle2.WaitOne();
+                testSubject.SwapProcesses();
+            });
             // Simulates a thread for an invocation that occurs while a file event is processing. Block at _invokeTaskTrackingLock in TryTrackedInvokeAsync.
             var task3 = Task.Run(() =>
             {

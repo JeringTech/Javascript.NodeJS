@@ -1328,7 +1328,7 @@ module.exports = (callback) => {{
 
         private void TryDeleteWatchDirectory()
         {
-            if(_tempWatchDirectoryUri == null)
+            if (_tempWatchDirectoryUri == null)
             {
                 return;
             }
