@@ -19,5 +19,11 @@ namespace Jering.Javascript.NodeJS
         {
             Task.WaitAll(tasks);
         }
+
+        /// <inheritdoc />
+        public Task WhenAll(params Task[] tasks)
+        {
+            return Task.WhenAll(tasks);
+        }
     }
 }
