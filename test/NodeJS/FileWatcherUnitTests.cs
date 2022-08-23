@@ -51,6 +51,48 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Throws<ArgumentNullException>(() => new FileWatcher("dummyDirectoryPath", false, new[] { new Regex(".") }, null!)); // Testing situation where user ignores nullable reference type warnings
         }
 
+        [Fact]
+        public void Stop_DoesNothingIfFileWatchingNotStarted()
+        {
+            // Arrange
+            FileWatcher testSubject = CreateFileWatcher();
+
+            // Act and assert
+            testSubject.Stop();
+        }
+
+        [Fact]
+        public void Stop_DoesNothingIfFileWatchingStopped()
+        {
+            // Arrange
+            string dummyDirectoryPath = Directory.GetCurrentDirectory(); // FileSystemWatcher constructor requires an existing path
+            FileWatcher testSubject = CreateFileWatcher(dummyDirectoryPath);
+            testSubject.Start();
+
+            // Act
+            testSubject.Stop();
+
+            // Assert
+            testSubject.Stop();
+        }
+
+        [Fact]
+        public void Stop_DisposesOfFileSystemWatcherIfWatchingFiles()
+        {
+            // Arrange
+            using var dummyFileSystemWatcher = new FileSystemWatcher(CreateWatchDirectory());
+            Mock<FileWatcher> mockTestSubject = CreateMockFileWatcher();
+            mockTestSubject.CallBase = true;
+            mockTestSubject.Setup(t => t.CreateFileSystemWatcher()).Returns(dummyFileSystemWatcher);
+            mockTestSubject.Object.Start();
+
+            // Act
+            mockTestSubject.Object.Stop();
+
+            // Assert
+            Assert.Throws<ObjectDisposedException>(() => dummyFileSystemWatcher.EnableRaisingEvents = true);
+        }
+
         // TODO verify that events are registered
         [Fact]
         public void Start_CreatesNewFileSystemWatcher()

@@ -23,8 +23,9 @@ namespace Jering.Javascript.NodeJS
         private readonly FileChangedEventHandler _fileChangedEventHandler;
         private readonly NotifyFilters _notifyFilters;
 
-        private FileSystemWatcher? _fileSystemWatcher;
+        private volatile FileSystemWatcher? _fileSystemWatcher;
         private bool _disposed;
+        private readonly object _stopLock = new();
 
         /// <summary>
         /// Creates a <see cref="FileWatcher"/>.
@@ -71,9 +72,24 @@ namespace Jering.Javascript.NodeJS
             // Microsoft.AspNetCore.NodeServices took this approach as well.
             //
             // If stop is called before start, _fileSystemWatcher may be null.
-            _fileSystemWatcher?.Dispose();
+            if (_fileSystemWatcher == null)
+            {
+                return;
+            }
+
+            lock (_stopLock)
+            {
+                if (_fileSystemWatcher == null)
+                {
+                    return;
+                }
+
+                _fileSystemWatcher.Dispose(); // Not thread-safe, so wrap in double checked lock
+                _fileSystemWatcher = null;
+            }
         }
 
+        // TODO FileSystemWatcher uses ThreadPool threads so this can be inefficient
         /// <inheritdoc />
         public void Start()
         {
@@ -147,6 +163,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Disposes of the NodeJS <see cref="FileWatcher"/>.
         /// </summary>
+        /// <remarks>This method is not thread-safe.</remarks>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
