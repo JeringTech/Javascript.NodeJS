@@ -37,6 +37,19 @@ namespace Jering.Javascript.NodeJS
         void AddErrorReceivedHandler(MessageReceivedEventHandler messageReceivedHandler);
 
         /// <summary>
+        /// Begins reading of stdout and stderr using standalone threads.
+        /// </summary>
+        /// <remarks>
+        /// <para>You must register at least one <see cref="MessageReceivedEventHandler"/> for each of <see cref="AddOutputDataReceivedHandler(DataReceivedEventHandler)"/>
+        /// and <see cref="AddErrorReceivedHandler(MessageReceivedEventHandler)"/> before calling this method.</para>
+        /// <para>Read content is passed to the registered <see cref="MessageReceivedEventHandler"/>s.</para>
+        /// <para>If <see cref="MessageReceivedEventHandler"/> are missing, the standalone threads will throw <see cref="NullReferenceException"/>s.</para>
+        /// <para>Use this method over <see cref="BeginOutputReadLine"/> and <see cref="BeginErrorReadLine"/>. Both of those methods require ThreadPool threads to read.
+        /// This means that if ThreadPool threads are limited in number, it will take some time for reads to start.</para>
+        /// </remarks>
+        void BeginOutputAndErrorReading();
+
+        /// <summary>
         /// Adds a <see cref="Process.OutputDataReceived"/> handler to the NodeJS process.
         /// </summary>
         /// <param name="dataReceivedEventHandler">The handler to add.</param>

@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Threading;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -69,6 +71,67 @@ namespace Jering.Javascript.NodeJS
             _internalOutputDataReceivedHandlerAdded = false;
             _errorDataStringBuilder = errorDataStringBuilder;
             _internalErrorDataReceivedHandlerAdded = false;
+        }
+
+        // This and the following two methods are derived from https://github.com/PowerShell/PowerShell/pull/11713/files to remedy the issue described here:
+        // https://github.com/PowerShell/PowerShell/issues/11659
+        /// <inheritdoc/>
+        public void BeginOutputAndErrorReading()
+        {
+            var outputThread = new Thread(OutputThreadStart)
+            {
+                IsBackground = true,
+                Name = "NodeJSStdOutReader"
+            };
+
+            var errorThread = new Thread(ErrorThreadStart)
+            {
+                IsBackground = true,
+                Name = "NodeJSStdErrReader"
+            };
+
+            outputThread.Start(_process.StandardOutput);
+            errorThread.Start(_process.StandardError);
+        }
+
+        private void OutputThreadStart(object arg)
+        {
+            var reader = (StreamReader)arg;
+            try
+            {
+                string? data;
+                while ((data = reader.ReadLine()) != null)
+                {
+                    if (TryCreateMessage(_outputDataStringBuilder, data, out string? message))
+                    {
+                        _outputReceivedHandler!(message);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // Treat this as EOF, the same as what 'Process.BeginOutputReadLine()' does.
+            }
+        }
+
+        private void ErrorThreadStart(object arg)
+        {
+            var reader = (StreamReader)arg;
+            try
+            {
+                string? data;
+                while ((data = reader.ReadLine()) != null)
+                {
+                    if (TryCreateMessage(_errorDataStringBuilder, data, out string? message))
+                    {
+                        _errorReceivedHandler!(message);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // Treat this as EOF, the same as what 'Process.BeginErrorReadLine()' does.
+            }
         }
 
         /// <inheritdoc />

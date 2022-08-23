@@ -661,8 +661,7 @@ namespace Jering.Javascript.NodeJS
             // stdout and stderr
             result.AddOutputReceivedHandler((string message) => OutputReceivedHandler(message, waitHandle));
             result.AddErrorReceivedHandler(ErrorReceivedHandler);
-            result.BeginOutputReadLine();
-            result.BeginErrorReadLine();
+            result.BeginOutputAndErrorReading();
 
             return result;
         }
