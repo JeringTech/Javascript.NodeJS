@@ -8,6 +8,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -215,7 +216,7 @@ namespace Jering.Javascript.NodeJS.Tests
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(loggerStringBuilder: loggerStringBuilder);
 
             // Act
-            testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
+            testSubject.ExposedOnConnectionEstablishedMessageReceived(testSubject.ExposedConnectionEstablishedMessageRegex.Match(dummyConnectionEstablishedMessage));
 
             // Assert
             Assert.Equal(expectedResult, testSubject._endpoint?.AbsoluteUri);
@@ -326,14 +327,16 @@ namespace Jering.Javascript.NodeJS.Tests
             {
             }
 
+            public Regex ExposedConnectionEstablishedMessageRegex => ConnectionEstablishedMessageRegex;
+
             public Task<(bool, T?)> ExposedTryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
             {
                 return TryInvokeAsync<T>(invocationRequest, cancellationToken);
             }
 
-            public void ExposedOnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+            public void ExposedOnConnectionEstablishedMessageReceived(System.Text.RegularExpressions.Match connectionEstablishedMessageMatch)
             {
-                OnConnectionEstablishedMessageReceived(connectionEstablishedMessage);
+                OnConnectionEstablishedMessageReceived(connectionEstablishedMessageMatch);
             }
         }
     }

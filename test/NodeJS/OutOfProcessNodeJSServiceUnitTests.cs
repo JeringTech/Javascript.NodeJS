@@ -1333,7 +1333,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public void OutputReceivedHandler_IfNodeJSProcessIsNotConnectedAndMessageIsConnectionEstablishedMessageEstablishesConnection()
         {
             // Arrange
-            const string dummyMessage = OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START;
+            const string dummyMessage = "[Jering.Javascript.NodeJS: HttpVersion - HTTP/2.0 Listening on IP - ::1 Port - 50000]";
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.SetConnected());
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
@@ -1407,7 +1407,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             return new object[][]
             {
-                new object[]{true, OutOfProcessNodeJSService.CONNECTION_ESTABLISHED_MESSAGE_START},
+                new object[]{true, "[Jering.Javascript.NodeJS: HttpVersion - HTTP/2.0 Listening on IP - ::1 Port - 50000]"},
                 new object[]{false, "dummyMessage"},
             };
         }
