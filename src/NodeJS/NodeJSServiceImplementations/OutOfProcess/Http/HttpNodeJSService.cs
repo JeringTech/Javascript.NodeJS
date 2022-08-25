@@ -21,7 +21,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Regex to match message used to perform a handshake with the NodeJS process.
         /// </summary>
-        private static readonly Regex _sharedConnectionEstablishedMessageRegex = new Regex(@"\[Jering.Javascript.NodeJS: HttpVersion - (?<protocol>HTTP/\d.\d) Listening on IP - (?<ip>[^ ]+) Port - (?<port>\d+)\]", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        private static readonly Regex _sharedConnectionEstablishedMessageRegex = new(@"\[Jering\.Javascript\.NodeJS: HttpVersion - (?<protocol>HTTP\/\d\.\d) Listening on IP - (?<ip>[^ ]+) Port - (?<port>\d+)\]", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 
         internal const string HTTP11_SERVER_SCRIPT_NAME = "Http11Server.js";
         internal const string HTTP20_SERVER_SCRIPT_NAME = "Http20Server.js";
@@ -38,6 +38,9 @@ namespace Jering.Javascript.NodeJS
         // Volatile since it may be updated by different threads and we always
         // want to use the most recent instance
         internal volatile Uri? _endpoint;
+
+        /// <inheritdoc />
+        protected override Regex ConnectionEstablishedMessageRegex => _sharedConnectionEstablishedMessageRegex;
 
         /// <summary>
         /// Creates an <see cref="HttpNodeJSService"/>.
@@ -87,9 +90,6 @@ namespace Jering.Javascript.NodeJS
             _httpVersion = httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HttpVersion.Version20 : HttpVersion.Version11;
 #endif
         }
-
-        /// <inheritdoc />
-        protected override Regex ConnectionEstablishedMessageRegex => _sharedConnectionEstablishedMessageRegex;
 
         /// <inheritdoc />
         protected override async Task<(bool, T?)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken) where T : default // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-9.0/unconstrained-type-parameter-annotations#default-constraint, https://github.com/dotnet/csharplang/issues/3297
@@ -184,11 +184,11 @@ namespace Jering.Javascript.NodeJS
         protected override void OnConnectionEstablishedMessageReceived(Match connectionMessageMatch)
         {
             _endpoint = new UriBuilder
-                        {
-                            Scheme = "http",
-                            Host = connectionMessageMatch.Groups["ip"].Value,
-                            Port = int.Parse(connectionMessageMatch.Groups["port"].Value),
-                        }.Uri;
+                {
+                    Scheme = "http",
+                    Host = connectionMessageMatch.Groups["ip"].Value,
+                    Port = int.Parse(connectionMessageMatch.Groups["port"].Value),
+                }.Uri;
 
             _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint,
                 connectionMessageMatch.Groups["protocol"].Value, // Pluck out HTTP version

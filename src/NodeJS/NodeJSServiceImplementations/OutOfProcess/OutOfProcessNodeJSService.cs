@@ -54,6 +54,12 @@ namespace Jering.Javascript.NodeJS
         private IFileWatcher? _fileWatcher;
 
         /// <summary>
+        /// <para>This regex is used to determine successful initialization of the process.</para>
+        /// <para>All match groups contained in the regex are passed as arguments to the <see cref="OnConnectionEstablishedMessageReceived"/> method.</para>
+        /// </summary>
+        protected abstract Regex ConnectionEstablishedMessageRegex { get; }
+
+        /// <summary>
         /// Creates an <see cref="OutOfProcessNodeJSService"/> instance.
         /// </summary>
         /// <param name="nodeProcessFactory"></param>
@@ -98,12 +104,6 @@ namespace Jering.Javascript.NodeJS
 
             (_trackInvokeTasks, _trackedInvokeTasks, _invokeTaskCreationCountdown) = InitializeFileWatching();
         }
-
-        /// <summary>
-        /// <para>This regex is used to determine successful initialization of the process.</para>
-        /// <para>All match groups contained in the regex are passed as arguments to the <see cref="OnConnectionEstablishedMessageReceived"/> method.</para>
-        /// </summary>
-        protected abstract Regex ConnectionEstablishedMessageRegex { get; }
 
         /// <summary>
         /// Asynchronously invokes code in the NodeJS instance.

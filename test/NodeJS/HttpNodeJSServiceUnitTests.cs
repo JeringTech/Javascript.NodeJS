@@ -208,11 +208,11 @@ namespace Jering.Javascript.NodeJS.Tests
 
         [Theory]
         [MemberData(nameof(OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data))]
-        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyIP, string dummyPort, string expectedResult)
+        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyHttpVersion, string dummyIP, string dummyPort, string expectedResult)
         {
             // Arrange
             var loggerStringBuilder = new StringBuilder();
-            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: HttpVersion - HTTP/1.1 Listening on IP - {dummyIP} Port - {dummyPort}]";
+            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: HttpVersion - {dummyHttpVersion} Listening on IP - {dummyIP} Port - {dummyPort}]";
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(loggerStringBuilder: loggerStringBuilder);
 
             // Act
@@ -220,15 +220,16 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.Equal(expectedResult, testSubject._endpoint?.AbsoluteUri);
-            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, "HTTP/1.1", expectedResult), loggerStringBuilder.ToString());
+            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, dummyHttpVersion, expectedResult), loggerStringBuilder.ToString());
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
         {
             return new object[][]
             {
-                new object[]{"127.0.0.1", "12345", "http://127.0.0.1:12345/"}, // IPv4, arbitrary port
-                new object[]{"::1", "543", "http://[::1]:543/"} // IPv6, arbitrary port
+                new object[]{ "HTTP/1.1", "127.0.0.1", "12345", "http://127.0.0.1:12345/"}, // Http 1.1, IPv4, arbitrary port
+                new object[]{ "HTTP/1.1", "::1", "543", "http://[::1]:543/"}, // Http 1.1, IPv6, arbitrary port
+                new object[]{ "HTTP/2.0", "127.0.0.1", "12345", "http://127.0.0.1:12345/"} // Http 2.0, IPv4, arbitrary port
             };
         }
 

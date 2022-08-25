@@ -1333,7 +1333,7 @@ namespace Jering.Javascript.NodeJS.Tests
         public void OutputReceivedHandler_IfNodeJSProcessIsNotConnectedAndMessageIsConnectionEstablishedMessageEstablishesConnection()
         {
             // Arrange
-            const string dummyMessage = "[Jering.Javascript.NodeJS: HttpVersion - HTTP/2.0 Listening on IP - ::1 Port - 50000]";
+            const string dummyMessage = "dummyMessage";
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.SetConnected());
             mockNodeJSProcess.Setup(n => n.Connected).Returns(false);
@@ -1343,7 +1343,9 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
                 Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set()).
                 Returns(mockNodeJSProcess.Object);
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.OnConnectionEstablishedMessageReceived(dummyMessage));
+            // Override ConnectionEstablishedMessageRegex to match "dummyMessage"
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.ConnectionEstablishedMessageRegex).Returns(new Regex(".*")); 
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.OnConnectionEstablishedMessageReceived(It.IsAny<System.Text.RegularExpressions.Match>()));
             mockTestSubject.Object.ConnectIfNotConnected(); // Set _nodeJSProcess
             using var dummyWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
             // Act
@@ -1352,7 +1354,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             _mockRepository.VerifyAll();
             Assert.True(dummyWaitHandle.WaitOne(0)); // Ensure that it gets signaled
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(dummyMessage), Times.Once());
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Verify(t => t.OnConnectionEstablishedMessageReceived(It.IsAny<System.Text.RegularExpressions.Match>()), Times.Once());
         }
 
         [Fact]
@@ -1375,14 +1377,14 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Contains(dummyMessage, logResult);
         }
 
-        [Theory(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
-        [MemberData(nameof(OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data))]
-        public void OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages(bool dummyConnected, string dummyMessage)
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void OutputReceivedHandler_IfNodeJSProcessIsConnectedLogsMessage()
         {
             // Arrange
+            const string dummyMessage = "dummyMessage";
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.SetConnected());
-            mockNodeJSProcess.Setup(n => n.Connected).Returns(dummyConnected);
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(true); // Connected
             var loggerStringBuilder = new StringBuilder();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder,
                 logLevel: LogLevel.Information);
@@ -1403,13 +1405,34 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Contains(dummyMessage, logResult);
         }
 
-        public static IEnumerable<object[]> OutputReceivedHandler_IfNodeJSProcessIsConnectedOrMessageIsNotConnectionEstablishedMessageLogsMessages_Data()
+        [Fact(Timeout = TIMEOUT_MS)] // Calls ConnectIfNotConnected so threading involved
+        public void OutputReceivedHandler_IfNodeJSProcessIsNotConnectionEstablishedMessageLogsMessage()
         {
-            return new object[][]
-            {
-                new object[]{true, "[Jering.Javascript.NodeJS: HttpVersion - HTTP/2.0 Listening on IP - ::1 Port - 50000]"},
-                new object[]{false, "dummyMessage"},
-            };
+            // Arrange
+            const string dummyMessage = "dummyMessage";
+            Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+            mockNodeJSProcess.Setup(n => n.SetConnected());
+            mockNodeJSProcess.Setup(n => n.Connected).Returns(false); // Not connected
+            var loggerStringBuilder = new StringBuilder();
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(loggerStringBuilder: loggerStringBuilder,
+                logLevel: LogLevel.Information);
+            mockTestSubject.CallBase = true;
+            mockTestSubject.
+                Setup(t => t.CreateAndSetUpProcess(It.IsAny<EventWaitHandle>())).
+                Callback<EventWaitHandle>(eventWaitHandle => eventWaitHandle.Set()).
+                Returns(mockNodeJSProcess.Object);
+            // Not connected but message does not match handshake-message regex so it should be treated as a normal message
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.ConnectionEstablishedMessageRegex).Returns(new Regex("arbitraryPattern"));
+            mockTestSubject.Object.ConnectIfNotConnected(); // Set _nodeJSProcess
+            using EventWaitHandle dummyWaitHandle = new(true, EventResetMode.AutoReset);
+
+            // Act
+            mockTestSubject.Object.OutputReceivedHandler(dummyMessage, dummyWaitHandle);
+
+            // Assert
+            _mockRepository.VerifyAll();
+            string logResult = loggerStringBuilder.ToString();
+            Assert.Contains(dummyMessage, logResult);
         }
 
         [Fact]
@@ -1804,7 +1827,8 @@ namespace Jering.Javascript.NodeJS.Tests
         // Mocking protected members: https://github.com/Moq/moq4/wiki/Quickstart#miscellaneous
         private interface IOutOfProcessNodeJSServiceProtectedMembers
         {
-            void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
+            Regex ConnectionEstablishedMessageRegex { get; }
+            void OnConnectionEstablishedMessageReceived(System.Text.RegularExpressions.Match connectionEstablishedMessage);
             Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
             void Dispose(bool disposing);
         }
