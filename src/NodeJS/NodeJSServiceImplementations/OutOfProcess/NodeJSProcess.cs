@@ -94,13 +94,18 @@ namespace Jering.Javascript.NodeJS
             errorThread.Start(_process.StandardError);
         }
 
-        private void OutputThreadStart(object arg)
+        private void OutputThreadStart(object? arg)
         {
-            var reader = (StreamReader)arg;
+            if(arg is not StreamReader streamReader)
+            {
+                // Should not get here
+                throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ExpectedAStreamReader, nameof(arg));
+            }
+
             try
             {
                 string? data;
-                while ((data = reader.ReadLine()) != null)
+                while ((data = streamReader.ReadLine()) != null)
                 {
                     if (TryCreateMessage(_outputDataStringBuilder, data, out string? message))
                     {
@@ -114,13 +119,18 @@ namespace Jering.Javascript.NodeJS
             }
         }
 
-        private void ErrorThreadStart(object arg)
+        private void ErrorThreadStart(object? arg)
         {
-            var reader = (StreamReader)arg;
+            if (arg is not StreamReader streamReader)
+            {
+                // Should not get here
+                throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ExpectedAStreamReader, nameof(arg));
+            }
+
             try
             {
                 string? data;
-                while ((data = reader.ReadLine()) != null)
+                while ((data = streamReader.ReadLine()) != null)
                 {
                     if (TryCreateMessage(_errorDataStringBuilder, data, out string? message))
                     {
