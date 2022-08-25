@@ -384,6 +384,10 @@ namespace Jering.Javascript.NodeJS
                 }
 
                 // No need to listen for file events while connecting - the new NodeJS process will reload all files.
+                if (_debugLoggingEnabled)
+                {
+                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher, _nodeJSProcess?.SafeID));
+                }
                 _fileWatcher?.Stop();
 
                 await CreateNewProcessAndConnectAsync().ConfigureAwait(false);
@@ -439,6 +443,10 @@ namespace Jering.Javascript.NodeJS
                         }
 
                         // Start listening for file events before unblocking all operations.
+                        if (_debugLoggingEnabled)
+                        {
+                            Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StartingFileWatcher, _nodeJSProcess.SafeID));
+                        }
                         _fileWatcher?.Start();
 
                         _nodeJSProcess.SetConnected();
@@ -563,6 +571,10 @@ namespace Jering.Javascript.NodeJS
             }
 
             // Immediately stop the fileWatcher so we don't get redundant events (see FileWatcher.Stop)
+            if (_debugLoggingEnabled)
+            {
+                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher, _nodeJSProcess?.SafeID));
+            }
             _fileWatcher?.Stop();
 
 #pragma warning disable CS4014

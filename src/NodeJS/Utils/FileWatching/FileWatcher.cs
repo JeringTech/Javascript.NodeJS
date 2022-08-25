@@ -84,6 +84,7 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
+                _fileSystemWatcher.EnableRaisingEvents = false;
                 _fileSystemWatcher.Dispose(); // Not thread-safe, so wrap in double checked lock
                 _fileSystemWatcher = null;
             }

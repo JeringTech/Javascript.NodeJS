@@ -237,6 +237,24 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Starting FileWatcher. Current process: {0}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_StartingFileWatcher {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_StartingFileWatcher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping FileWatcher. Current process: {0}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting on process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}..
         /// </summary>
         internal static string LogDebug_OutOfProcessNodeJSService_WaitingOnProcessConnectionSemaphore {

@@ -212,4 +212,10 @@ Exception:
   <data name="ArgumentException_NodeJSProcess_ExpectedAStreamReader" xml:space="preserve">
     <value>Expected a StreamReader.</value>
   </data>
+  <data name="LogDebug_OutOfProcessNodeJSService_StartingFileWatcher" xml:space="preserve">
+    <value>Starting FileWatcher. Current process: {0}.</value>
+  </data>
+  <data name="LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher" xml:space="preserve">
+    <value>Stopping FileWatcher. Current process: {0}.</value>
+  </data>
 </root>
