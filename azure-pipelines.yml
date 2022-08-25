@@ -14,6 +14,3 @@ jobs:
     outOfProcessBuildDependencies: ["nodejs"]
     codecovKey: "e5de9f48-fb06-43c6-8368-44de5cf7e5d4"
     cacheYarnPackages: true
-- template: templates/docs/main.yml@templates
-  parameters:
-    nugetRestorePats: "$(nugetRestorePats)"
