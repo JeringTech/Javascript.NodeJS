@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.0...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.1...HEAD)
+
+## [7.0.0-beta.1](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.0...7.0.0-beta.1) - Aug 26, 2022
+### Changes
+- **Breaking Changes**: 
+    - Replaced `void INodeJSService.MoveToNewProcess` with `ValueTask MoveToNewProcessAsync()`. ([#144](https://github.com/JeringTech/Javascript.NodeJS/pull/144))
+    - Replaced `OutOfProcessNodeJSServiceOptions.TimeoutMS` with `OutOfProcessNodeJSServiceOptions.ConnectionTimeoutMS` and `OutOfProcessNodeJSServiceOptions.InvocationTimeoutMS`. ([#144](https://github.com/JeringTech/Javascript.NodeJS/pull/144))
 
 ## [7.0.0-beta.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.1...7.0.0-beta.0) - Aug 25, 2022
 ### Changes
