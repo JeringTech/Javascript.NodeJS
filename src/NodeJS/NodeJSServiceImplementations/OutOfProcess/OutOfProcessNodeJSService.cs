@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,11 +22,6 @@ namespace Jering.Javascript.NodeJS
     /// <seealso cref="INodeJSService" />
     public abstract class OutOfProcessNodeJSService : INodeJSService
     {
-        /// <summary>
-        /// Start of the message used to perform a handshake with the NodeJS process.
-        /// </summary>
-        protected internal const string CONNECTION_ESTABLISHED_MESSAGE_START = "[Jering.Javascript.NodeJS: ";
-
         /// <summary>
         /// The logger for the NodeJS process's stdout and stderr streams as well as messages from <see cref="OutOfProcessNodeJSService"/> and its implementations.
         /// </summary>
@@ -56,6 +52,12 @@ namespace Jering.Javascript.NodeJS
         private bool _disposed;
         private volatile INodeJSProcess? _nodeJSProcess; // Volatile since it's used in a double checked lock (we check whether it's null)
         private IFileWatcher? _fileWatcher;
+
+        /// <summary>
+        /// <para>This regex is used to determine successful initialization of the process.</para>
+        /// <para>All match groups contained in the regex are passed as arguments to the <see cref="OnConnectionEstablishedMessageReceived"/> method.</para>
+        /// </summary>
+        protected abstract Regex ConnectionEstablishedMessageRegex { get; }
 
         /// <summary>
         /// Creates an <see cref="OutOfProcessNodeJSService"/> instance.
@@ -117,8 +119,8 @@ namespace Jering.Javascript.NodeJS
         /// <para>The message can be used to complete the handshake with the
         /// NodeJS process, for example by delivering a port and an IP address to use in further communications.</para>
         /// </summary>
-        /// <param name="connectionEstablishedMessage">The connection established message.</param>
-        protected abstract void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage);
+        /// <param name="connectionMessageMatch">The regex match that can be used to extract additional arguments to complete the handshake.</param>
+        protected abstract void OnConnectionEstablishedMessageReceived(Match connectionMessageMatch);
 
         /// <inheritdoc />
         public virtual async Task<T?> InvokeFromFileAsync<T>(string modulePath, string? exportName = null, object?[]? args = null, CancellationToken cancellationToken = default)
@@ -671,9 +673,9 @@ namespace Jering.Javascript.NodeJS
             //
             // Note that we should not get a connection message for any process other than the current _nodeJSProcess
             // because ConnectIfNotConnected is synchronous.
-            if (_nodeJSProcess?.Connected == false && message.StartsWith(CONNECTION_ESTABLISHED_MESSAGE_START))
+            if (_nodeJSProcess?.Connected == false && ConnectionEstablishedMessageRegex.Match(message) is { Success: true } match)
             {
-                OnConnectionEstablishedMessageReceived(message);
+                OnConnectionEstablishedMessageReceived(match);
 
                 if (_infoLoggingEnabled)
                 {

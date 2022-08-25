@@ -8,6 +8,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -207,27 +208,28 @@ namespace Jering.Javascript.NodeJS.Tests
 
         [Theory]
         [MemberData(nameof(OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data))]
-        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyIP, string dummyPort, string expectedResult)
+        public void OnConnectionEstablishedMessageReceived_ExtractsEndPoint(string dummyHttpVersion, string dummyIP, string dummyPort, string expectedResult)
         {
             // Arrange
             var loggerStringBuilder = new StringBuilder();
-            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: HttpVersion - HTTP/1.1 Listening on IP - {dummyIP} Port - {dummyPort}]";
+            string dummyConnectionEstablishedMessage = $"[Jering.Javascript.NodeJS: HttpVersion - {dummyHttpVersion} Listening on IP - {dummyIP} Port - {dummyPort}]";
             ExposedHttpNodeJSService testSubject = CreateHttpNodeJSService(loggerStringBuilder: loggerStringBuilder);
 
             // Act
-            testSubject.ExposedOnConnectionEstablishedMessageReceived(dummyConnectionEstablishedMessage);
+            testSubject.ExposedOnConnectionEstablishedMessageReceived(testSubject.ExposedConnectionEstablishedMessageRegex.Match(dummyConnectionEstablishedMessage));
 
             // Assert
             Assert.Equal(expectedResult, testSubject._endpoint?.AbsoluteUri);
-            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, "HTTP/1.1", expectedResult), loggerStringBuilder.ToString());
+            Assert.Contains(string.Format(Strings.LogInformation_HttpEndpoint, dummyHttpVersion, expectedResult), loggerStringBuilder.ToString());
         }
 
         public static IEnumerable<object[]> OnConnectionEstablishedMessageReceived_ExtractsEndPoint_Data()
         {
             return new object[][]
             {
-                new object[]{"127.0.0.1", "12345", "http://127.0.0.1:12345/"}, // IPv4, arbitrary port
-                new object[]{"::1", "543", "http://[::1]:543/"} // IPv6, arbitrary port
+                new object[]{ "HTTP/1.1", "127.0.0.1", "12345", "http://127.0.0.1:12345/"}, // Http 1.1, IPv4, arbitrary port
+                new object[]{ "HTTP/1.1", "::1", "543", "http://[::1]:543/"}, // Http 1.1, IPv6, arbitrary port
+                new object[]{ "HTTP/2.0", "127.0.0.1", "12345", "http://127.0.0.1:12345/"} // Http 2.0, IPv4, arbitrary port
             };
         }
 
@@ -326,14 +328,16 @@ namespace Jering.Javascript.NodeJS.Tests
             {
             }
 
+            public Regex ExposedConnectionEstablishedMessageRegex => ConnectionEstablishedMessageRegex;
+
             public Task<(bool, T?)> ExposedTryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken)
             {
                 return TryInvokeAsync<T>(invocationRequest, cancellationToken);
             }
 
-            public void ExposedOnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+            public void ExposedOnConnectionEstablishedMessageReceived(System.Text.RegularExpressions.Match connectionEstablishedMessageMatch)
             {
-                OnConnectionEstablishedMessageReceived(connectionEstablishedMessage);
+                OnConnectionEstablishedMessageReceived(connectionEstablishedMessageMatch);
             }
         }
     }

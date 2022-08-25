@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.0...HEAD)
+
+## [7.0.0-beta.0](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.1...7.0.0-beta.0) - Aug 25, 2022
+### Changes
+- **Breaking**: `OutOfProcessNodeJSService.OnConnectionEstablishedMessageReceived` now takes a `System.Text.RegularExpressions.Match` argument instead of a `string`. ([#146](https://github.com/JeringTech/Javascript.NodeJS/pull/146))
+### Fixes
+- Fixed handshake with Node.js not completing when external systems interfere with Node.js's stdout stream. ([#146](https://github.com/JeringTech/Javascript.NodeJS/pull/146))
 
 ## [6.3.1](https://github.com/JeringTech/Javascript.NodeJS/compare/6.3.0...6.3.1) - May 10, 2022
 ### Fixes

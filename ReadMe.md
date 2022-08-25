@@ -1769,6 +1769,7 @@ Contributions are welcome!
 - [flcdrg](https://github.com/flcdrg)
 - [samcic](https://github.com/samcic)
 - [johnrom](https://github.com/johnrom)
+- [aKzenT](https://github.com/aKzenT)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.

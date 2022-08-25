@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +18,11 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class HttpNodeJSService : OutOfProcessNodeJSService
     {
+        /// <summary>
+        /// Regex to match message used to perform a handshake with the NodeJS process.
+        /// </summary>
+        private static readonly Regex _sharedConnectionEstablishedMessageRegex = new(@"\[Jering\.Javascript\.NodeJS: HttpVersion - (?<protocol>HTTP\/\d\.\d) Listening on IP - (?<ip>[^ ]+) Port - (?<port>\d+)\]", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
         internal const string HTTP11_SERVER_SCRIPT_NAME = "Http11Server.js";
         internal const string HTTP20_SERVER_SCRIPT_NAME = "Http20Server.js";
 
@@ -32,6 +38,9 @@ namespace Jering.Javascript.NodeJS
         // Volatile since it may be updated by different threads and we always
         // want to use the most recent instance
         internal volatile Uri? _endpoint;
+
+        /// <inheritdoc />
+        protected override Regex ConnectionEstablishedMessageRegex => _sharedConnectionEstablishedMessageRegex;
 
         /// <summary>
         /// Creates an <see cref="HttpNodeJSService"/>.
@@ -172,42 +181,18 @@ namespace Jering.Javascript.NodeJS
         }
 
         /// <inheritdoc />
-        protected override void OnConnectionEstablishedMessageReceived(string connectionEstablishedMessage)
+        protected override void OnConnectionEstablishedMessageReceived(Match connectionMessageMatch)
         {
-            // Start after message start and "HttpVersion - HTTP/X.X Listening on IP - "
-            int startIndex = CONNECTION_ESTABLISHED_MESSAGE_START.Length + 41;
-            var stringBuilder = new StringBuilder("http://");
+            _endpoint = new UriBuilder
+                {
+                    Scheme = "http",
+                    Host = connectionMessageMatch.Groups["ip"].Value,
+                    Port = int.Parse(connectionMessageMatch.Groups["port"].Value),
+                }.Uri;
 
-            for (int i = startIndex; i < connectionEstablishedMessage.Length; i++)
-            {
-                char currentChar = connectionEstablishedMessage[i];
-
-                if (currentChar == ':')
-                {
-                    // ::1
-                    stringBuilder.Append("[::1]");
-                    i += 2;
-                }
-                else if (currentChar == ' ')
-                {
-                    stringBuilder.Append(':');
-
-                    // Skip over "Port - "
-                    i += 7;
-                }
-                else if (currentChar == ']')
-                {
-                    _endpoint = new Uri(stringBuilder.ToString());
-                    _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint,
-                        connectionEstablishedMessage.Substring(41, 8), // Pluck out HTTP version
-                        _endpoint));
-                    return;
-                }
-                else
-                {
-                    stringBuilder.Append(currentChar);
-                }
-            }
+            _logger.LogInformation(string.Format(Strings.LogInformation_HttpEndpoint,
+                connectionMessageMatch.Groups["protocol"].Value, // Pluck out HTTP version
+                _endpoint));
         }
 
         /// <inheritdoc />
