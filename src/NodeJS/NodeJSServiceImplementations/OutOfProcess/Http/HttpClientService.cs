@@ -21,15 +21,13 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <param name="httpClient">The <see cref="HttpClient"/> to send HTTP requests with.</param>
         /// <param name="outOfProcessNodeJSServiceOptionsAccessor">The <see cref="OutOfProcessNodeJSServiceOptions"/> accessor.</param>
-        public HttpClientService(HttpClient httpClient,
-            IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor)
+        public HttpClientService(HttpClient httpClient, IOptions<OutOfProcessNodeJSServiceOptions> outOfProcessNodeJSServiceOptionsAccessor)
         {
             _httpClient = httpClient;
 
-            // Configure
-            OutOfProcessNodeJSServiceOptions outOfProcessNodeJSServiceOptions = outOfProcessNodeJSServiceOptionsAccessor.Value;
-            httpClient.Timeout = outOfProcessNodeJSServiceOptions.TimeoutMS == -1 ? System.Threading.Timeout.InfiniteTimeSpan :
-                TimeSpan.FromMilliseconds(outOfProcessNodeJSServiceOptions.TimeoutMS + 1000);
+            // Set timeout to invocation timeout + 1000 so that HttpClient does not timeout requests if user specifies a timeout > HttpClient's (100,000)
+            OutOfProcessNodeJSServiceOptions options = outOfProcessNodeJSServiceOptionsAccessor.Value;
+            httpClient.Timeout = options.InvocationTimeoutMS < 0 ? System.Threading.Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(options.InvocationTimeoutMS + 1000);
         }
 
         /// <inheritdoc />

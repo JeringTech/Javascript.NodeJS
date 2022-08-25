@@ -10,6 +10,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Stops file watching.
         /// </summary>
+        /// <remarks>This method is thread-safe.</remarks>
         void Stop();
 
         /// <summary>

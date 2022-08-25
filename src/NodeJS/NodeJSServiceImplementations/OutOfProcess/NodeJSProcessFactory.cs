@@ -29,6 +29,14 @@ namespace Jering.Javascript.NodeJS
             return new NodeJSProcess(CreateProcess(startInfo));
         }
 
+        /// <inheritdoc />
+        public INodeJSProcess Create(string serverScript, EventHandler exitedEventHandler)
+        {
+            ProcessStartInfo startInfo = CreateStartInfo(serverScript);
+
+            return new NodeJSProcess(CreateProcess(startInfo, exitedEventHandler));
+        }
+
         internal ProcessStartInfo CreateStartInfo(string nodeServerScript)
         {
             nodeServerScript = EscapeCommandLineArg(nodeServerScript); // TODO can we escape before embedding? Would avoid an allocation every time we start a NodeJS process.
@@ -63,24 +71,28 @@ namespace Jering.Javascript.NodeJS
             return startInfo;
         }
 
-        internal static Process CreateProcess(ProcessStartInfo startInfo)
+        internal static Process CreateProcess(ProcessStartInfo startInfo, EventHandler? exitedEventHandler = null)
         {
             try
             {
-                var process = Process.Start(startInfo);
-
-                if (process != null)
+                var process = new Process
                 {
+                    StartInfo = startInfo,
                     // On Mac at least, a killed child process is left open as a zombie until the parent
                     // captures its exit code. We don't need the exit code for this process, and don't want
                     // to use process.WaitForExit() explicitly (we'd have to block the thread until it really
                     // has exited), but we don't want to leave zombies lying around either. It's sufficient
                     // to use process.EnableRaisingEvents so that .NET will grab the exit code and let the
                     // zombie be cleaned away without having to block our thread.
-                    process.EnableRaisingEvents = true;
-
-                    return process;
+                    EnableRaisingEvents = true,
+                };
+                if (exitedEventHandler != null)
+                {
+                    process.Exited += exitedEventHandler;
                 }
+                process.Start();
+
+                return process;
             }
             catch (Exception exception)
             {

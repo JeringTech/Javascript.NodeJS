@@ -19,5 +19,11 @@ namespace Jering.Javascript.NodeJS
         /// </summary>
         /// <param name="tasks">An array of Task instances on which to wait.</param>
         void WaitAll(params Task[] tasks);
+
+        /// <summary>
+        /// Creates a task that will complete when all of the <see cref="Task"/> objects in <paramref name="tasks"/> have completed.
+        /// </summary>
+        /// <param name="tasks">The tasks to wait on for completion.</param>
+        Task WhenAll(params Task[] tasks);
     }
 }

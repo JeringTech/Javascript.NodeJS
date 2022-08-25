@@ -19,7 +19,7 @@ namespace Jering.Javascript.NodeJS {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Strings {
@@ -89,6 +89,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected a StreamReader..
+        /// </summary>
+        internal static string ArgumentException_NodeJSProcess_ExpectedAStreamReader {
+            get {
+                return ResourceManager.GetString("ArgumentException_NodeJSProcess_ExpectedAStreamReader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The process has exited..
         /// </summary>
         internal static string ArgumentException_NodeJSProcess_ProcessHasExited {
@@ -125,7 +134,7 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}..
+        ///   Looks up a localized string similar to NodeJS connection attempt timed out after {0}ms. ProcessID: {1}. Process exited: {2}. Exit status: {3}..
         /// </summary>
         internal static string ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut {
             get {
@@ -139,6 +148,24 @@ namespace Jering.Javascript.NodeJS {
         internal static string ConnectionException_OutOfProcessNodeJSService_FailedToConnect {
             get {
                 return ResourceManager.GetString("ConnectionException_OutOfProcessNodeJSService_FailedToConnect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Process with ID {0} exited before connecting..
+        /// </summary>
+        internal static string ConnectionException_OutOfProcessNodeJSService_ProcessExitedBeforeConnecting {
+            get {
+                return ResourceManager.GetString("ConnectionException_OutOfProcessNodeJSService_ProcessExitedBeforeConnecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation count below minimum. This might be because ExitBlock is being called more than once for some EnterBlockAsync invocations. It could also be because DrainBlockAndPreventEntryAsync is being called multiple times without calls to ResetAfterDraining in between..
+        /// </summary>
+        internal static string InvalidOperationException_BlockDrain_OperationCountBelowMinimum {
+            get {
+                return ResourceManager.GetString("InvalidOperationException_BlockDrain_OperationCountBelowMinimum", resourceCulture);
             }
         }
         
@@ -192,7 +219,7 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error..
+        ///   Looks up a localized string similar to Invocation timed out after {0}ms. You can change the timeout duration by setting {1}.{2}. Do ensure that your NodeJS function invokes its callback (or throws an exception if it is an async function)..
         /// </summary>
         internal static string InvocationException_OutOfProcessNodeJSService_InvocationTimedOut {
             get {
@@ -201,20 +228,38 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before set, thread ID: {0}..
+        ///   Looks up a localized string similar to Releasing process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeSet {
+        internal static string LogDebug_OutOfProcessNodeJSService_ReleasingProcessConnectionSemaphore {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeSet", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_ReleasingProcessConnectionSemaphore", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Before wait, thread ID: {0}..
+        ///   Looks up a localized string similar to Starting FileWatcher. Current process: {0}..
         /// </summary>
-        internal static string LogDebug_OutOfProcessNodeJSService_BeforeWait {
+        internal static string LogDebug_OutOfProcessNodeJSService_StartingFileWatcher {
             get {
-                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_BeforeWait", resourceCulture);
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_StartingFileWatcher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stopping FileWatcher. Current process: {0}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting on process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}..
+        /// </summary>
+        internal static string LogDebug_OutOfProcessNodeJSService_WaitingOnProcessConnectionSemaphore {
+            get {
+                return ResourceManager.GetString("LogDebug_OutOfProcessNodeJSService_WaitingOnProcessConnectionSemaphore", resourceCulture);
             }
         }
         
@@ -255,6 +300,15 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Process exited before connecting..
+        /// </summary>
+        internal static string LogInformation_ProcessExitedBeforeConnecting {
+            get {
+                return ResourceManager.GetString("LogInformation_ProcessExitedBeforeConnecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An attempt to connect to NodeJS failed. Retries remaining: {0}.
         ///Exception:
         ///  {1}.
@@ -282,6 +336,15 @@ namespace Jering.Javascript.NodeJS {
         internal static string LogWarning_RetriesInExistingProcessExhausted {
             get {
                 return ResourceManager.GetString("LogWarning_RetriesInExistingProcessExhausted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use MoveToNewProcessAsync instead since it allows for asynchronous waiting..
+        /// </summary>
+        internal static string Obsolete_MoveToNewProcess {
+            get {
+                return ResourceManager.GetString("Obsolete_MoveToNewProcess", resourceCulture);
             }
         }
     }

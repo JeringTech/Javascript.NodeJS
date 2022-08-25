@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,8 +49,8 @@ namespace Jering.Javascript.NodeJS
         /// <param name="httpContentFactory">The factory for creating <see cref="HttpContent"/>s.</param>
         /// <param name="embeddedResourcesService">The service for retrieving NodeJS Http server scripts.</param>
         /// <param name="fileWatcherFactory">The service for creating <see cref="IFileWatcher"/>s</param>
-        /// <param name="monitorService">The service for lock-based thread synchronization.</param>
         /// <param name="taskService">The service for utilizing tasks.</param>
+        /// <param name="blockDrainerService">The service for draining code blocks.</param>
         /// <param name="httpClientService">The service for utilizing <see cref="HttpClient"/>.</param>
         /// <param name="jsonService">The service for JSON serialization and deserialization.</param>
         /// <param name="nodeJSProcessFactory">The factory for creating <see cref="NodeJSProcess"/>s.</param>
@@ -61,8 +60,8 @@ namespace Jering.Javascript.NodeJS
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
             IFileWatcherFactory fileWatcherFactory,
-            IMonitorService monitorService,
             ITaskService taskService,
+            IBlockDrainerService blockDrainerService,
             IHttpClientService httpClientService,
             IJsonService jsonService,
             INodeJSProcessFactory nodeJSProcessFactory,
@@ -72,8 +71,8 @@ namespace Jering.Javascript.NodeJS
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
                 fileWatcherFactory,
-                monitorService,
                 taskService,
+                blockDrainerService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,
 #if NETCOREAPP3_1 || NET5_0_OR_GREATER
                 httpNodeJSServiceOptionsAccessor.Value.Version == HttpVersion.Version20 ? HTTP20_SERVER_SCRIPT_NAME : HTTP11_SERVER_SCRIPT_NAME)

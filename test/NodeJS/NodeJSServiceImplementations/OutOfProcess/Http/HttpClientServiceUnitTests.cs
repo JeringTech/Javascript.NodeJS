@@ -14,10 +14,10 @@ namespace Jering.Javascript.NodeJS.Tests
 
         [Theory]
         [MemberData(nameof(Constructor_SetsTimeout_Data))]
-        public void Constructor_SetsTimeout(int dummyTimeoutMS, TimeSpan expectedTimeoutMS)
+        public void Constructor_SetsTimeout(int dummyInvocationTimeoutMS, TimeSpan expectedInvocationTimeoutMS)
         {
             // Arrange
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { TimeoutMS = dummyTimeoutMS };
+            var dummyOptions = new OutOfProcessNodeJSServiceOptions() { InvocationTimeoutMS = dummyInvocationTimeoutMS };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
             using var dummyHttpClient = new HttpClient();
@@ -27,15 +27,16 @@ namespace Jering.Javascript.NodeJS.Tests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(expectedTimeoutMS, result.Timeout);
+            Assert.Equal(expectedInvocationTimeoutMS, result.Timeout);
         }
 
         public static IEnumerable<object[]> Constructor_SetsTimeout_Data()
         {
             return new object[][]
             {
-                // -1 == infinite
+                // < 0 == infinite
                 new object[]{ -1, Timeout.InfiniteTimeSpan},
+                new object[]{ -2, Timeout.InfiniteTimeSpan},
                 // All other values == value + 1000
                 new object[]{ 0, TimeSpan.FromMilliseconds(1000)},
                 new object[]{ 1000, TimeSpan.FromMilliseconds(2000)}

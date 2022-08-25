@@ -8,12 +8,19 @@ namespace Jering.Javascript.NodeJS
     /// </summary>
     public class OutOfProcessNodeJSServiceOptions
     {
-        /// <summary>The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations.</summary>
+        /// <summary>The maximum duration to wait for the NodeJS process to connect.</summary>
         /// <remarks>
         /// <para>If this value is negative, the maximum duration is infinite.</para>
-        /// <para>Defaults to 60000.</para>
+        /// <para>Defaults to <c>5000</c>.</para>
         /// </remarks>
-        public int TimeoutMS { get; set; } = 60000;
+        public int ConnectionTimeoutMS { get; set; } = 5000;
+
+        /// <summary>The maximum duration to wait for responses to invocations.</summary>
+        /// <remarks>
+        /// <para>If this value is negative, the maximum duration is infinite.</para>
+        /// <para>Defaults to <c>100,000</c>.</para>
+        /// </remarks>
+        public int InvocationTimeoutMS { get; set; } = 100_000;
 
         /// <summary>The number of times a NodeJS process retries an invocation.</summary>
         /// <remarks>
@@ -51,9 +58,9 @@ namespace Jering.Javascript.NodeJS
         /// <summary>Number of times the library retries NodeJS connection attempts.</summary>
         /// <remarks>
         /// <para>If this value is negative, connection attempts are retried indefinitely.</para>
-        /// <para>Defaults to 1.</para>
+        /// <para>Defaults to 2.</para>
         /// </remarks>
-        public int NumConnectionRetries { get; set; } = 1;
+        public int NumConnectionRetries { get; set; } = 2;
 
         /// <summary>The concurrency mode for invocations.</summary>
         /// <remarks>

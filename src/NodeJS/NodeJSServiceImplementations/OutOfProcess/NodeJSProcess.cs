@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Threading;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -69,6 +71,77 @@ namespace Jering.Javascript.NodeJS
             _internalOutputDataReceivedHandlerAdded = false;
             _errorDataStringBuilder = errorDataStringBuilder;
             _internalErrorDataReceivedHandlerAdded = false;
+        }
+
+        // This and the following two methods are derived from https://github.com/PowerShell/PowerShell/pull/11713/files to remedy the issue described here:
+        // https://github.com/PowerShell/PowerShell/issues/11659
+        /// <inheritdoc/>
+        public void BeginOutputAndErrorReading()
+        {
+            var outputThread = new Thread(OutputThreadStart)
+            {
+                IsBackground = true,
+                Name = "NodeJSStdOutReader"
+            };
+
+            var errorThread = new Thread(ErrorThreadStart)
+            {
+                IsBackground = true,
+                Name = "NodeJSStdErrReader"
+            };
+
+            outputThread.Start(_process.StandardOutput);
+            errorThread.Start(_process.StandardError);
+        }
+
+        private void OutputThreadStart(object? arg)
+        {
+            if(arg is not StreamReader streamReader)
+            {
+                // Should not get here
+                throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ExpectedAStreamReader, nameof(arg));
+            }
+
+            try
+            {
+                string? data;
+                while ((data = streamReader.ReadLine()) != null)
+                {
+                    if (TryCreateMessage(_outputDataStringBuilder, data, out string? message))
+                    {
+                        _outputReceivedHandler!(message);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // Treat this as EOF, the same as what 'Process.BeginOutputReadLine()' does.
+            }
+        }
+
+        private void ErrorThreadStart(object? arg)
+        {
+            if (arg is not StreamReader streamReader)
+            {
+                // Should not get here
+                throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ExpectedAStreamReader, nameof(arg));
+            }
+
+            try
+            {
+                string? data;
+                while ((data = streamReader.ReadLine()) != null)
+                {
+                    if (TryCreateMessage(_errorDataStringBuilder, data, out string? message))
+                    {
+                        _errorReceivedHandler!(message);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // Treat this as EOF, the same as what 'Process.BeginErrorReadLine()' does.
+            }
         }
 
         /// <inheritdoc />
@@ -172,7 +245,7 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public void Kill()
         {
-            _process?.Kill();
+            _process.Kill();
         }
 
         /// <inheritdoc />
@@ -265,6 +338,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>
         /// Kills and disposes of the NodeJS process.
         /// </summary>
+        /// <remarks>This method is thread-safe.</remarks>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
@@ -281,20 +355,19 @@ namespace Jering.Javascript.NodeJS
 
                 if (disposing) // If this method was called by a finalizer, we shouldn't try to release managed resources - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-disposeboolean-overload
                 {
-                    // A finalizer can run even if an object's constructor never completed, so use null conditional operator
-                    try
+                    // A finalizer can run even if an object's constructor never completed, to be safe, use null conditional operator.
+                    if (_process?.HasExited == false)
                     {
-                        Kill();
-                        _process?.WaitForExit(500); // Give async output some time to push its messages
+                        try
+                        {
+                            _process?.Kill();
+                        }
+                        catch
+                        {
+                            // Throws if process is already dead, note that process could die between HasExited check and Kill
+                        }
                     }
-                    catch
-                    {
-                        // Do nothing if we catch an exception, since if kill fails the process is already dead
-                    }
-                    finally
-                    {
-                        _process?.Dispose();
-                    }
+                    _process?.Dispose();
                 }
 
                 _disposed = true;
