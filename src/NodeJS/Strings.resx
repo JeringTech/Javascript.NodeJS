@@ -149,16 +149,16 @@
     <value>Received a HTTP response with an unexpected status code: {0}.</value>
   </data>
   <data name="ConnectionException_OutOfProcessNodeJSService_ConnectionAttemptTimedOut" xml:space="preserve">
-    <value>Attempt to connect to Node timed out after {0}ms. Process exited: {1}. Exit status: {2}.</value>
+    <value>NodeJS connection attempt timed out after {0}ms. ProcessID: {1}. Process exited: {2}. Exit status: {3}.</value>
   </data>
   <data name="InvocationException_OutOfProcessNodeJSService_InvocationTimedOut" xml:space="preserve">
-    <value>The Node invocation timed out after {0}ms. You can change the timeout duration by setting the {1} property on {2}. Do ensure that your NodeJS function always invokes the callback (or throws an exception synchronously), even if it encounters an error.</value>
+    <value>Invocation timed out after {0}ms. You can change the timeout duration by setting {1}.{2}. Do ensure that your NodeJS function invokes its callback (or throws an exception if it is an async function).</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeSet" xml:space="preserve">
-    <value>Before set, thread ID: {0}.</value>
+  <data name="LogDebug_OutOfProcessNodeJSService_ReleasingProcessConnectionSemaphore" xml:space="preserve">
+    <value>Releasing process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}.</value>
   </data>
-  <data name="LogDebug_OutOfProcessNodeJSService_BeforeWait" xml:space="preserve">
-    <value>Before wait, thread ID: {0}.</value>
+  <data name="LogDebug_OutOfProcessNodeJSService_WaitingOnProcessConnectionSemaphore" xml:space="preserve">
+    <value>Waiting on process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}.</value>
   </data>
   <data name="LogWarning_InvocationAttemptFailed" xml:space="preserve">
     <value>An invocation attempt failed. Retries using existing process remaining: {0}.
@@ -196,5 +196,20 @@ Exception:
   </data>
   <data name="InvalidOperations_EmbeddedResourcesService_NoEmbeddedResourceWithSpecifiedName" xml:space="preserve">
     <value>No embedded resource with specified name: {0}.</value>
+  </data>
+  <data name="ConnectionException_OutOfProcessNodeJSService_ProcessExitedBeforeConnecting" xml:space="preserve">
+    <value>Process with ID {0} exited before connecting.</value>
+  </data>
+  <data name="LogInformation_ProcessExitedBeforeConnecting" xml:space="preserve">
+    <value>Process exited before connecting.</value>
+  </data>
+  <data name="InvalidOperationException_BlockDrain_OperationCountBelowMinimum" xml:space="preserve">
+    <value>Operation count below minimum. This might be because ExitBlock is being called more than once for some EnterBlockAsync invocations. It could also be because DrainBlockAndPreventEntryAsync is being called multiple times without calls to ResetAfterDraining in between.</value>
+  </data>
+  <data name="Obsolete_MoveToNewProcess" xml:space="preserve">
+    <value>Use MoveToNewProcessAsync instead since it allows for asynchronous waiting.</value>
+  </data>
+  <data name="ArgumentException_NodeJSProcess_ExpectedAStreamReader" xml:space="preserve">
+    <value>Expected a StreamReader.</value>
   </data>
 </root>

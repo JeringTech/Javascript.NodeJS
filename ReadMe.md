@@ -1219,11 +1219,13 @@ Thrown if this instance is disposed or if it attempts to use a disposed dependen
 `OperationCanceledException`  
 Thrown if `cancellationToken` is cancelled.  
 
-##### INodeJSService.MoveToNewProcess()
+##### INodeJSService.MoveToNewProcessAsync()
 Moves subsequent invocations to a new NodeJS process.  
 ```csharp
-void MoveToNewProcess()
+ValueTask MoveToNewProcessAsync()
 ```
+###### Returns
+The `ValueTask` representing the asynchronous operation.  
 ###### Remarks
 This method exposes the system used by file watching (see `OutOfProcessNodeJSServiceOptions.EnableFileWatching`) and process retries 
 (see `OutOfProcessNodeJSServiceOptions.NumProcessRetries`) to move to new processes.  
@@ -1231,6 +1233,8 @@ This method exposes the system used by file watching (see `OutOfProcessNodeJSSer
 When is access to this system useful? Consider the situation where your application uses file watching.
 If your application knows when files change (e.g. your application is the actor changing files) you can manually invoke this method instead of using file 
 watching. This enables you to avoid the overhead of file watching.  
+
+You do not need to await this method. Subsequent invocations are wait asynchronously until the new process is ready.  
 
 The method respects `OutOfProcessNodeJSServiceOptions.GracefulProcessShutdown`.  
 <!-- INodeJSService generated docs -->
@@ -1303,15 +1307,24 @@ and "production" otherwise.
 public OutOfProcessNodeJSServiceOptions()
 ```
 #### Properties
-##### OutOfProcessNodeJSServiceOptions.TimeoutMS
-The maximum duration to wait for the NodeJS process to connect and to wait for responses to invocations.  
+##### OutOfProcessNodeJSServiceOptions.ConnectionTimeoutMS
+The maximum duration to wait for the NodeJS process to connect.  
 ```csharp
-public int TimeoutMS { get; set; }
+public int ConnectionTimeoutMS { get; set; }
 ```
 ###### Remarks
 If this value is negative, the maximum duration is infinite.  
 
-Defaults to 3000.  
+Defaults to `5000`.  
+##### OutOfProcessNodeJSServiceOptions.InvocationTimeoutMS
+The maximum duration to wait for responses to invocations.  
+```csharp
+public int InvocationTimeoutMS { get; set; }
+```
+###### Remarks
+If this value is negative, the maximum duration is infinite.  
+
+Defaults to `100,000`.  
 ##### OutOfProcessNodeJSServiceOptions.NumRetries
 The number of times a NodeJS process retries an invocation.  
 ```csharp

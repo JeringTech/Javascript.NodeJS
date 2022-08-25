@@ -32,8 +32,8 @@ namespace Jering.Javascript.NodeJS
                 AddSingleton<IJsonService, JsonService>().
                 AddSingleton<IEnvironmentService, EnvironmentService>().
                 AddSingleton<IFileWatcherFactory, FileWatcherFactory>().
-                AddSingleton<IMonitorService, MonitorService>().
-                AddSingleton<ITaskService, TaskService>();
+                AddSingleton<ITaskService, TaskService>().
+                AddTransient<IBlockDrainerService, BlockDrainerService>();
 #if NETCOREAPP3_1
             // If not called, framework forces HTTP/1.1 so long as origin isn't https
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);

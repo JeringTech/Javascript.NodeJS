@@ -94,7 +94,11 @@ namespace Jering.Javascript.NodeJS.Tests
             Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
             string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+#if NET461
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
+#else
+            await File.WriteAllTextAsync(dummylongRunningTriggerPath, string.Empty).ConfigureAwait(false); // fs.watch returns immediately if path to watch doesn't exist
+#endif
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => {{
@@ -107,7 +111,11 @@ namespace Jering.Javascript.NodeJS.Tests
     }}
 }}";
             string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyInitialModule).ConfigureAwait(false);
+#endif
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
@@ -123,20 +131,24 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 getPidTasks[i] = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid");
             }
-            Task.WaitAll(getPidTasks);
-            int[] initialProcessID1s = getPidTasks.Select(task => task.Result).ToArray();
-            var initialProcesses = new Process[dummyNumProcesses];
-            for (int i = 0; i < dummyNumProcesses; i++)
+            await Task.WhenAll(getPidTasks).ConfigureAwait(false);
+            HashSet<int> initialProcessID1s = new(getPidTasks.Select(task => task.Result));
+            var initialProcesses = new List<Process>(dummyNumProcesses);
+            foreach (int initialProcessID in initialProcessID1s)
             {
                 // Create Process instances for initial processes so we can verify that they get killed
-                initialProcesses[i] = Process.GetProcessById(initialProcessID1s[i]);
+                initialProcesses.Add(Process.GetProcessById(initialProcessID));
             }
             var longRunningTasks = new Task<int>[dummyNumProcesses];
             for (int i = 0; i < dummyNumProcesses; i++)
             {
                 longRunningTasks[i] = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
             }
-            File.WriteAllText(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }");// Trigger shifts to new processes
+#if NET461
+            File.WriteAllText(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }"); // Trigger shifts to new processes
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }").ConfigureAwait(false); // Trigger shifts to new processes
+#endif
             // Wait for all processes to shift
             var newProcessIDs = new List<int>(dummyNumProcesses);
             do
@@ -149,12 +161,19 @@ namespace Jering.Javascript.NodeJS.Tests
             }
             while (newProcessIDs.Count != dummyNumProcesses); // Poll until we've shifted to new processes. If we don't successfully shift to new processes, test will timeout.
             // End long running invocations
+#if NET461
             File.AppendAllText(dummylongRunningTriggerPath, "dummyContent");
-            Task.WaitAll(longRunningTasks);
-            int[] initialProcessID2s = longRunningTasks.Select(task => task.Result).ToArray();
+#else
+            await File.AppendAllTextAsync(dummylongRunningTriggerPath, "dummyContent").ConfigureAwait(false);
+#endif
+            await Task.WhenAll(longRunningTasks).ConfigureAwait(false);
+            HashSet<int> initialProcessID2s = new(longRunningTasks.Select(task => task.Result));
             foreach (Process initialProcess in initialProcesses)
             {
-                initialProcess.WaitForExit(); // Should exit after the long running invocations complete
+                while (!initialProcess.HasExited) // Should exit after the long running invocations complete
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
             }
 
             // Assert
@@ -176,7 +195,11 @@ namespace Jering.Javascript.NodeJS.Tests
     longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
 }";
             string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").AbsolutePath;
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyInitialModule).ConfigureAwait(false);
+#endif
             var resultStringBuilder = new StringBuilder();
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
@@ -193,13 +216,13 @@ namespace Jering.Javascript.NodeJS.Tests
             {
                 getPidTasks[i] = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid");
             }
-            Task.WaitAll(getPidTasks);
-            int[] intialProcessIDs = getPidTasks.Select(task => task.Result).ToArray();
-            var initialProcesses = new Process[dummyNumProcesses];
-            for (int i = 0; i < dummyNumProcesses; i++)
+            await Task.WhenAll(getPidTasks).ConfigureAwait(false);
+            HashSet<int> initialProcessIDs = new(getPidTasks.Select(task => task.Result));
+            var initialProcesses = new List<Process>(dummyNumProcesses);
+            foreach(int initialProcessID in initialProcessIDs)
             {
                 // Create Process instances for initial processes so we can verify that they get killed
-                initialProcesses[i] = Process.GetProcessById(intialProcessIDs[i]);
+                initialProcesses.Add(Process.GetProcessById(initialProcessID));
             }
             var longRunningTasks = new Task<int>[dummyNumProcesses];
             for (int i = 0; i < dummyNumProcesses; i++)
@@ -211,26 +234,33 @@ namespace Jering.Javascript.NodeJS.Tests
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => callback(null, process.pid)
 }";
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyNewModule);
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyNewModule).ConfigureAwait(false);
+#endif
             // Wait for initial processes to exit
             foreach (Process initialProcess in initialProcesses)
             {
-                initialProcess.WaitForExit();
+                while (!initialProcess.HasExited) // Should exit after the long running invocations complete
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
             }
             // Wait for all processes to shift
             var newProcessID1s = new List<int>(dummyNumProcesses);
             do
             {
                 int newProcessID = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
-                if (!intialProcessIDs.Contains(newProcessID) && !newProcessID1s.Contains(newProcessID))
+                if (!initialProcessIDs.Contains(newProcessID) && !newProcessID1s.Contains(newProcessID))
                 {
                     newProcessID1s.Add(newProcessID);
                 }
             }
             while (newProcessID1s.Count != dummyNumProcesses); // Poll until we've shifted to new processes. If we don't successfully shift to new processes, test will timeout.
             // Because graceful shutdown is disabled, long running invocations should fail in initial processes and retry successfully in new processes
-            Task.WaitAll(longRunningTasks);
-            int[] newProcessID2s = longRunningTasks.Select(task => task.Result).ToArray();
+            await Task.WhenAll(longRunningTasks).ConfigureAwait(false);
+            HashSet<int> newProcessID2s = new(longRunningTasks.Select(task => task.Result));
 
             // Assert
             string resultLog = resultStringBuilder.ToString();

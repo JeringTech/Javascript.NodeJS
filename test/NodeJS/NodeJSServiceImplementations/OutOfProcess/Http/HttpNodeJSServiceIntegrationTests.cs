@@ -952,7 +952,7 @@ module.exports = (callback) => {
     // Does not work
     // process.stdout.write('', 'utf8', () => callback());
 }}").ConfigureAwait(false);
-            Thread.Sleep(1000);
+            await Task.Delay(1000).ConfigureAwait(false);
             ((IDisposable)_serviceProvider!).Dispose();
             string result = resultStringBuilder.ToString();
 
@@ -994,7 +994,7 @@ module.exports = (callback) => {
             console.error({dummyLogArgument}); 
             callback();
         }}").ConfigureAwait(false);
-            Thread.Sleep(1000);
+            await Task.Delay(1000).ConfigureAwait(false);
             ((IDisposable)_serviceProvider!).Dispose(); // _serviceProvider created by CreateHttpNodeJSService
             string result = resultStringBuilder.ToString();
 
@@ -1036,7 +1036,7 @@ module.exports = (callback) => {{
             using Stream? resultStream = await testSubject.InvokeFromStringAsync<Stream>(dummyModule).ConfigureAwait(false);
             Assert.NotNull(resultStream);
             using var streamReader = new StreamReader(resultStream!); // Assert.NotNull throws if resultStream is null
-            string result = streamReader.ReadToEnd();
+            string result = await streamReader.ReadToEndAsync().ConfigureAwait(false);
             Assert.Equal(dummyData, result);
         }
 
@@ -1051,7 +1051,11 @@ module.exports = (callback) => {{
             Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
             string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+#if NET461
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
+#else
+            await File.WriteAllTextAsync(dummylongRunningTriggerPath, string.Empty).ConfigureAwait(false); // fs.watch returns immediately if path to watch doesn't exist
+#endif
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => {{
@@ -1064,7 +1068,11 @@ module.exports = (callback) => {{
     }}
 }}";
             string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyInitialModule).ConfigureAwait(false);
+#endif
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
             {
@@ -1078,7 +1086,11 @@ module.exports = (callback) => {{
             int initialProcessID1 = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
             var initialProcess = Process.GetProcessById(initialProcessID1); // Create Process instance for initial process so we can verify that it gets killed
             Task<int> longRunningTask = testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "longRunning");
+#if NET461
             File.WriteAllText(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }"); // Trigger shift to new process
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, "module.exports = { getPid: (callback) => callback(null, process.pid) }").ConfigureAwait(false); // Trigger shift to new process
+#endif
             int newProcessID;
             do
             {
@@ -1088,7 +1100,10 @@ module.exports = (callback) => {{
             // Because graceful shutdown is enabled, last process should still be alive after we shift, waiting for longRunning to end
             File.AppendAllText(dummylongRunningTriggerPath, "dummyContent"); // End long running invocation
             int initialProcessID2 = await longRunningTask.ConfigureAwait(false);
-            initialProcess.WaitForExit(); // Should exit after the long running invocation completes
+            while (!initialProcess.HasExited) // Should exit after the long running invocation completes
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
 
             // Assert
             Assert.Equal(initialProcessID1, initialProcessID2); // Long running invocation should complete in initial process
@@ -1105,7 +1120,11 @@ module.exports = (callback) => {{
     longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
 }";
             string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").AbsolutePath;
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyInitialModule).ConfigureAwait(false);
+#endif
             var resultStringBuilder = new StringBuilder();
             var dummyServices = new ServiceCollection();
             dummyServices.Configure<OutOfProcessNodeJSServiceOptions>(options =>
@@ -1124,14 +1143,21 @@ module.exports = (callback) => {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => callback(null, process.pid)
 }";
+#if NET461
             File.WriteAllText(dummyModuleFilePath, dummyNewModule); // Trigger shift to new process
+#else
+            await File.WriteAllTextAsync(dummyModuleFilePath, dummyNewModule).ConfigureAwait(false);  // Trigger shift to new process
+#endif
             int newProcessID1;
             do
             {
                 newProcessID1 = await testSubject.InvokeFromFileAsync<int>(dummyModuleFilePath, "getPid").ConfigureAwait(false);
             }
             while (newProcessID1 == initialProcessID); // Poll until we've shifted to new process. If we don't successfully shift to a new process, test will timeout.
-            initialProcess.WaitForExit(); // Exits before long running invocation completes
+            while (!initialProcess.HasExited) // Exits before long running invocation completes
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
             // Because graceful shutdown is disabled, long running invocation should fail in initial process and retry successfully in new process
             int newProcessID2 = await longRunningTask.ConfigureAwait(false);
 
@@ -1142,7 +1168,7 @@ module.exports = (callback) => {{
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
-        public async void MoveToNewProcess_MovesToNewProcess()
+        public async void MoveToNewProcessAsync_MovesToNewProcess()
         {
             // Arrange
             // Create initial module
@@ -1152,8 +1178,11 @@ module.exports = (callback) => {{
             // Act
             int initialProcessID = await testSubject.InvokeFromStringAsync<int>(dummyModule).ConfigureAwait(false);
             var initialProcess = Process.GetProcessById(initialProcessID); // Create Process instance for initial process so we can verify that it gets killed
-            testSubject.MoveToNewProcess();
-            initialProcess.WaitForExit(); // If we don't successfully shift to a new process, test will timeout.
+            await testSubject.MoveToNewProcessAsync().ConfigureAwait(false);
+            while (!initialProcess.HasExited) // If we don't successfully shift to a new process, test will timeout.
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
             int newProcessID = await testSubject.InvokeFromStringAsync<int>(dummyModule).ConfigureAwait(false);
 
             // Assert
