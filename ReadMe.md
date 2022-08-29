@@ -354,8 +354,8 @@ services.Configure<NodeJSProcessOptions>(options => options.NodeAndV8Options = "
 
 // Options for the INodeJSService implementation
 // - HttpNodeJSService is the default INodeJSService implementation. It communicates with the NodeJS process via HTTP. Below, we set the HTTP version it uses to HTTP/2.0.
-// - HttpNodeJSService extends OutOfProcessNodeJSService, an abstraction for NodeJS process management. Below we set the timeout for connecting to the NodeJS process and for invocations to -1 (infinite).
-services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
+// - HttpNodeJSService extends OutOfProcessNodeJSService, an abstraction for NodeJS process management. Below we set the timeout for invocations to -1 (infinite).
+services.Configure<OutOfProcessNodeJSServiceOptions>(options => options.InvocationTimeoutMS = -1);
 services.Configure<HttpNodeJSServiceOptions>(options => options.Version = HttpVersion.Version20);
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
@@ -377,8 +377,8 @@ StaticNodeJSService.Configure<NodeJSProcessOptions>(options => options.NodeAndV8
 
 // Options for the INodeJSService implementation
 // - HttpNodeJSService is the default INodeJSService implementation. It communicates with the NodeJS process via HTTP. Below, we set the HTTP version it uses to HTTP/2.0.
-// - HttpNodeJSService extends OutOfProcessNodeJSService, an abstraction for NodeJS process management. Below we set the timeout for connecting to the NodeJS process and for invocations to -1 (infinite).
-StaticNodeJSService.Configure<OutOfProcessNodeJSServiceOptions>(options => options.TimeoutMS = -1);
+// - HttpNodeJSService extends OutOfProcessNodeJSService, an abstraction for NodeJS process management. Below we set the timeout for invocations to -1 (infinite).
+StaticNodeJSService.Configure<OutOfProcessNodeJSServiceOptions>(options => options.InvocationTimeoutMS = -1);
 StaticNodeJSService.Configure<HttpNodeJSServiceOptions>(options => options.Version = HttpVersion.Version20);
 ```
 
@@ -392,7 +392,7 @@ We recommend making these configurations at application startup since:
 ### Debugging Javascript
 Follow these steps to debug javascript invoked using `INodeJSService`:
 1. Add [`debugger`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger) statements to your javascript module.
-2. Configure the following options: `NodeJSProcessOptions.NodeAndV8Options` = `--inspect-brk` and `OutOfProcessNodeJSServiceOptions.TimeoutMS` = `-1`.
+2. Configure the following options: `NodeJSProcessOptions.NodeAndV8Options` = `--inspect-brk` and `OutOfProcessNodeJSServiceOptions.InvocationTimeoutMS` = `-1`.
 3. Create an `INodeJSService` (or use `StaticNodeJSService`).
 4. Call a [javascript invoking method](#methods). 
 5. Navigate to `chrome://inspect/` in Chrome.
