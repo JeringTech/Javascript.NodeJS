@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net5.0;net6.0;netcoreapp3.1;net461</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net5.0;net6.0;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net5.0;net6.0;netcoreapp3.1;net461;net7.0</TargetFrameworks>
+        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net5.0;net6.0;netcoreapp3.1;net7.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <DefaultItemExcludes>Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>

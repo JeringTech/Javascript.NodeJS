@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp3.1;net461;net5.0;net6.0</TargetFrameworks>
-        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard2.0;net5.0;netcoreapp3.1;net6.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netcoreapp3.1;net461;net5.0;net6.0;net7.0</TargetFrameworks>
+        <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard2.0;net5.0;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
         <PackageId>Jering.Javascript.NodeJS</PackageId>
         <Authors>JeremyTCD</Authors>
         <Title>Invoke Javascript in NodeJS, from C#</Title>
