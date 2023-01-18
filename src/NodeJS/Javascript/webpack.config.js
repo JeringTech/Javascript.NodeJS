@@ -18,6 +18,7 @@ module.exports = env => {
         },
         entry: env.entry,
         output: {
+            hashFunction: 'xxhash64',
             libraryTarget: 'commonjs2',
             path: path.join(__dirname, 'bin', env.mode),
             filename: path.basename(env.entry, path.extname(env.entry)) + '.js'
