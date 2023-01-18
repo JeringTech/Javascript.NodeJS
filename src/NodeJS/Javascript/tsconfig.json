@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
+        "target": "es2022",
+        "module": "es2022",
+        "esModuleInterop": true,
         "moduleResolution": "node",
         "typeRoots": [ "node_modules/@types" ],
         "types": [ "node" ]
