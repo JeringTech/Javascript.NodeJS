@@ -1,4 +1,4 @@
-﻿import path = require("path");
+﻿const path = require("path");
 import * as http from 'http';
 import * as http2 from 'http2';
 import InvocationRequest from "../../../InvocationData/InvocationRequest";

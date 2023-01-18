@@ -23,12 +23,13 @@ namespace Jering.Javascript.NodeJS.Tests
     public sealed class HttpNodeJSServiceIntegrationTests : IDisposable
     {
         // Set to true to break in NodeJS (see CreateHttpNodeJSService)
-        private const bool DEBUG_NODEJS = false;
-        // Set to -1 when debugging in NodeJS
-        private const int TIMEOUT_MS = 60000;
+        private const bool DEBUG_NODEJS = true;
+        private const int TIMEOUT_MS = DEBUG_NODEJS  ? - 1 : 60000;
 
         // Modules
         private const string DUMMY_RETURNS_ARG_MODULE_FILE = "dummyReturnsArgModule.js";
+        private const string DUMMY_SINGLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummySingleFunctionExportECMAScriptModule.mjs";
+        private const string DUMMY_MULTIPLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummyMultipleFunctionExportECMAScriptModule.mjs";
         private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
         private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
         private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
@@ -182,6 +183,34 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             int result = await testSubject.InvokeFromFileAsync<int>(DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE, "getNumber").ConfigureAwait(false);
             Assert.Equal(numThreads, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WorksForSingleFunctionExportEcmaScriptModule()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            int result = await testSubject.InvokeFromFileAsync<int>(DUMMY_SINGLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE, args: new object[] {1, 2}).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(3, result);
+        }
+
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WorksForMultipleFunctionExportEcmaScriptModule()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+            // Act
+            int result1 = await testSubject.InvokeFromFileAsync<int>(DUMMY_MULTIPLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE, "subtract", new object[] { 1, 2 }).ConfigureAwait(false);
+            int result2 = await testSubject.InvokeFromFileAsync<int>(DUMMY_MULTIPLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE, "add", new object[] { 1, 2 }).ConfigureAwait(false);
+
+            // Assert
+            Assert.Equal(-1, result1);
+            Assert.Equal(3, result2);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
