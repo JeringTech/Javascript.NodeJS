@@ -1094,7 +1094,11 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyConnectionTimeoutMS = 100; // Arbitrary, we release the semaphoreSlim before we wait on it
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             Mock<INodeJSProcess> mockInitialNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+#if NET5_0 || NET6_0 || NET7_0
+            mockInitialNodeJSProcess.Setup(n => n.DisposeAsync());
+#else
             mockInitialNodeJSProcess.Setup(n => n.Dispose());
+#endif
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
             mockNodeJSProcessFactory.Setup(n => n.Create(It.IsAny<string>(), It.IsAny<EventHandler>())).Returns(mockInitialNodeJSProcess.Object);
             Mock<INodeJSProcess> mockNewNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
@@ -1140,7 +1144,11 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<INodeJSProcess> mockNewNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNewNodeJSProcess.Setup(n => n.SafeID).Returns(dummyProcessID);
             mockNewNodeJSProcess.Setup(n => n.HasExited).Returns(true);
+#if NET5_0 || NET6_0 || NET7_0
+            mockNewNodeJSProcess.Setup(n => n.DisposeAsync());
+#else
             mockNewNodeJSProcess.Setup(n => n.Dispose());
+#endif
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { ConnectionTimeoutMS = dummyConnectionTimeoutMS, NumConnectionRetries = dummyNumConnectionRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
@@ -1165,7 +1173,11 @@ namespace Jering.Javascript.NodeJS.Tests
                 Assert.Contains(string.Format(Strings.LogWarning_ConnectionAttemptFailed, dummyNumConnectionRetries, new ConnectionException(expectedResultExceptionMessage)), logResult);
             }
             _mockRepository.VerifyAll();
+#if NET5_0 || NET6_0 || NET7_0
+            mockNewNodeJSProcess.Verify(n => n.DisposeAsync(), Times.Exactly(dummyNumConnectionRetries * 2 + 1)); // Dispose called after failure, also called when retrying (we don't retry after the last failure)
+#else
             mockNewNodeJSProcess.Verify(n => n.Dispose(), Times.Exactly(dummyNumConnectionRetries * 2 + 1)); // Dispose called after failure, also called when retrying (we don't retry after the last failure)
+#endif
             mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsNotNull<DisposeTrackingSemaphoreSlim>()), Times.Exactly(dummyNumConnectionRetries + 1)); // Once for first try, once for each retry
         }
 
@@ -1181,7 +1193,11 @@ namespace Jering.Javascript.NodeJS.Tests
             mockNewNodeJSProcess.Setup(n => n.SafeID).Returns(dummyProcessID);
             mockNewNodeJSProcess.Setup(n => n.HasExited).Returns(false);
             mockNewNodeJSProcess.Setup(n => n.ExitStatus).Returns(dummyExitStatus);
+#if NET5_0 || NET6_0 || NET7_0
+            mockNewNodeJSProcess.Setup(n => n.DisposeAsync());
+#else
             mockNewNodeJSProcess.Setup(n => n.Dispose());
+#endif
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { ConnectionTimeoutMS = dummyConnectionTimeoutMS, NumConnectionRetries = dummyNumConnectionRetries };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
@@ -1204,7 +1220,11 @@ namespace Jering.Javascript.NodeJS.Tests
                 Assert.Contains(string.Format(Strings.LogWarning_ConnectionAttemptFailed, dummyNumConnectionRetries, new ConnectionException(expectedResultExceptionMessage)), logResult);
             }
             _mockRepository.VerifyAll();
+#if NET5_0 || NET6_0 || NET7_0
+            mockNewNodeJSProcess.Verify(n => n.DisposeAsync(), Times.Exactly(dummyNumConnectionRetries * 2 + 1)); // Dispose called after failure, also called when retrying (we don't retry after the last failure)
+#else
             mockNewNodeJSProcess.Verify(n => n.Dispose(), Times.Exactly(dummyNumConnectionRetries * 2 + 1)); // Dispose called after failure, also called when retrying (we don't retry after the last failure)
+#endif
             mockTestSubject.Verify(t => t.CreateAndSetUpProcess(It.IsNotNull<DisposeTrackingSemaphoreSlim>()), Times.Exactly(dummyNumConnectionRetries + 1)); // Once for first try, once for each retry
         }
 
@@ -1479,7 +1499,11 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             Mock<INodeJSProcess> mockNewNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
+#if NET5_0 || NET6_0 || NET7_0
+            mockNewNodeJSProcess.Setup(n => n.DisposeAsync());
+#else
             mockNewNodeJSProcess.Setup(n => n.Dispose());
+#endif
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
             mockNodeJSProcessFactory.Setup(n => n.Create(It.IsAny<string>(), It.IsAny<EventHandler>())).Returns(mockNewNodeJSProcess.Object);
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(embeddedResourcesService: mockEmbeddedResourcesService.Object,

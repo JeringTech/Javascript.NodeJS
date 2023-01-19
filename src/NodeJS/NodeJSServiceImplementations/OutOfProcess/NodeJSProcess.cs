@@ -4,6 +4,7 @@ using System.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -23,7 +24,6 @@ namespace Jering.Javascript.NodeJS
         internal const string EXIT_STATUS_DISPOSED = "Process has been disposed";
 
         private readonly Process _process;
-        private readonly object _lock = new();
         private bool _connected;
         private volatile bool _disposed; // Used in double checked lock
         private readonly StringBuilder _outputDataStringBuilder;
@@ -32,6 +32,7 @@ namespace Jering.Javascript.NodeJS
         private readonly StringBuilder _errorDataStringBuilder;
         private MessageReceivedEventHandler? _errorReceivedHandler;
         private bool _internalErrorDataReceivedHandlerAdded;
+        private readonly SemaphoreSlim _lock = new(1, 1);
 
         /// <summary>
         /// Creates a <see cref="NodeJSProcess"/>.
@@ -96,7 +97,7 @@ namespace Jering.Javascript.NodeJS
 
         private void OutputThreadStart(object? arg)
         {
-            if(arg is not StreamReader streamReader)
+            if (arg is not StreamReader streamReader)
             {
                 // Should not get here
                 throw new ArgumentException(Strings.ArgumentException_NodeJSProcess_ExpectedAStreamReader, nameof(arg));
@@ -195,9 +196,14 @@ namespace Jering.Javascript.NodeJS
         /// <inheritdoc />
         public virtual void SetConnected()
         {
-            lock (_lock)
+            _lock.Wait();
+            try
             {
                 _connected = true;
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
 
@@ -206,14 +212,19 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                _lock.Wait();
+                try
                 {
-                    if (HasExited)
+                    if (HasExitedSync)
                     {
                         return _disposed ? EXIT_STATUS_DISPOSED : _process.ExitCode.ToString();
                     }
 
                     return EXIT_STATUS_NOT_EXITED;
+                }
+                finally
+                {
+                    _lock.Release();
                 }
             }
         }
@@ -223,9 +234,14 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                _lock.Wait();
+                try
                 {
-                    return _disposed || _process.HasExited;
+                    return HasExitedSync;
+                }
+                finally
+                {
+                    _lock.Release();
                 }
             }
         }
@@ -235,12 +251,19 @@ namespace Jering.Javascript.NodeJS
         {
             get
             {
-                lock (_lock)
+                _lock.Wait();
+                try
                 {
-                    return !HasExited && _connected;
+                    return !HasExitedSync && _connected;
+                }
+                finally
+                {
+                    _lock.Release();
                 }
             }
         }
+
+        private bool HasExitedSync => _disposed || _process.HasExited;
 
         /// <inheritdoc />
         public void Kill()
@@ -326,12 +349,72 @@ namespace Jering.Javascript.NodeJS
             return true;
         }
 
+#if NET5_0 || NET6_0 || NET7_0 // WaitForExitAsync is only available in .NET 5.0 and above
+        /// <summary>
+        /// Kills and disposes of the NodeJS process.
+        /// </summary>
+        /// <remarks>This method is thread-safe.</remarks>
+        public async ValueTask DisposeAsync()
+        {
+            // Perform async cleanup
+            await DisposeAsyncCore().ConfigureAwait(false);
+
+            // Suppress finalization
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Kills and disposes of the NodeJS process.
+        /// </summary>
+        /// <remarks>This method is thread-safe.</remarks>
+        protected virtual async ValueTask DisposeAsyncCore()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            await _lock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                if (_process.HasExited == false)
+                {
+                    try
+                    {
+                        _process.Kill();
+                        await _process.WaitForExitAsync().ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // Throws if process is already dead, note that process could die between HasExited check and Kill
+                    }
+                }
+                _process.Dispose();
+
+                _disposed = true;
+                _connected = false;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+#endif
+
         /// <summary>
         /// Kills and disposes of the NodeJS process.
         /// </summary>
         public void Dispose()
         {
+            // Perform sync cleanup
             Dispose(true);
+
+            // Suppress finalization
             GC.SuppressFinalize(this); // In case a sub class overrides Object.Finalize - https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-overload
         }
 
@@ -346,7 +429,8 @@ namespace Jering.Javascript.NodeJS
                 return;
             }
 
-            lock (_lock)
+            _lock.Wait();
+            try
             {
                 if (_disposed)
                 {
@@ -361,6 +445,7 @@ namespace Jering.Javascript.NodeJS
                         try
                         {
                             _process?.Kill();
+                            _process?.WaitForExit(); // Blocks
                         }
                         catch
                         {
@@ -372,6 +457,10 @@ namespace Jering.Javascript.NodeJS
 
                 _disposed = true;
                 _connected = false;
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
     }
