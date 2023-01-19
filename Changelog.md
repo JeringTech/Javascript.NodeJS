@@ -3,7 +3,14 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.1...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.2...HEAD)
+
+## [7.0.0-beta.2](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.1...7.0.0-beta.2) - Jan 19, 2023
+### Additions
+- `InvokeFromFileAsync` now supports `.mjs` files. ([#154](https://github.com/JeringTech/Javascript.NodeJS/pull/154)).
+- Added net7.0 target. ([#153](https://github.com/JeringTech/Javascript.NodeJS/pull/153)
+### Fixes
+- `NodeJSProcess.Dispose` now waits for Node.js process to exit. Added `NodeJSProcess.DisposeAsync` (net5.0 and later only) which waits for the exit asynchronously. ([#155](https://github.com/JeringTech/Javascript.NodeJS/pull/155)).
 
 ## [7.0.0-beta.1](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.0...7.0.0-beta.1) - Aug 26, 2022
 ### Changes
