@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		keypair.snk = keypair.snk
 		License.md = License.md
 		NuGet.Config = NuGet.Config
+		src\NodeJS\nuget_icon.png = src\NodeJS\nuget_icon.png
 		ReadMe.md = ReadMe.md
 		ThirdPartyLicenses.txt = ThirdPartyLicenses.txt
 	EndProjectSection

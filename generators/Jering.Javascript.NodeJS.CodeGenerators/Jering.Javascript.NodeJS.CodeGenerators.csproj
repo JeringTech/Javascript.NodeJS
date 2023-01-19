@@ -13,6 +13,7 @@
 		<RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>

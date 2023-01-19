@@ -18,7 +18,7 @@
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
         <RepositoryType>git</RepositoryType>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <PackageIconUrl>https://raw.githubusercontent.com/JeringTech/Javascript.NodeJS/master/nuget_icon.png</PackageIconUrl>
+        <PackageIcon>nuget_icon.png</PackageIcon>
         <Http11ServerFileName>Http11Server.js</Http11ServerFileName>
         <Http20ServerFileName>Http20Server.js</Http20ServerFileName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
@@ -69,6 +69,10 @@
         <!-- Documentation only needs to be generated once, for the latest framework -->
         <ProjectReference Condition=" '$(TargetFramework)' == 'net7.0' " Include="..\..\generators\Jering.Javascript.NodeJS.DocumentationGenerators\Jering.Javascript.NodeJS.DocumentationGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\nuget_icon.png" Pack="true" PackagePath="\"/>
+	</ItemGroup>
 
     <ItemGroup>
         <Compile Update="Strings.Designer.cs">
