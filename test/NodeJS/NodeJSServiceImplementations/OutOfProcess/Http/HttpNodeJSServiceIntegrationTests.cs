@@ -185,6 +185,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(numThreads, result);
         }
 
+        // WARNING: will fail randomly in Debug configuration if Node.js version is pre 19.0.0 - https://github.com/JeringTech/Javascript.NodeJS/issues/151#issuecomment-1396258748
         [Fact(Timeout = TIMEOUT_MS)]
         public async void InvokeFromFileAsync_WorksForSingleFunctionExportEcmaScriptModule()
         {
@@ -198,6 +199,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(3, result);
         }
 
+        // WARNING: will fail randomly in Debug configuration if Node.js version is pre 19.0.0 - https://github.com/JeringTech/Javascript.NodeJS/issues/151#issuecomment-1396258748
         [Fact(Timeout = TIMEOUT_MS)]
         public async void InvokeFromFileAsync_WorksForMultipleFunctionExportEcmaScriptModule()
         {

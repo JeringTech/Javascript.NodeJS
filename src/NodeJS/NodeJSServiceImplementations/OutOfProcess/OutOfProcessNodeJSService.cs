@@ -412,7 +412,14 @@ namespace Jering.Javascript.NodeJS
                 {
                     // If an exception is thrown below, between CreateAndSetUpProcess and returning from this method, we might retry despite having
                     // started a process. Call dispose to avoid such processes becoming orphans.
-                    _nodeJSProcess?.Dispose();
+                    if (_nodeJSProcess != null)
+                    {
+#if NET5_0 || NET6_0 || NET7_0
+                        await _nodeJSProcess.DisposeAsync().ConfigureAwait(false);
+#else
+                        _nodeJSProcess.Dispose();
+#endif
+                    }
 
                     // If the new process is created successfully, the semaphoreSlim is released by OutputReceivedHandler.
                     semaphoreSlim = new DisposeTrackingSemaphoreSlim(0, 1);
@@ -437,7 +444,11 @@ namespace Jering.Javascript.NodeJS
                         if (_nodeJSProcess.HasExited)
                         {
                             // Dispose
+#if NET5_0 || NET6_0 || NET7_0
+                            await _nodeJSProcess.DisposeAsync().ConfigureAwait(false);
+#else
                             _nodeJSProcess.Dispose();
+#endif
 
                             throw new ConnectionException(string.Format(Strings.ConnectionException_OutOfProcessNodeJSService_ProcessExitedBeforeConnecting, processId));
                         }
@@ -466,7 +477,11 @@ namespace Jering.Javascript.NodeJS
                         _nodeJSProcess.ExitStatus);
 
                     // Kills and disposes process
+#if NET5_0 || NET6_0 || NET7_0
+                    await _nodeJSProcess.DisposeAsync().ConfigureAwait(false);
+#else
                     _nodeJSProcess.Dispose();
+#endif
 
                     throw new ConnectionException(exceptionMessage);
                 }
@@ -663,7 +678,11 @@ namespace Jering.Javascript.NodeJS
                     {
                         Logger.LogInformation(string.Format(Strings.LogInformation_KillingNodeJSProcess, lastNodeJSProcess.SafeID));
                     }
+#if NET5_0 || NET6_0 || NET7_0
+                    await lastNodeJSProcess.DisposeAsync().ConfigureAwait(false);
+#else
                     lastNodeJSProcess.Dispose();
+#endif
                 }
             }
         }
@@ -687,7 +706,7 @@ namespace Jering.Javascript.NodeJS
             // _nodeJSProcess could be null if we receive a message from a ditched process.
             //
             // Note that we should not get a connection message for any process other than the current _nodeJSProcess
-            // because ConnectIfNotConnected is synchronous.
+            // because CreateNewProcessAndConnectAsync is never executed in parallel (for the same instance).
             if (_nodeJSProcess?.Connected == false && ConnectionEstablishedMessageRegex.Match(message) is { Success: true } match)
             {
                 OnConnectionEstablishedMessageReceived(match);

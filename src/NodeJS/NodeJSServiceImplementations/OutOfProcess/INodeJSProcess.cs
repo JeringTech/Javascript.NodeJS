@@ -14,7 +14,11 @@ namespace Jering.Javascript.NodeJS
     /// <item>This abstraction allows for more simpler and more thorough tests through mocking.</item>
     /// </list>
     /// </summary>
+#if NET5_0 || NET6_0 || NET7_0
+    public interface INodeJSProcess : IAsyncDisposable, IDisposable
+#else
     public interface INodeJSProcess : IDisposable
+#endif
     {
         /// <summary>
         /// <para>Adds a handler for output messages.</para>
