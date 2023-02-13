@@ -154,7 +154,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any, resAction?: (request: IHttpResponse) => boolean) => {
+                const callback = (error: Error | string, result: any, resAction?: (response: IHttpResponse) => boolean) => {
                     if (callbackCalled) {
                         return;
                     }
