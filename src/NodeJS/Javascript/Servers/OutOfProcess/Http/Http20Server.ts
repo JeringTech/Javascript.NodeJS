@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as stream from 'stream';
 import InvocationRequest from '../../../InvocationData/InvocationRequest';
 import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
-import { getTempIdentifier, respondWithError, setup } from './Shared';
+import {getTempIdentifier, IHttpResponse, respondWithError, setup} from './Shared';
 
 // Setup
 const [args, projectDir, moduleResolutionPaths] = setup();
@@ -140,7 +140,7 @@ function serverOnRequestListener(req: http2.Http2ServerRequest, res: http2.Http2
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any) => {
+                const callback = (error: Error | string, result: any, resAction?: (request: IHttpResponse) => boolean) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -148,7 +148,14 @@ function serverOnRequestListener(req: http2.Http2ServerRequest, res: http2.Http2
 
                     if (error != null) {
                         respondWithError(res, error);
-                    } else if (result instanceof stream.Readable) {
+                        return;
+                    }
+
+                    if (resAction?.(res)) {
+                        return;
+                    }
+                    
+                    if (result instanceof stream.Readable) {
                         // By default, res is ended when result ends - https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
                         result.pipe(res.stream);
                     } else if (typeof result === 'string') {

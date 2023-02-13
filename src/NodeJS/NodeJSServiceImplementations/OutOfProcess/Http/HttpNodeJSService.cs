@@ -157,6 +157,10 @@ namespace Jering.Javascript.NodeJS
 #endif
                         return (true, (T)(object)stream); // User's reponsibility to handle disposal
                     }
+                    else if (typeof(T) == typeof(HttpResponseMessage))
+                    {
+                        return (true, (T)(object)httpResponseMessage); 
+                    }
                     else
                     {
 #if NET5_0_OR_GREATER

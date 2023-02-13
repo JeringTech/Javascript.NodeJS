@@ -1,4 +1,6 @@
 // The typings for module are incomplete and can't be augmented, so import as any.
+import {Http2ServerRequest, Http2ServerResponse} from "http2";
+
 const Module = require('module');
 import * as http from 'http';
 import { AddressInfo, Socket } from 'net';
@@ -6,7 +8,7 @@ import * as path from 'path';
 import * as stream from 'stream';
 import InvocationRequest from '../../../InvocationData/InvocationRequest';
 import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
-import { getTempIdentifier, respondWithError, setup } from './Shared';
+import { getTempIdentifier, respondWithError, setup, IHttpResponse } from './Shared';
 
 // Setup
 const [args, projectDir, moduleResolutionPaths] = setup();
@@ -154,7 +156,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any) => {
+                const callback = (error: Error | string, result: any, resAction?: (request: IHttpResponse) => boolean) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -162,7 +164,13 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
 
                     if (error != null) {
                         respondWithError(res, error);
-                    } else if (result instanceof stream.Readable) {
+                    }
+                    
+                    if (resAction?.(res)) {
+                        return;
+                    }
+
+                    if (result instanceof stream.Readable) {
                         // By default, res is ended when result ends - https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
                         result.pipe(res);
                     } else if (typeof result === 'string') {

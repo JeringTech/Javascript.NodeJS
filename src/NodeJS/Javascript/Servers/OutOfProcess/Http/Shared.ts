@@ -1,4 +1,5 @@
 ﻿const path = require("path");
+import * as stream from 'stream';
 import * as http from 'http';
 import * as http2 from 'http2';
 import InvocationRequest from "../../../InvocationData/InvocationRequest";
@@ -165,4 +166,9 @@ function demarcateMessageEndings(outputStream: NodeJS.WritableStream) {
 
         origWriteFunction.apply(this, arguments);
     };
+}
+export interface IHttpResponse extends stream.Writable {
+    setHeader(name: string, value: string | string[]): void;
+    writeHead(statusCode: number, headers?: http.OutgoingHttpHeaders): this;
+    writeHead(statusCode: number, statusMessage: string, headers?: http.OutgoingHttpHeaders): this;
 }
