@@ -1,6 +1,4 @@
 // The typings for module are incomplete and can't be augmented, so import as any.
-import {Http2ServerRequest, Http2ServerResponse} from "http2";
-
 const Module = require('module');
 import * as http from 'http';
 import { AddressInfo, Socket } from 'net';
