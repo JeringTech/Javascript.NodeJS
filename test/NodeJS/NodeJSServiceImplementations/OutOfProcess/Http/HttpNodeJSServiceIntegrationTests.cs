@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,6 +32,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private const string DUMMY_SINGLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummySingleFunctionExportECMAScriptModule.mjs";
         private const string DUMMY_MULTIPLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummyMultipleFunctionExportECMAScriptModule.mjs";
         private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
+        private const string DUMMY_RETURN_RESPONSE_ACTION_FILE = "dummyReturnResponseAction.mjs";
         private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
         private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
         private static readonly string _dummyReturnsArgModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_RETURNS_ARG_MODULE_FILE));
@@ -213,6 +215,29 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             Assert.Equal(-1, result1);
             Assert.Equal(3, result2);
+        }
+        
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_ResActionShouldReturnHeadersAndContentInResponseMessage()
+        {
+            // Arrange
+            HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+            
+            const string HeaderName = "success-header";
+            const string HeaderValue = "success-value";
+            const string Content = "success-content";
+
+            // Act
+            HttpResponseMessage? result1 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RESPONSE_ACTION_FILE, "responseActionWithHeader", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
+            HttpResponseMessage? result2 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RESPONSE_ACTION_FILE, "responseActionWithHeaderAndReturn", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
+
+            // Assert
+            AssertHelper.NotNull(result1);
+            Assert.Equal(Content, await result1.Content.ReadAsStringAsync().ConfigureAwait(false));
+            Assert.Equal(HeaderValue, result1.Headers.GetValues(HeaderName).First());
+            AssertHelper.NotNull(result2);
+            Assert.Equal(Content, await result2.Content.ReadAsStringAsync().ConfigureAwait(false));
+            Assert.Equal(HeaderValue, result2.Headers.GetValues(HeaderName).First());
         }
 
         [Fact(Timeout = TIMEOUT_MS)]

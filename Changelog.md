@@ -3,7 +3,13 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.2...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...HEAD)
+
+## [7.0.0-beta.3](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.2...7.0.0-beta.3) - Feb 14, 2023
+### Additions
+- Added `HttpResponseMessage` as a possible invocation result. ([#157](https://github.com/JeringTech/Javascript.NodeJS/pull/157)).
+- Added a `responseAction` parameter to the [Javascript callback](https://github.com/JeringTech/Javascript.NodeJS#invoking-javascript). This action can be used to modify an invocation's
+HTTP response before it is sent from Node.js to the .Net process. ([#157](https://github.com/JeringTech/Javascript.NodeJS/pull/157)).
 
 ## [7.0.0-beta.2](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.1...7.0.0-beta.2) - Jan 19, 2023
 ### Additions

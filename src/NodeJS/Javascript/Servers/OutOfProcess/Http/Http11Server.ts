@@ -154,7 +154,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any) => {
+                const callback = (error: Error | string, result: any, responseAction?: (response: http.ServerResponse) => boolean) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -162,7 +162,13 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
 
                     if (error != null) {
                         respondWithError(res, error);
-                    } else if (result instanceof stream.Readable) {
+                    }
+
+                    if (responseAction?.(res)) {
+                        return;
+                    }
+
+                    if (result instanceof stream.Readable) {
                         // By default, res is ended when result ends - https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
                         result.pipe(res);
                     } else if (typeof result === 'string') {
