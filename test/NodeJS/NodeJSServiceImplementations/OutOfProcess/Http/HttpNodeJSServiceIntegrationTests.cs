@@ -32,7 +32,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private const string DUMMY_SINGLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummySingleFunctionExportECMAScriptModule.mjs";
         private const string DUMMY_MULTIPLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE = "dummyMultipleFunctionExportECMAScriptModule.mjs";
         private const string DUMMY_EXPORTS_MULTIPLE_FUNCTIONS_MODULE_FILE = "dummyExportsMultipleFunctionsModule.js";
-        private const string DUMMY_RETURN_RES_ACTION_FILE = "dummyReturnResAction.mjs";
+        private const string DUMMY_RETURN_RESPONSE_ACTION_FILE = "dummyReturnResponseAction.mjs";
         private const string DUMMY_CACHE_IDENTIFIER = "dummyCacheIdentifier";
         private static readonly string _projectPath = Path.Combine(Directory.GetCurrentDirectory(), "../../../Javascript"); // Current directory is <test project path>/bin/debug/<framework>
         private static readonly string _dummyReturnsArgModule = File.ReadAllText(Path.Combine(_projectPath, DUMMY_RETURNS_ARG_MODULE_FILE));
@@ -228,12 +228,14 @@ namespace Jering.Javascript.NodeJS.Tests
             const string Content = "success-content";
 
             // Act
-            var result1 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RES_ACTION_FILE, "resActionWithHeader", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
-            var result2 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RES_ACTION_FILE, "resActionWithHeaderAndReturn", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
-            
+            HttpResponseMessage? result1 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RESPONSE_ACTION_FILE, "responseActionWithHeader", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
+            HttpResponseMessage? result2 = await testSubject.InvokeFromFileAsync<HttpResponseMessage>(DUMMY_RETURN_RESPONSE_ACTION_FILE, "responseActionWithHeaderAndReturn", new object[] { HeaderName, HeaderValue, Content }).ConfigureAwait(false);
+
             // Assert
+            AssertHelper.NotNull(result1);
             Assert.Equal(Content, await result1.Content.ReadAsStringAsync().ConfigureAwait(false));
             Assert.Equal(HeaderValue, result1.Headers.GetValues(HeaderName).First());
+            AssertHelper.NotNull(result2);
             Assert.Equal(Content, await result2.Content.ReadAsStringAsync().ConfigureAwait(false));
             Assert.Equal(HeaderValue, result2.Headers.GetValues(HeaderName).First());
         }

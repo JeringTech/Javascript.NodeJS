@@ -1,4 +1,4 @@
-function resActionWithHeader(callback, header, headerValue, result) {
+function responseActionWithHeader(callback, header, headerValue, result) {
     callback(null, result, (res) => {
         res.setHeader(header, headerValue);
         res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -6,7 +6,7 @@ function resActionWithHeader(callback, header, headerValue, result) {
     });
 }
 
-function resActionWithHeaderAndReturn(callback, header, headerValue, result) {
+function responseActionWithHeaderAndReturn(callback, header, headerValue, result) {
     callback(null, null, (res) => {
         res.setHeader(header, headerValue);
         res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -14,4 +14,4 @@ function resActionWithHeaderAndReturn(callback, header, headerValue, result) {
     });
 }
 
-export { resActionWithHeader, resActionWithHeaderAndReturn };
+export { responseActionWithHeader, responseActionWithHeaderAndReturn };

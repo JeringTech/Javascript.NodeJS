@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as stream from 'stream';
 import InvocationRequest from '../../../InvocationData/InvocationRequest';
 import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
-import { getTempIdentifier, respondWithError, setup, IHttpResponse } from './Shared';
+import { getTempIdentifier, respondWithError, setup } from './Shared';
 
 // Setup
 const [args, projectDir, moduleResolutionPaths] = setup();
@@ -154,7 +154,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 }
 
                 let callbackCalled = false;
-                const callback = (error: Error | string, result: any, resAction?: (response: IHttpResponse) => boolean) => {
+                const callback = (error: Error | string, result: any, responseAction?: (response: http.ServerResponse) => boolean) => {
                     if (callbackCalled) {
                         return;
                     }
@@ -163,8 +163,8 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                     if (error != null) {
                         respondWithError(res, error);
                     }
-                    
-                    if (resAction?.(res)) {
+
+                    if (responseAction?.(res)) {
                         return;
                     }
 

@@ -167,8 +167,3 @@ function demarcateMessageEndings(outputStream: NodeJS.WritableStream) {
         origWriteFunction.apply(this, arguments);
     };
 }
-export interface IHttpResponse extends stream.Writable {
-    setHeader(name: string, value: string | string[]): void;
-    writeHead(statusCode: number, headers?: http.OutgoingHttpHeaders): this;
-    writeHead(statusCode: number, statusMessage: string, headers?: http.OutgoingHttpHeaders): this;
-}
