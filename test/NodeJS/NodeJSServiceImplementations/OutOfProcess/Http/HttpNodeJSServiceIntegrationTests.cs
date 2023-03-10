@@ -187,6 +187,23 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(numThreads, result);
         }
 
+        // See: https://github.com/JeringTech/Javascript.NodeJS/issues/160
+        [Fact(Timeout = TIMEOUT_MS)]
+        public async void InvokeFromFileAsync_WorksForSingleFunctionExportEcmaScriptModule_Issue160()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                // Arrange
+                HttpNodeJSService testSubject = CreateHttpNodeJSService(projectPath: _projectPath);
+
+                for (int n = 0; n < 15; n++)
+                {
+                    // Act
+                    await testSubject.InvokeFromFileAsync<int>(DUMMY_SINGLE_FUNCTION_EXPORT_ECMA_SCRIPT_MODULE_FILE, args: new object[] {1, 2});
+                }
+            }
+        }
+
         // WARNING: will fail randomly in Debug configuration if Node.js version is pre 19.0.0 - https://github.com/JeringTech/Javascript.NodeJS/issues/151#issuecomment-1396258748
         [Fact(Timeout = TIMEOUT_MS)]
         public async void InvokeFromFileAsync_WorksForSingleFunctionExportEcmaScriptModule()
@@ -216,7 +233,7 @@ namespace Jering.Javascript.NodeJS.Tests
             Assert.Equal(-1, result1);
             Assert.Equal(3, result2);
         }
-        
+
         [Fact(Timeout = TIMEOUT_MS)]
         public async void InvokeFromFileAsync_ResActionShouldReturnHeadersAndContentInResponseMessage()
         {
