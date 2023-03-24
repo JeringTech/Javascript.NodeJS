@@ -106,13 +106,14 @@ namespace Jering.Javascript.NodeJS
             try
             {
                 string? data;
-                while ((data = streamReader.ReadLine()) != null)
+                do
                 {
+                    data = streamReader.ReadLine();
                     if (TryCreateMessage(_outputDataStringBuilder, data, out string? message))
                     {
                         _outputReceivedHandler!(message);
                     }
-                }
+                } while (data != null);
             }
             catch (IOException)
             {
@@ -131,13 +132,14 @@ namespace Jering.Javascript.NodeJS
             try
             {
                 string? data;
-                while ((data = streamReader.ReadLine()) != null)
+                do
                 {
+                    data = streamReader.ReadLine();
                     if (TryCreateMessage(_errorDataStringBuilder, data, out string? message))
                     {
                         _errorReceivedHandler!(message);
                     }
-                }
+                } while (data != null);
             }
             catch (IOException)
             {
@@ -387,13 +389,13 @@ namespace Jering.Javascript.NodeJS
                     try
                     {
                         _process.Kill();
-                        await _process.WaitForExitAsync().ConfigureAwait(false);
                     }
                     catch
                     {
                         // Throws if process is already dead, note that process could die between HasExited check and Kill
                     }
                 }
+                await _process.WaitForExitAsync().ConfigureAwait(false);
                 _process.Dispose();
 
                 _disposed = true;
