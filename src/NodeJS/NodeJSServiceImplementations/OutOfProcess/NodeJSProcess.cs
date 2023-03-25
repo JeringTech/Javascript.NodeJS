@@ -395,7 +395,16 @@ namespace Jering.Javascript.NodeJS
                         // Throws if process is already dead, note that process could die between HasExited check and Kill
                     }
                 }
+
+                // Wait for exit
+                //
+                // Even after HasExited is true, there may still be output to be read. See https://github.com/dotnet/runtime/blob/91b93eb22bc7d9029a38469e55aa72d52c087834/src/libraries/System.Diagnostics.Process/src/System/Diagnostics/Process.cs#L1475.
+                //
+                // Should not throw. Process has started so Process._haveProcessID and Process._haveProcessHandle are true. They are only set to false
+                // by Process.Close, which is only called by Process.Dispose, called below.
                 await _process.WaitForExitAsync().ConfigureAwait(false);
+
+                // Dispose
                 _process.Dispose();
 
                 _disposed = true;
@@ -447,13 +456,17 @@ namespace Jering.Javascript.NodeJS
                         try
                         {
                             _process?.Kill();
-                            _process?.WaitForExit(); // Blocks
                         }
                         catch
                         {
                             // Throws if process is already dead, note that process could die between HasExited check and Kill
                         }
                     }
+
+                    // Wait for exit (see DisposeAsync for why we call this outside of the HasExited == false block)
+                    _process?.WaitForExit(); // Blocks
+
+                    // Dispose
                     _process?.Dispose();
                 }
 
