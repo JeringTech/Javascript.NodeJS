@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.4...HEAD)
+
+## [7.0.0-beta.4](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...7.0.0-beta.4) - Mar 25, 2023
+### Fixes
+- Handle process outputs correctly. ([#166](https://github.com/JeringTech/Javascript.NodeJS/pull/166)).
 
 ## [7.0.0-beta.3](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.2...7.0.0-beta.3) - Feb 14, 2023
 ### Additions
