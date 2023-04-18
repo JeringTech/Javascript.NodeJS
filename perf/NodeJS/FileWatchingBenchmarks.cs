@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnosers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jering.Javascript.NodeJS.Performance
@@ -29,7 +28,7 @@ namespace Jering.Javascript.NodeJS.Performance
         [Benchmark]
         public void HttpNodeJSService_FileWatching_GracefulShutdownEnabled_MoveToNewProcess()
         {
-            _httpNodeJSService!.FileChangedHandler(DUMMY_PATH);
+            _httpNodeJSService!.FileChangedHandler();
         }
 
         [GlobalSetup(Target = nameof(HttpNodeJSService_FileWatching_GracefulShutdownDisabled_MoveToNewProcess))]
@@ -52,7 +51,7 @@ namespace Jering.Javascript.NodeJS.Performance
         [Benchmark]
         public void HttpNodeJSService_FileWatching_GracefulShutdownDisabled_MoveToNewProcess()
         {
-            _httpNodeJSService!.FileChangedHandler(DUMMY_PATH);
+            _httpNodeJSService!.FileChangedHandler();
         }
 
         [GlobalCleanup]

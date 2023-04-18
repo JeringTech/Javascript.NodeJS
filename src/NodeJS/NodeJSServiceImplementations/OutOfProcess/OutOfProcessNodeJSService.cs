@@ -31,7 +31,7 @@ namespace Jering.Javascript.NodeJS
         private readonly IEmbeddedResourcesService _embeddedResourcesService;
         private readonly ITaskService _taskService;
         private readonly IBlockDrainerService _blockDrainerService;
-        private readonly IFileWatcherFactory _fileWatcherFactory;
+        private readonly IFileWatcherService _fileWatcherService;
         private readonly INodeJSProcessFactory _nodeProcessFactory;
         private readonly string _serverScriptName;
         private readonly Assembly _serverScriptAssembly;
@@ -48,7 +48,6 @@ namespace Jering.Javascript.NodeJS
 
         private bool _disposed;
         private volatile INodeJSProcess? _nodeJSProcess; // Volatile since it's used in a double checked lock
-        private IFileWatcher? _fileWatcher;
 
         /// <summary>
         /// <para>This regex is used to determine successful initialization of the process.</para>
@@ -63,7 +62,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="logger"></param>
         /// <param name="optionsAccessor"></param>
         /// <param name="embeddedResourcesService"></param>
-        /// <param name="fileWatcherFactory"></param>
+        /// <param name="fileWatcherService"></param>
         /// <param name="taskService"></param>
         /// <param name="blockDrainerService"></param>
         /// <param name="serverScriptAssembly"></param>
@@ -72,13 +71,13 @@ namespace Jering.Javascript.NodeJS
             ILogger logger,
             IOptions<OutOfProcessNodeJSServiceOptions> optionsAccessor,
             IEmbeddedResourcesService embeddedResourcesService,
-            IFileWatcherFactory fileWatcherFactory,
+            IFileWatcherService fileWatcherService,
             ITaskService taskService,
             IBlockDrainerService blockDrainerService,
             Assembly serverScriptAssembly,
             string serverScriptName)
         {
-            _fileWatcherFactory = fileWatcherFactory;
+            _fileWatcherService = fileWatcherService;
             _taskService = taskService;
             _blockDrainerService = blockDrainerService;
 
@@ -383,13 +382,6 @@ namespace Jering.Javascript.NodeJS
                     return;
                 }
 
-                // No need to listen for file events while connecting - the new NodeJS process will reload all files.
-                if (_debugLoggingEnabled)
-                {
-                    Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher, _nodeJSProcess?.SafeID));
-                }
-                _fileWatcher?.Stop();
-
                 await CreateNewProcessAndConnectAsync().ConfigureAwait(false);
             }
             finally
@@ -458,7 +450,6 @@ namespace Jering.Javascript.NodeJS
                         {
                             Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StartingFileWatcher, _nodeJSProcess.SafeID));
                         }
-                        _fileWatcher?.Start();
 
                         _nodeJSProcess.SetConnected();
 
@@ -533,7 +524,7 @@ namespace Jering.Javascript.NodeJS
                 return default;
             }
 
-            _fileWatcher = _fileWatcherFactory.Create(_options.WatchPath, _options.WatchSubdirectories, _options.WatchFileNamePatterns, FileChangedHandler);
+            _fileWatcherService.AddFileChangedListenerAsync(FileChangedHandler);
 
             if (!_options.GracefulProcessShutdown)
             {
@@ -578,19 +569,12 @@ namespace Jering.Javascript.NodeJS
         }
 
         // FileSystemWatcher handles file events synchronously (one after another), storing pending events in a buffer - https://github.com/dotnet/runtime/blob/master/src/libraries/System.IO.FileSystem.Watcher/src/System/IO/FileSystemWatcher.Win32.cs.
-        internal virtual void FileChangedHandler(string path)
+        internal virtual void FileChangedHandler()
         {
-            if (_infoLoggingEnabled)
-            {
-                Logger.LogInformation(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, path));
-            }
-
-            // Immediately stop the fileWatcher so we don't get redundant events (see FileWatcher.Stop)
             if (_debugLoggingEnabled)
             {
-                Logger.LogDebug(string.Format(Strings.LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher, _nodeJSProcess?.SafeID));
+                Logger.LogDebug(string.Format(Strings.LogDebug_FileChangedHandlerInvokedForProcess, _nodeJSProcess?.SafeID));
             }
-            _fileWatcher?.Stop();
 
 #pragma warning disable CS4014
             // No need to await
@@ -760,7 +744,6 @@ namespace Jering.Javascript.NodeJS
             if (disposing)
             {
                 _nodeJSProcess?.Dispose();
-                _fileWatcher?.Dispose();
                 _connectingLock?.Dispose();
                 _blockDrainerService?.Dispose();
             }

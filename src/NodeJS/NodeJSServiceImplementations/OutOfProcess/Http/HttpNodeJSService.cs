@@ -48,7 +48,7 @@ namespace Jering.Javascript.NodeJS
         /// <param name="httpNodeJSServiceOptionsAccessor">The <see cref="HttpNodeJSServiceOptions"/> accessor.</param>
         /// <param name="httpContentFactory">The factory for creating <see cref="HttpContent"/>s.</param>
         /// <param name="embeddedResourcesService">The service for retrieving NodeJS Http server scripts.</param>
-        /// <param name="fileWatcherFactory">The service for creating <see cref="IFileWatcher"/>s</param>
+        /// <param name="fileWatcherService">The service for watching files.</param>
         /// <param name="taskService">The service for utilizing tasks.</param>
         /// <param name="blockDrainerService">The service for draining code blocks.</param>
         /// <param name="httpClientService">The service for utilizing <see cref="HttpClient"/>.</param>
@@ -59,7 +59,7 @@ namespace Jering.Javascript.NodeJS
             IOptions<HttpNodeJSServiceOptions> httpNodeJSServiceOptionsAccessor,
             IHttpContentFactory httpContentFactory,
             IEmbeddedResourcesService embeddedResourcesService,
-            IFileWatcherFactory fileWatcherFactory,
+            IFileWatcherService fileWatcherService,
             ITaskService taskService,
             IBlockDrainerService blockDrainerService,
             IHttpClientService httpClientService,
@@ -70,7 +70,7 @@ namespace Jering.Javascript.NodeJS
                 logger,
                 outOfProcessNodeJSServiceOptionsAccessor,
                 embeddedResourcesService,
-                fileWatcherFactory,
+                fileWatcherService,
                 taskService,
                 blockDrainerService,
                 typeof(HttpNodeJSService).GetTypeInfo().Assembly,

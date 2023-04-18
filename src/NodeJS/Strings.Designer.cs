@@ -228,6 +228,33 @@ namespace Jering.Javascript.NodeJS {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File changed handler invoked for process: {0}..
+        /// </summary>
+        internal static string LogDebug_FileChangedHandlerInvokedForProcess {
+            get {
+                return ResourceManager.GetString("LogDebug_FileChangedHandlerInvokedForProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal file changed handler call debounced, file path: &quot;{0}&quot;..
+        /// </summary>
+        internal static string LogDebug_InternalFileChangedHandlerCallDebounced {
+            get {
+                return ResourceManager.GetString("LogDebug_InternalFileChangedHandlerCallDebounced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Internal file changed handler called, file path: &quot;{0}&quot;..
+        /// </summary>
+        internal static string LogDebug_InternalFileChangedHandlerCalled {
+            get {
+                return ResourceManager.GetString("LogDebug_InternalFileChangedHandlerCalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Releasing process connection semaphore, processID: {0}, thread ID: {1}, thread is ThreadPool thread : {2}..
         /// </summary>
         internal static string LogDebug_OutOfProcessNodeJSService_ReleasingProcessConnectionSemaphore {
@@ -287,6 +314,15 @@ namespace Jering.Javascript.NodeJS {
         internal static string LogInformation_HttpEndpoint {
             get {
                 return ResourceManager.GetString("LogInformation_HttpEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invoking registered file changed handlers, file path: &quot;{0}&quot;..
+        /// </summary>
+        internal static string LogInformation_InvokingRegisteredFileChangedHandlers {
+            get {
+                return ResourceManager.GetString("LogInformation_InvokingRegisteredFileChangedHandlers", resourceCulture);
             }
         }
         
