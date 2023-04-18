@@ -31,7 +31,7 @@ namespace Jering.Javascript.NodeJS
                 AddSingleton(typeof(INodeJSService), INodeJSServiceFactory).
                 AddSingleton<IJsonService, JsonService>().
                 AddSingleton<IEnvironmentService, EnvironmentService>().
-                AddSingleton<IFileWatcherFactory, FileWatcherFactory>().
+                AddSingleton<IFileWatcherService, FileWatcherService>().
                 AddSingleton<ITaskService, TaskService>().
                 AddTransient<IBlockDrainerService, BlockDrainerService>();
 #if NETCOREAPP3_1

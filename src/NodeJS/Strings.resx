@@ -218,4 +218,16 @@ Exception:
   <data name="LogDebug_OutOfProcessNodeJSService_StoppingFileWatcher" xml:space="preserve">
     <value>Stopping FileWatcher. Current process: {0}.</value>
   </data>
+  <data name="LogDebug_InternalFileChangedHandlerCallDebounced" xml:space="preserve">
+    <value>Internal file changed handler call debounced, file path: "{0}".</value>
+  </data>
+  <data name="LogDebug_InternalFileChangedHandlerCalled" xml:space="preserve">
+    <value>Internal file changed handler called, file path: "{0}".</value>
+  </data>
+  <data name="LogInformation_InvokingRegisteredFileChangedHandlers" xml:space="preserve">
+    <value>Invoking registered file changed handlers, file path: "{0}".</value>
+  </data>
+  <data name="LogDebug_FileChangedHandlerInvokedForProcess" xml:space="preserve">
+    <value>File changed handler invoked for process: {0}.</value>
+  </data>
 </root>

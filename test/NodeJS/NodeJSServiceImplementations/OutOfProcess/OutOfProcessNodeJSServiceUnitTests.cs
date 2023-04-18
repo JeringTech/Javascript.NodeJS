@@ -1,11 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using Moq.Protected;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -13,8 +9,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Moq;
+using Moq.Protected;
 using Xunit;
 using Xunit.Abstractions;
+using Match = System.Text.RegularExpressions.Match;
 
 namespace Jering.Javascript.NodeJS.Tests
 {
@@ -990,18 +992,12 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
-        public void ConnectIfNotConnectedAsync_IfNodeJSProcessIsNullFirstThreadStopsFileWatcherAndConnectsToANewNodeJSProcess()
+        public void ConnectIfNotConnectedAsync_IfNodeJSProcessIsNullFirstThreadConnectsToANewNodeJSProcess()
         {
             // Arrange
             var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = true };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            // So _fileWatcher is set
-            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.
-                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
-                Returns(mockFileWatcher.Object);
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.Connected).Returns(true);
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
@@ -1009,13 +1005,13 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(nodeProcessFactory: mockNodeJSProcessFactory.Object,
                 embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object);
+                optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
             mockTestSubject.
                 Setup(t => t.CreateNewProcessAndConnectAsync()).
                 Callback(() => mockTestSubject.Object.CreateAndSetUpProcess(null!)).
                 Returns(Task.CompletedTask);
+            mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((false, null!)); // Called by constructor, override to do nothing
             OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
             // Act
@@ -1035,22 +1031,15 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             _mockRepository.VerifyAll();
             mockTestSubject.Verify(t => t.CreateNewProcessAndConnectAsync(), Times.Once); // Only creates and connects once
-            mockFileWatcher.Verify(f => f.Stop(), Times.Once);
         }
 
         [Fact(Timeout = TIMEOUT_MS)]
-        public void ConnectIfNotConnectedAsync_IfNodeJSProcessIsNotConnectedFirstThreadStopsFileWatcherAndConnectsToANewNodeJSProcess()
+        public void ConnectIfNotConnectedAsync_IfNodeJSProcessIsNotConnectedFirstThreadConnectsToANewNodeJSProcess()
         {
             // Arrange
             var dummyOptions = new OutOfProcessNodeJSServiceOptions() { EnableFileWatching = true };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            // So _fileWatcher is set
-            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.
-                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
-                Returns(mockFileWatcher.Object);
             bool dummyIsConnected = false;
             Mock<INodeJSProcess> mockNodeJSProcess = _mockRepository.Create<INodeJSProcess>();
             mockNodeJSProcess.Setup(n => n.Connected).Returns(() => dummyIsConnected);
@@ -1059,10 +1048,10 @@ namespace Jering.Javascript.NodeJS.Tests
             Mock<IEmbeddedResourcesService> mockEmbeddedResourcesService = _mockRepository.Create<IEmbeddedResourcesService>();
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(nodeProcessFactory: mockNodeJSProcessFactory.Object,
                 embeddedResourcesService: mockEmbeddedResourcesService.Object,
-                optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object);
+                optionsAccessor: mockOptionsAccessor.Object);
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.CreateNewProcessAndConnectAsync()).Callback(() => dummyIsConnected = true).Returns(Task.CompletedTask);
+            mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((false, null!)); // Called by constructor, override to do nothing
             mockTestSubject.Object.CreateAndSetUpProcess(null!);
             OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
 
@@ -1083,7 +1072,6 @@ namespace Jering.Javascript.NodeJS.Tests
             // Assert
             _mockRepository.VerifyAll();
             mockTestSubject.Verify(t => t.CreateNewProcessAndConnectAsync(), Times.Once); // Only creates and connects once
-            mockFileWatcher.Verify(f => f.Stop(), Times.Once);
         }
 
         [Fact]
@@ -1097,7 +1085,7 @@ namespace Jering.Javascript.NodeJS.Tests
 #if NET5_0 || NET6_0 || NET7_0
             mockInitialNodeJSProcess.Setup(n => n.DisposeAsync());
 #else
-            mockInitialNodeJSProcess.Setup(n => n.Dispose());
+                    mockInitialNodeJSProcess.Setup(n => n.Dispose());
 #endif
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
             mockNodeJSProcessFactory.Setup(n => n.Create(It.IsAny<string>(), It.IsAny<EventHandler>())).Returns(mockInitialNodeJSProcess.Object);
@@ -1108,15 +1096,7 @@ namespace Jering.Javascript.NodeJS.Tests
             var dummyOptions = new OutOfProcessNodeJSServiceOptions { ConnectionTimeoutMS = dummyConnectionTimeoutMS, EnableFileWatching = true };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            // So _fileWatcher is set
-            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
-            mockFileWatcher.Setup(f => f.Start());
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.
-                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
-                Returns(mockFileWatcher.Object);
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object,
                 nodeProcessFactory: mockNodeJSProcessFactory.Object,
                 embeddedResourcesService: mockEmbeddedResourcesService.Object);
             mockTestSubject.CallBase = true;
@@ -1124,6 +1104,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 Setup(t => t.CreateAndSetUpProcess(It.IsNotNull<DisposeTrackingSemaphoreSlim>())).
                 Callback((DisposeTrackingSemaphoreSlim semaphoreSlim) => semaphoreSlim.Release()).
                 Returns(mockNewNodeJSProcess.Object);
+            mockTestSubject.Setup(t => t.InitializeFileWatching()).Returns((false, null!)); // Called by constructor, override to do nothing
             OutOfProcessNodeJSService testSubject = mockTestSubject.Object;
             testSubject.CreateAndSetUpProcess(null!); // Create initial process
 
@@ -1247,7 +1228,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void InitializeFileWatching_CreatesFileWatcherAndReturnsNothingIfFileWatchingIsEnabledButGracefulShutdownIsNot()
+        public void InitializeFileWatching_AddsFileChangedListenerAndReturnsNothingIfFileWatchingIsEnabledButGracefulShutdownIsNot()
         {
             // Arrange
             const string dummyWatchPath = "dummyWatchPath";
@@ -1262,10 +1243,10 @@ namespace Jering.Javascript.NodeJS.Tests
             };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.Setup(f => f.Create(dummyWatchPath, dummyWatchSubdirectories, dummyWatchFileNames, It.IsAny<FileChangedEventHandler>())); // Assigned directly to instance variable
+            Mock<IFileWatcherService> mockFileWatcherService = _mockRepository.Create<IFileWatcherService>();
+            mockFileWatcherService.Setup(f => f.AddFileChangedListenerAsync(It.IsAny<Action>()));
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object,
+                fileWatcherService: mockFileWatcherService.Object,
                 taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
 
@@ -1278,7 +1259,7 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void InitializeFileWatching_CreatesFileWatcherAndReturnsInvokeTaskTrackingVariablesIfBothFileWatchingAndGracefulShutdownAreEnabled()
+        public void InitializeFileWatching_AddsFileChangedListenerAndReturnsInvokeTaskTrackingVariablesIfBothFileWatchingAndGracefulShutdownAreEnabled()
         {
             // Arrange
             const string dummyWatchPath = "dummyWatchPath";
@@ -1293,10 +1274,10 @@ namespace Jering.Javascript.NodeJS.Tests
             };
             Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
             mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.Setup(f => f.Create(dummyWatchPath, dummyWatchSubdirectories, dummyWatchFileNames, It.IsAny<FileChangedEventHandler>())); // Assigned directly to instance variable
+            Mock<IFileWatcherService> mockFileWatcherService = _mockRepository.Create<IFileWatcherService>();
+            mockFileWatcherService.Setup(f => f.AddFileChangedListenerAsync(It.IsAny<Action>()));
             Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object,
+                fileWatcherService: mockFileWatcherService.Object,
                 taskService: _mockRepository.Create<ITaskService>().Object);
             mockTestSubject.CallBase = true;
 
@@ -1345,33 +1326,17 @@ namespace Jering.Javascript.NodeJS.Tests
         }
 
         [Fact]
-        public void FileChangedHandler_LogsChangedFileStopsFileWatchingAndMovesToNewProcess()
+        public void FileChangedHandler_MovesToNewProcess()
         {
             // Arrange
-            const string dummyPath = "dummyPath";
-            var loggerStringBuilder = new StringBuilder();
-            var dummyOptions = new OutOfProcessNodeJSServiceOptions { EnableFileWatching = true };
-            Mock<IOptions<OutOfProcessNodeJSServiceOptions>> mockOptionsAccessor = _mockRepository.Create<IOptions<OutOfProcessNodeJSServiceOptions>>();
-            mockOptionsAccessor.Setup(o => o.Value).Returns(dummyOptions);
-            // So _fileWatcher is set
-            Mock<IFileWatcher> mockFileWatcher = _mockRepository.Create<IFileWatcher>();
-            mockFileWatcher.Setup(f => f.Stop());
-            Mock<IFileWatcherFactory> mockFileWatcherFactory = _mockRepository.Create<IFileWatcherFactory>();
-            mockFileWatcherFactory.
-                Setup(f => f.Create(dummyOptions.WatchPath, dummyOptions.WatchSubdirectories, dummyOptions.WatchFileNamePatterns, It.IsAny<FileChangedEventHandler>())).
-                Returns(mockFileWatcher.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
-                fileWatcherFactory: mockFileWatcherFactory.Object,
-                loggerStringBuilder: loggerStringBuilder,
-                logLevel: LogLevel.Information);
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService();
             mockTestSubject.CallBase = true;
-            mockTestSubject.Setup(t => t.MoveToNewProcessAsync(true));
+            mockTestSubject.Setup(t => t.MoveToNewProcessAsync(true)).Returns(new ValueTask());
 
             // Act
-            mockTestSubject.Object.FileChangedHandler(dummyPath);
+            mockTestSubject.Object.FileChangedHandler();
 
             // Assert
-            Assert.Contains(string.Format(Strings.LogInformation_FileChangedMovingtoNewNodeJSProcess, dummyPath), loggerStringBuilder.ToString());
             _mockRepository.VerifyAll();
         }
 
@@ -1384,7 +1349,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockNewNodeJSProcess.Setup(n => n.Connected).Returns(false);
             Mock<INodeJSProcessFactory> mockNodeJSProcessFactory = _mockRepository.Create<INodeJSProcessFactory>();
             mockNodeJSProcessFactory.Setup(n => n.Create(It.IsAny<string>(), It.IsAny<EventHandler>())).Returns(mockNewNodeJSProcess.Object);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(nodeProcessFactory: mockNodeJSProcessFactory.Object, 
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(nodeProcessFactory: mockNodeJSProcessFactory.Object,
                 embeddedResourcesService: mockEmbeddedResourcesService.Object);
             mockTestSubject.CallBase = true;
             mockTestSubject.Setup(t => t.CreateNewProcessAndConnectAsync()).Returns(new Task(() => { })); // Unstarted task (never completes)
@@ -1475,7 +1440,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockBlockDrainerService.Setup(b => b.ResetAfterDraining());
             Mock<ITaskService> mockTaskService = _mockRepository.Create<ITaskService>();
             mockTaskService.Setup(t => t.WhenAll(It.IsAny<Task[]>())).Returns(Task.CompletedTask);
-            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object, 
+            Mock<OutOfProcessNodeJSService> mockTestSubject = CreateMockOutOfProcessNodeJSService(optionsAccessor: mockOptionsAccessor.Object,
                 blockDrainerService: mockBlockDrainerService.Object,
                 taskService: mockTaskService.Object);
             mockTestSubject.CallBase = true;
@@ -1563,7 +1528,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.CallBase = true;
             // Override ConnectionEstablishedMessageRegex to match "dummyMessage"
             mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.ConnectionEstablishedMessageRegex).Returns(new Regex(".*"));
-            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.OnConnectionEstablishedMessageReceived(It.IsAny<System.Text.RegularExpressions.Match>()));
+            mockTestSubject.Protected().As<IOutOfProcessNodeJSServiceProtectedMembers>().Setup(t => t.OnConnectionEstablishedMessageReceived(It.IsAny<Match>()));
             mockTestSubject.Object.CreateAndSetUpProcess(null!); // Set _nodeJSProcess
             var dummySempahoreSlim = new DisposeTrackingSemaphoreSlim(0, 1);
 
@@ -1673,7 +1638,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private interface IOutOfProcessNodeJSServiceProtectedMembers
         {
             Regex ConnectionEstablishedMessageRegex { get; }
-            void OnConnectionEstablishedMessageReceived(System.Text.RegularExpressions.Match connectionEstablishedMessage);
+            void OnConnectionEstablishedMessageReceived(Match connectionEstablishedMessage);
             Task<(bool, T)> TryInvokeAsync<T>(InvocationRequest invocationRequest, CancellationToken cancellationToken);
             void Dispose(bool disposing);
         }
@@ -1686,7 +1651,7 @@ namespace Jering.Javascript.NodeJS.Tests
         private Mock<OutOfProcessNodeJSService> CreateMockOutOfProcessNodeJSService(INodeJSProcessFactory? nodeProcessFactory = null,
             IOptions<OutOfProcessNodeJSServiceOptions>? optionsAccessor = null,
             IEmbeddedResourcesService? embeddedResourcesService = null,
-            IFileWatcherFactory? fileWatcherFactory = null,
+            IFileWatcherService? fileWatcherService = null,
             ITaskService? taskService = null,
             IBlockDrainerService? blockDrainerService = null,
             Assembly? serverScriptAssembly = null,
@@ -1727,7 +1692,7 @@ namespace Jering.Javascript.NodeJS.Tests
                 logger,
                 optionsAccessor,
                 embeddedResourcesService,
-                fileWatcherFactory,
+                fileWatcherService,
                 taskService,
                 blockDrainerService,
                 serverScriptAssembly,
