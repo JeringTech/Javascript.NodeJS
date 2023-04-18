@@ -5,7 +5,7 @@ for an overview of semantic versioning.
 
 ## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.4...HEAD)
 
-## [7.0.0-beta.4](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...7.0.0-beta.4) - Mar 25, 2023
+## [7.0.0-beta.4](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...7.0.0-beta.4) - Apr 18, 2023
 ### Fixes
 - Handle process outputs correctly. ([#166](https://github.com/JeringTech/Javascript.NodeJS/pull/166)).
 
