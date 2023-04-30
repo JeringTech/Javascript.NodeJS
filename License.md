@@ -1,5 +1,5 @@
 ﻿# Licenses
-Jering.Javascript.NodeJS, copyright © 2018-2022 Jering. All rights reserved.
+Jering.Javascript.NodeJS, copyright © 2018-2023 Jering. All rights reserved.
 
 ## Source Code and Documentation Code-Examples
 Source code and documentation code-examples are licensed under the following license:
