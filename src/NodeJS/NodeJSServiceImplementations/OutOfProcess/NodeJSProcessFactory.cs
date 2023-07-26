@@ -48,7 +48,7 @@ namespace Jering.Javascript.NodeJS
 #endif
             var startInfo = new ProcessStartInfo(_nodeJSProcessOptions.ExecutablePath!) // ConfigureNodeJSProcessOptions sets ExecutablePath to "node" if user specified value is null, whitespace or an empty string
             {
-                Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
+                Arguments = $"{_nodeJSProcessOptions.NodeAndV8Options} --input-type=module -e \"{nodeServerScript}\" -- --parentPid {currentProcessPid} --port {_nodeJSProcessOptions.Port}",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,

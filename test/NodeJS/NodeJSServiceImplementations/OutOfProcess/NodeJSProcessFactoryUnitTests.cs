@@ -42,7 +42,7 @@ namespace Jering.Javascript.NodeJS.Tests
 #else
             int currentProcessPid = Process.GetCurrentProcess().Id;
 #endif
-            Assert.Equal($"{dummyNodeAndV8Options} -e \"{dummyNodeServerScript}\" -- --parentPid {currentProcessPid} --port {dummyPort}", result.Arguments);
+            Assert.Equal($"{dummyNodeAndV8Options} --input-type=module -e \"{dummyNodeServerScript}\" -- --parentPid {currentProcessPid} --port {dummyPort}", result.Arguments);
             Assert.False(result.UseShellExecute);
             Assert.True(result.RedirectStandardInput);
             Assert.True(result.RedirectStandardOutput);

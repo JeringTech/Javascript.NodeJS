@@ -118,12 +118,8 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                     }
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
-                    if (resolvedPath.endsWith('.mjs')) {
                         exports = await import(/* webpackIgnore: true */ 'file:///' + resolvedPath.replaceAll('\\', '/'));
                     } else {
-                        exports = __non_webpack_require__(resolvedPath);
-                    }
-                } else {
                     respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}.`);
                     return;
                 }
@@ -135,7 +131,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 // Get function to invoke
                 let functionToInvoke: Function;
                 if (invocationRequest.exportName != null) {
-                    functionToInvoke = exports[invocationRequest.exportName];
+                    functionToInvoke = exports[invocationRequest.exportName] ?? exports.default?.[invocationRequest.exportName];
                     if (functionToInvoke == null) {
                         respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} has no export named ${invocationRequest.exportName}.`);
                         return;
