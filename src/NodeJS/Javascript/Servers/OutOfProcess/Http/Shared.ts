@@ -1,4 +1,4 @@
-﻿const path = require("path");
+﻿import * as path from 'path';
 import * as stream from 'stream';
 import * as http from 'http';
 import * as http2 from 'http2';
