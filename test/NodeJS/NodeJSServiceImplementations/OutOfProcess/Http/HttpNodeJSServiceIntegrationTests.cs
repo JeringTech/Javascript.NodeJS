@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1106,7 +1107,7 @@ module.exports = (callback) => {{
             // Arrange
             Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
-            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").AbsolutePath; // fs.watch can't deal with backslashes in paths
+            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").LocalPath; // fs.watch can't deal with backslashes in paths
 #if NET461
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
 #else
@@ -1115,7 +1116,7 @@ module.exports = (callback) => {{
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => {{
-        fs.watch('{dummylongRunningTriggerPath}', 
+        fs.watch('{JavaScriptEncoder.Default.Encode(dummylongRunningTriggerPath)}', 
             null, 
             () => {{
                 callback(null, process.pid);
@@ -1123,7 +1124,7 @@ module.exports = (callback) => {{
         );
     }}
 }}";
-            string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(tempWatchDirectoryUri, "dummyModule.js").LocalPath;
 #if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
 #else
@@ -1175,7 +1176,7 @@ module.exports = (callback) => {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => setInterval(() => { /* Do nothing */ }, 1000)
 }";
-            string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").AbsolutePath;
+            string dummyModuleFilePath = new Uri(CreateWatchDirectoryUri(), "dummyModule.js").LocalPath;
 #if NET461
             File.WriteAllText(dummyModuleFilePath, dummyInitialModule);
 #else
