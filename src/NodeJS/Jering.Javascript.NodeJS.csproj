@@ -19,8 +19,8 @@
         <RepositoryType>git</RepositoryType>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageIcon>nuget_icon.png</PackageIcon>
-        <Http11ServerFileName>Http11Server.js</Http11ServerFileName>
-        <Http20ServerFileName>Http20Server.js</Http20ServerFileName>
+        <Http11ServerFileName>Http11Server.mjs</Http11ServerFileName>
+        <Http20ServerFileName>Http20Server.mjs</Http20ServerFileName>
         <!-- Exclude Javascript\bin and Javascript\node_modules from project - https://github.com/dotnet/cli/issues/7525 -->
         <DefaultItemExcludes>Javascript\bin\**;Javascript\node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -71,7 +71,7 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\nuget_icon.png" Pack="true" PackagePath="\"/>
+		<None Include="..\..\nuget_icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
     <ItemGroup>
