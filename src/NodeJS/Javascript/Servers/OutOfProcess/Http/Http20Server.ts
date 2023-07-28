@@ -106,7 +106,7 @@ function serverOnRequestListener(req: http2.Http2ServerRequest, res: http2.Http2
                     }
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
-                    exports = await import(/* webpackIgnore: true */ 'file:///' + resolvedPath.replaceAll('\\', '/'));
+                    exports = await import('file:///' + resolvedPath.replaceAll('\\', '/'));
                 } else {
                     respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}.`);
                     return;
