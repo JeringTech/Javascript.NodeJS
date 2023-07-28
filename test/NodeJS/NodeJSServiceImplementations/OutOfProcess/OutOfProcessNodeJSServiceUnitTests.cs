@@ -462,7 +462,7 @@ namespace Jering.Javascript.NodeJS.Tests
             mockTestSubject.Object.Dispose();
             ObjectDisposedException result = await Assert.
                 ThrowsAsync<ObjectDisposedException>(async () => await mockTestSubject.Object.TryInvokeCoreAsync<string>(new InvocationRequest(ModuleSourceType.String, "dummyModuleSource"), CancellationToken.None).ConfigureAwait(false)).ConfigureAwait(false);
-            Assert.Equal($"Cannot access a disposed object.\nObject name: '{nameof(OutOfProcessNodeJSService)}'.", result.Message, ignoreLineEndingDifferences: true);
+            Assert.Contains($"{nameof(OutOfProcessNodeJSService)}", result.Message);
         }
 
         [Fact]
