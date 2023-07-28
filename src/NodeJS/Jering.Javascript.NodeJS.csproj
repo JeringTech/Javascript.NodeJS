@@ -38,7 +38,9 @@
         <JavascriptOutputs Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName);Javascript\bin\$(Configuration)\$(Http20ServerFileName)" />
         <!-- If any file in JavascriptInputs has changed, fast up-to-date check must indicate that a rebuild is required - https://github.com/dotnet/project-system/pull/2241 -->
         <UpToDateCheckInput Include="@(JavascriptInputs)" />
+        <EmbeddedResource Remove="Javascript\bin\Debug\Http11Server.js" />
         <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http11ServerFileName)" LogicalName="$(Http11ServerFileName)" />
+        <EmbeddedResource Remove="Javascript\bin\Debug\Http20Server.js" />
         <EmbeddedResource Include="Javascript\bin\$(Configuration)\$(Http20ServerFileName)" LogicalName="$(Http20ServerFileName)" />
     </ItemGroup>
 
@@ -71,7 +73,7 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\nuget_icon.png" Pack="true" PackagePath="\"/>
+		<None Include="..\..\nuget_icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
     <ItemGroup>
