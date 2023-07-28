@@ -94,12 +94,13 @@ namespace Jering.Javascript.NodeJS.Tests
             const int dummyNumProcesses = 5;
             Uri tempWatchDirectoryUri = CreateWatchDirectoryUri();
             // Create initial module
-            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").LocalPath;
+            string dummylongRunningTriggerPath = new Uri(tempWatchDirectoryUri, "dummyTriggerFile").LocalPath; // Use LocalPath instead of AbsolutePath, the latter performs URL encoding, which results in paths that are invalid for local use
 #if NET461
             File.WriteAllText(dummylongRunningTriggerPath, string.Empty); // fs.watch returns immediately if path to watch doesn't exist
 #else
             await File.WriteAllTextAsync(dummylongRunningTriggerPath, string.Empty).ConfigureAwait(false); // fs.watch returns immediately if path to watch doesn't exist
 #endif
+            // JavascriptEncode.Default.Encode encodes a string so that it can be used as a string literal in Javascript
             string dummyInitialModule = $@"module.exports = {{
     getPid: (callback) => callback(null, process.pid),
     longRunning: (callback) => {{
