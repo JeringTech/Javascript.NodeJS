@@ -1,5 +1,4 @@
-// The typings for module are incomplete and can't be augmented, so import as any.
-const Module = require('module');
+import ModuleTemp from 'module';
 import * as http from 'http';
 import { AddressInfo, Socket } from 'net';
 import * as path from 'path';
@@ -7,6 +6,9 @@ import * as stream from 'stream';
 import InvocationRequest from '../../../InvocationData/InvocationRequest';
 import ModuleSourceType from '../../../InvocationData/ModuleSourceType';
 import { getTempIdentifier, respondWithError, setup } from './Shared';
+
+// The typings for module are incomplete and can't be augmented, so import as any.
+const Module = ModuleTemp as any;
 
 // Setup
 const [args, projectDir, moduleResolutionPaths] = setup();
@@ -118,11 +120,7 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                     }
                 } else if (invocationRequest.moduleSourceType === ModuleSourceType.File) {
                     const resolvedPath = path.resolve(projectDir, invocationRequest.moduleSource);
-                    if (resolvedPath.endsWith('.mjs')) {
-                        exports = await import(/* webpackIgnore: true */ 'file:///' + resolvedPath.replaceAll('\\', '/'));
-                    } else {
-                        exports = __non_webpack_require__(resolvedPath);
-                    }
+                    exports = await import('file:///' + resolvedPath.replaceAll('\\', '/'));
                 } else {
                     respondWithError(res, `Invalid module source type: ${invocationRequest.moduleSourceType}.`);
                     return;
@@ -135,9 +133,10 @@ function serverOnRequestListener(req: http.IncomingMessage, res: http.ServerResp
                 // Get function to invoke
                 let functionToInvoke: Function;
                 if (invocationRequest.exportName != null) {
-                    functionToInvoke = exports[invocationRequest.exportName];
+                    functionToInvoke = exports[invocationRequest.exportName] ?? exports.default?.[invocationRequest.exportName];
                     if (functionToInvoke == null) {
-                        respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} has no export named ${invocationRequest.exportName}.`);
+                        let availableExports = Object.keys(exports).join(', ');
+                        respondWithError(res, `The module ${getTempIdentifier(invocationRequest)} has no export named ${invocationRequest.exportName}. Available exports are: ${availableExports}`);
                         return;
                     }
                     if (!(typeof functionToInvoke === 'function')) {

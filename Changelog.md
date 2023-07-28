@@ -3,7 +3,11 @@ This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Ref
 *[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
 for an overview of semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.4...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.5...HEAD)
+
+## [7.0.0-beta.5](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.4...7.0.0-beta.5) - Jul 28, 2023
+### Changes
+- Changed server scripts from CommonJS to EcmaScript modules. This should improve the reliability of `.mjs` file invocations. ([#173](https://github.com/JeringTech/Javascript.NodeJS/pull/173)).
 
 ## [7.0.0-beta.4](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.3...7.0.0-beta.4) - Apr 18, 2023
 ### Fixes

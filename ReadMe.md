@@ -1783,6 +1783,7 @@ Contributions are welcome!
 - [samcic](https://github.com/samcic)
 - [johnrom](https://github.com/johnrom)
 - [aKzenT](https://github.com/aKzenT)
+- [thebuilder](https://github.com/thebuilder)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
