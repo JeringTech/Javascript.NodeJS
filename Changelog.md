@@ -1,9 +1,12 @@
 # Changelog
-This project uses [semantic versioning](http://semver.org/spec/v2.0.0.html). Refer to 
-*[Semantic Versioning in Practice](https://www.jering.tech/articles/semantic-versioning-in-practice)*
-for an overview of semantic versioning.
+This project uses semantic versioning.
 
-## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.5...HEAD)
+## [Unreleased](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0...HEAD)
+
+## [7.0.0](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.5...7.0.0) - Sep 16, 2023
+### Changes
+- **Breaking Changes**: 
+    - Replaced the deprecated package `Microsoft.AspNetCore.Hosting.Abstractions` with `Microsoft.Extensions.Hosting.Abstractions`. ([#173](https://github.com/JeringTech/Javascript.NodeJS/pull/178)).
 
 ## [7.0.0-beta.5](https://github.com/JeringTech/Javascript.NodeJS/compare/7.0.0-beta.4...7.0.0-beta.5) - Jul 28, 2023
 ### Changes

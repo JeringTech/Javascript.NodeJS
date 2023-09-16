@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;
 
@@ -12,7 +12,7 @@ namespace Jering.Javascript.NodeJS
         /// <summary>The base path for resolving NodeJS module paths.</summary>
         /// <remarks>
         /// <para>If this value is <c>null</c>, whitespace or an empty string and the application is an ASP.NET Core application, 
-        /// project path is <see cref="IHostingEnvironment.ContentRootPath"/>.</para>
+        /// project path is <see cref="IHostEnvironment.ContentRootPath"/>.</para>
         /// </remarks>
         public string ProjectPath { get; set; } = Directory.GetCurrentDirectory();
 
@@ -43,7 +43,7 @@ namespace Jering.Javascript.NodeJS
         /// <remarks>
         /// <para>You can configure NodeJS by specifying environment variables for it. Find the full list of environment variables <a href="https://nodejs.org/api/cli.html#cli_environment_variables">here</a>.</para>
         /// <para>If this value doesn't contain an element with key "NODE_ENV" and the application is an ASP.NET Core application,
-        /// an element with key "NODE_ENV" is added. The added element's value is "development" if <see cref="IHostingEnvironment.EnvironmentName"/> is <see cref="EnvironmentName.Development"/>,
+        /// an element with key "NODE_ENV" is added. The added element's value is "development" if <see cref="IHostEnvironment.EnvironmentName"/> is <see cref="Environments.Development"/>,
         /// and "production" otherwise.</para>
         /// </remarks>
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();

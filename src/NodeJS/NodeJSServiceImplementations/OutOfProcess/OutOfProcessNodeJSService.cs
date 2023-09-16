@@ -564,7 +564,7 @@ namespace Jering.Javascript.NodeJS
             finally
             {
                 // Remove completed task, note that it might already have been removed in MoveToNewProcessAsync
-                trackedInvokeTasks.TryRemove(trackedInvokeTask, out object _);
+                trackedInvokeTasks.TryRemove(trackedInvokeTask, out object? _);
             }
         }
 
