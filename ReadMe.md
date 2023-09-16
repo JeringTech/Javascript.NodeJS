@@ -1254,7 +1254,7 @@ public string ProjectPath { get; set; }
 ```
 ###### Remarks
 If this value is `null`, whitespace or an empty string and the application is an ASP.NET Core application, 
-project path is `IHostingEnvironment.ContentRootPath`.  
+project path is `IHostEnvironment.ContentRootPath`.  
 ##### NodeJSProcessOptions.ExecutablePath
 The value used to locate the NodeJS executable.  
 ```csharp
@@ -1295,7 +1295,7 @@ public IDictionary<string, string> EnvironmentVariables { get; set; }
 You can configure NodeJS by specifying environment variables for it. Find the full list of environment variables [here](https://nodejs.org/api/cli.html#cli_environment_variables).  
 
 If this value doesn't contain an element with key "NODE_ENV" and the application is an ASP.NET Core application,
-an element with key "NODE_ENV" is added. The added element's value is "development" if `IHostingEnvironment.EnvironmentName` is `EnvironmentName.Development`,
+an element with key "NODE_ENV" is added. The added element's value is "development" if `IHostEnvironment.EnvironmentName` is `Environments.Development`,
 and "production" otherwise.  
 <!-- NodeJSProcessOptions generated docs -->
 <!-- OutOfProcessNodeJSServiceOptions generated docs -->

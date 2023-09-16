@@ -1,8 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Jering.Javascript.NodeJS
 {
@@ -59,20 +59,20 @@ namespace Jering.Javascript.NodeJS
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IServiceProvider serviceProvider = scope.ServiceProvider;
 
-            IHostingEnvironment? hostingEnvironment = serviceProvider.GetService<IHostingEnvironment>();
-            if (hostingEnvironment == null)
+            IHostEnvironment? hostEnvironment = serviceProvider.GetService<IHostEnvironment>();
+            if (hostEnvironment == null)
             {
                 return;
             }
 
             if (!projectPathSpecified)
             {
-                options.ProjectPath = hostingEnvironment.ContentRootPath;
+                options.ProjectPath = hostEnvironment.ContentRootPath;
             }
 
             if (!nodeEnvSpecified)
             {
-                options.EnvironmentVariables["NODE_ENV"] = hostingEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
+                options.EnvironmentVariables["NODE_ENV"] = hostEnvironment.IsDevelopment() ? "development" : "production"; // De-facto standard values for Node
             }
         }
     }

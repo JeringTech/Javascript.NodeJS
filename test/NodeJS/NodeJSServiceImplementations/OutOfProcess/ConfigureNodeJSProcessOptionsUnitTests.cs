@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
@@ -17,7 +17,7 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(null); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(null); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
@@ -67,7 +67,7 @@ namespace Jering.Javascript.NodeJS.Tests
             // Arrange
             const string dummyProjectPath = "dummyProjectPath";
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(null); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(null); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
@@ -90,10 +90,10 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyContentRootPath = "dummyContentRootPath";
-            Mock<IHostingEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostingEnvironment>();
+            Mock<IHostEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostEnvironment>();
             mockHostingEnvironment.Setup(h => h.ContentRootPath).Returns(dummyContentRootPath);
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
@@ -128,10 +128,10 @@ namespace Jering.Javascript.NodeJS.Tests
         {
             // Arrange
             const string dummyProjectPath = "dummyProjectPath";
-            Mock<IHostingEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostingEnvironment>();
-            mockHostingEnvironment.Setup(h => h.EnvironmentName).Returns("dummyEnvironmentName"); // Called by IsDevelopment()
+            Mock<IHostEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostEnvironment>();
+            mockHostingEnvironment.Setup(h => h.EnvironmentName).Returns("dummyEnvironments"); // Called by IsDevelopment()
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
@@ -154,14 +154,14 @@ namespace Jering.Javascript.NodeJS.Tests
         [Theory]
         [MemberData(nameof(Configure_ConfiguresNodeEnvIfItIsUnspecified_Data))]
         public void Configure_ConfiguresNodeEnvIfItIsUnspecified(Dictionary<string, string> dummyExistingEnvironmentVariables,
-            string dummyEnvironmentName,
+            string dummyEnvironments,
             Dictionary<string, string> expectedEnvironmentVariables)
         {
             // Arrange
-            Mock<IHostingEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostingEnvironment>();
-            mockHostingEnvironment.Setup(h => h.EnvironmentName).Returns(dummyEnvironmentName); // Called by IsDevelopment()
+            Mock<IHostEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostEnvironment>();
+            mockHostingEnvironment.Setup(h => h.EnvironmentName).Returns(dummyEnvironments); // Called by IsDevelopment()
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
@@ -187,28 +187,28 @@ namespace Jering.Javascript.NodeJS.Tests
 
             return new object?[][]
             {
-                // Sets NODE_ENV to development if EnvironmentName is Development
+                // Sets NODE_ENV to development if Environments is Development
                 new object ?[]{
                     null,
-                    EnvironmentName.Development,
+                    Environments.Development,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedDevelopmentNodeEnvValue } }
                 },
-                // Sets NODE_ENV to production if EnvironmentName is Production
+                // Sets NODE_ENV to production if Environments is Production
                 new object ?[]{
                     null,
-                    EnvironmentName.Production,
+                    Environments.Production,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedProductionNodeEnvValue } }
                 },
                 // Defaults to "production"
                 new object ?[]{
                     null,
-                    EnvironmentName.Staging,
+                    Environments.Staging,
                     new Dictionary<string, string>{ { nodeEnvVarName, expectedProductionNodeEnvValue } }
                 },
                 // Keeps existing environment variables
                 new object ?[]{
                     new Dictionary<string, string> { { dummyEnvVarName, dummyEnvVarValue } },
-                    EnvironmentName.Development,
+                    Environments.Development,
                     new Dictionary<string, string>
                     {
                         { dummyEnvVarName, dummyEnvVarValue },
@@ -225,10 +225,10 @@ namespace Jering.Javascript.NodeJS.Tests
             const string nodeEnvVarName = "NODE_ENV";
             const string dummyNodeEnvValue = "dummyEnvironmentState";
             var dummyEnvironmentVariables = new Dictionary<string, string> { { nodeEnvVarName, dummyNodeEnvValue } };
-            Mock<IHostingEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostingEnvironment>();
+            Mock<IHostEnvironment> mockHostingEnvironment = _mockRepository.Create<IHostEnvironment>();
             mockHostingEnvironment.Setup(h => h.ContentRootPath).Returns("dummyContentRootPath");
             Mock<IServiceProvider> mockServiceProvider = _mockRepository.Create<IServiceProvider>();
-            mockServiceProvider.Setup(s => s.GetService(typeof(IHostingEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
+            mockServiceProvider.Setup(s => s.GetService(typeof(IHostEnvironment))).Returns(mockHostingEnvironment.Object); // Called by the extension method GetService<T>
             Mock<IServiceScope> mockServiceScope = _mockRepository.Create<IServiceScope>();
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockServiceProvider.Object);
             Mock<IServiceScopeFactory> mockServiceScopeFactory = _mockRepository.Create<IServiceScopeFactory>();
