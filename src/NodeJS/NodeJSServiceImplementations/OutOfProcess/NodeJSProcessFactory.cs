@@ -119,23 +119,13 @@ namespace Jering.Javascript.NodeJS
                     // argument gets escaped.
                     if (i == arg.Length - 1)
                     {
-                        for (int j = 0; j < slashSequenceLength; j++)
-                        {
-                            stringBuilder.
-                                Append('\\').
-                                Append('\\');
-                        }
+                        stringBuilder.Append('\\', 2 * slashSequenceLength);
                     }
                 }
                 else if (currentChar == '"')
                 {
                     // Every \ or sequence of \ that preceed a " must be escaped.
-                    for (int j = 0; j < slashSequenceLength; j++)
-                    {
-                        stringBuilder.
-                            Append('\\').
-                            Append('\\');
-                    }
+                    stringBuilder.Append('\\', 2 * slashSequenceLength);
                     slashSequenceLength = 0;
 
                     stringBuilder.
@@ -144,10 +134,7 @@ namespace Jering.Javascript.NodeJS
                 }
                 else
                 {
-                    for (int j = 0; j < slashSequenceLength; j++)
-                    {
-                        stringBuilder.Append('\\');
-                    }
+                    stringBuilder.Append('\\', slashSequenceLength);
                     slashSequenceLength = 0;
 
                     stringBuilder.Append(currentChar);
