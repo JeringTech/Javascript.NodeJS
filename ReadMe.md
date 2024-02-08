@@ -1784,6 +1784,7 @@ Contributions are welcome!
 - [johnrom](https://github.com/johnrom)
 - [aKzenT](https://github.com/aKzenT)
 - [thebuilder](https://github.com/thebuilder)
+- [jirisoukup](https://github.com/jirisoukup)
 
 ## About
 Follow [@JeringTech](https://twitter.com/JeringTech) for updates and more.
