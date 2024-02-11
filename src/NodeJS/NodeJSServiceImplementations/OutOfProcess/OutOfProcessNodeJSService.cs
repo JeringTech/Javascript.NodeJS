@@ -45,9 +45,12 @@ namespace Jering.Javascript.NodeJS
         private readonly int _invocationTimeoutMS;
         private readonly ConcurrentDictionary<Task, object?> _trackedInvokeTasks; // TODO use ConcurrentSet when it's available - https://github.com/dotnet/runtime/issues/16443
         private readonly bool _trackInvokeTasks;
+        private readonly object _fileChangeAggregateLock = new();
+        private readonly int _fileChangeAggregateDelayInMilliseconds;
 
         private bool _disposed;
         private volatile INodeJSProcess? _nodeJSProcess; // Volatile since it's used in a double checked lock
+        private Timer? _fileChangeAggregateTimer;
 
         /// <summary>
         /// <para>This regex is used to determine successful initialization of the process.</para>
@@ -87,6 +90,8 @@ namespace Jering.Javascript.NodeJS
             _serverScriptName = serverScriptName;
             _serverScriptAssembly = serverScriptAssembly;
             Logger = logger;
+
+            _fileChangeAggregateDelayInMilliseconds = _options.AggregateTimeout;
 
             _debugLoggingEnabled = Logger.IsEnabled(LogLevel.Debug);
             _warningLoggingEnabled = Logger.IsEnabled(LogLevel.Warning);
@@ -576,12 +581,38 @@ namespace Jering.Javascript.NodeJS
                 Logger.LogDebug(string.Format(Strings.LogDebug_FileChangedHandlerInvokedForProcess, _nodeJSProcess?.SafeID));
             }
 
+            lock (_fileChangeAggregateLock)
+            {
+                // If the timer is already running, disable it.
+                _fileChangeAggregateTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+
+                // Start or restart the timer.
+                if (_fileChangeAggregateTimer == null)
+                {
+                    _fileChangeAggregateTimer = new Timer(ExecuteFileChangeAggregate, null, _fileChangeAggregateDelayInMilliseconds, Timeout.Infinite);
+                }
+                else
+                {
+                    _fileChangeAggregateTimer.Change(_fileChangeAggregateDelayInMilliseconds, Timeout.Infinite);
+                }
+            }
+        }
+
+        // Delegate for timer execution
+        private void ExecuteFileChangeAggregate(object? state)
+        {
 #pragma warning disable CS4014
             // No need to await
             //
             // Note that we need to reconnect even if we've just connected so that the changed file is loaded.
             MoveToNewProcessAsync(true);
 #pragma warning restore CS4014
+
+            lock (_fileChangeAggregateLock)
+            {
+                _fileChangeAggregateTimer?.Dispose();
+                _fileChangeAggregateTimer = null;
+            }
         }
 
         // Just connected refers to the situation where _nodeJSProcess.Connected is true but _connectingLock has not been released

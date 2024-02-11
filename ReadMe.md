@@ -1471,6 +1471,12 @@ Also, invocations complete using the outdated version of your script. Weigh thes
 This value does nothing if `OutOfProcessNodeJSServiceOptions.EnableFileWatching` is `false` and `OutOfProcessNodeJSServiceOptions.NumProcessRetries` is 0.  
 
 Defaults to `true`.  
+##### OutOfProcessNodeJSServiceOptions.AggregateTimeout
+
+Add a delay before restarting the NodeJS service once the first file changed. This allows OutOfProcessNodeJSService to aggregate any other changes made during this time period into one rebuild.  
+```csharp
+public int AggregateTimeout { get; set; }
+```
 <!-- OutOfProcessNodeJSServiceOptions generated docs -->
 <!-- HttpNodeJSServiceOptions generated docs -->
 

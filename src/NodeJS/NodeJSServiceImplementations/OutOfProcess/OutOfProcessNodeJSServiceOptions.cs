@@ -129,5 +129,13 @@ namespace Jering.Javascript.NodeJS
         /// <para>Defaults to <c>true</c>.</para>
         /// </remarks>
         public bool GracefulProcessShutdown { get; set; } = true;
+
+        /// <summary>
+        /// Add a delay before restarting the NodeJS service once the first file changed. This allows OutOfProcessNodeJSService to aggregate any other changes made during this time period into one rebuild.
+        /// </summary>
+        /// <para>Value is set in milliseconds</para>
+        /// <para>This value does nothing if <see cref="EnableFileWatching"/> is <c>false</c></para>
+        /// <para>Defaults to <c>600</c>.</para>
+        public int AggregateTimeout { get; set; } = 600;
     }
 }
